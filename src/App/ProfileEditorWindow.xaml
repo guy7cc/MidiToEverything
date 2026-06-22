@@ -95,7 +95,12 @@
                                 <ColumnDefinition Width="120" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                <TextBlock Text="タイトル正規表現 (任意)" />
+                                <Grid>
+                                    <TextBlock Text="タイトル正規表現 (任意)" VerticalAlignment="Center" />
+                                    <Button HorizontalAlignment="Right" Content="選択中の候補から提案" Padding="6,1"
+                                            ToolTip="上で選んだ起動中プロセスのタイトルから、将来も一致しやすい正規表現を生成します"
+                                            Command="{Binding DataContext.SuggestTitlePatternCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                </Grid>
                                 <TextBox Text="{Binding TitlePattern, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1">
