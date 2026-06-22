@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MidiToEverything.Core.Application;
@@ -24,12 +26,16 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     private volatile MidiMessage? _lastMessage;
     private EditableBinding? _editingOriginal; // the list binding being edited (null = creating new)
     private bool _loadingDraft;                // guards programmatic SelectedBinding changes
+    private EditableProfile? _subscribedProfile;
+    // Debounces auto-save: every change except an in-progress binding signal persists automatically.
+    private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
 
     public ProfileEditorViewModel(IProfileRepository repository, ProfileManager manager, IMidiSource source)
     {
         _repository = repository;
         _manager = manager;
         _source = source;
+        _saveTimer.Tick += (_, _) => SaveNow();
 
         foreach (var profile in EditMapper.ToEditable(manager.CurrentConfig))
         {
@@ -61,8 +67,41 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
 
     partial void OnDraftBindingChanged(EditableBinding? value) => OnPropertyChanged(nameof(HasDraft));
 
-    // Switching profiles abandons any open draft (it belonged to the previous profile).
-    partial void OnSelectedProfileChanged(EditableProfile? value) => DiscardDraft();
+    // Switching profiles abandons any open draft, and re-targets field auto-save at the new profile.
+    partial void OnSelectedProfileChanged(EditableProfile? value)
+    {
+        if (_subscribedProfile is not null)
+        {
+            _subscribedProfile.PropertyChanged -= OnProfileFieldChanged;
+        }
+
+        _subscribedProfile = value;
+        if (value is not null)
+        {
+            value.PropertyChanged += OnProfileFieldChanged;
+        }
+
+        DiscardDraft();
+    }
+
+    // Profile name / match pattern / priority edits persist automatically (debounced).
+    private void OnProfileFieldChanged(object? sender, PropertyChangedEventArgs e) => RequestAutoSave();
+
+    /// <summary>Persist after a short idle (coalesces rapid edits like typing a name).</summary>
+    private void RequestAutoSave()
+    {
+        _saveTimer.Stop();
+        _saveTimer.Start();
+    }
+
+    /// <summary>Persist the current profiles to disk and reload the running engine immediately.</summary>
+    private void SaveNow()
+    {
+        _saveTimer.Stop();
+        var config = EditMapper.ToConfig(Profiles, _manager.CurrentConfig);
+        _repository.Save(config);
+        _manager.Reload(config);
+    }
 
     // Clicking a binding in the list opens a working copy to edit (changes apply on commit).
     partial void OnSelectedBindingChanged(EditableBinding? value)
@@ -108,9 +147,10 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AddProfile()
     {
-        var profile = new EditableProfile { Id = "", Name = "新しいプロファイル" };
+        var profile = new EditableProfile { Id = Guid.NewGuid().ToString("N")[..8], Name = "新しいプロファイル" };
         Profiles.Add(profile);
         SelectedProfile = profile;
+        SaveNow(); // profile add persists immediately
     }
 
     private void LoadProcesses()
@@ -177,10 +217,14 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         {
             Profiles.Remove(profile);
             SelectedProfile = Profiles.FirstOrDefault();
+            SaveNow(); // profile delete persists immediately
         }
     }
 
-    /// <summary>Start a new binding draft (not added to the list until "save").</summary>
+    /// <summary>
+    /// Add a new binding to the profile (persisted immediately) and open it for editing.
+    /// Its signal content is a draft until "バインディングを保存" is pressed.
+    /// </summary>
     [RelayCommand]
     private void AddBinding()
     {
@@ -190,10 +234,14 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
             return;
         }
 
-        SetSelectedBindingGuarded(null); // creating a new one — clear list selection
-        _editingOriginal = null;
-        DraftBinding = new EditableBinding();
-        SetLearnStatus("新規バインディングを編集中。設定後に「バインディングを保存」で確定します。", isError: false);
+        var binding = new EditableBinding();
+        SelectedProfile.Bindings.Add(binding);
+        SaveNow(); // binding add persists immediately
+
+        _editingOriginal = binding;
+        DraftBinding = binding.Clone();
+        SetSelectedBindingGuarded(binding);
+        SetLearnStatus("新規バインディングを追加しました。内容を設定して「バインディングを保存」で確定します。", isError: false);
     }
 
     /// <summary>Remove the selected (committed) binding and close the editor.</summary>
@@ -203,12 +251,13 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         if (SelectedProfile is not null && SelectedBinding is not null)
         {
             SelectedProfile.Bindings.Remove(SelectedBinding);
+            SaveNow(); // binding delete persists immediately
         }
 
         DiscardDraft();
     }
 
-    /// <summary>Commit the draft into the profile's binding list (add new, or update the edited one).</summary>
+    /// <summary>Commit the draft's signal content into the list and persist it.</summary>
     [RelayCommand]
     private void CommitBinding()
     {
@@ -222,7 +271,6 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         {
             _editingOriginal.CopyValuesFrom(DraftBinding);
             SetSelectedBindingGuarded(_editingOriginal);
-            SetLearnStatus("バインディングを更新しました。", isError: false);
         }
         else
         {
@@ -231,13 +279,11 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
             _editingOriginal = committed;
             DraftBinding = committed.Clone();
             SetSelectedBindingGuarded(committed);
-            SetLearnStatus("バインディングを追加しました。", isError: false);
         }
-    }
 
-    /// <summary>Abandon the current draft without committing.</summary>
-    [RelayCommand]
-    private void DiscardBinding() => DiscardDraft();
+        SaveNow();
+        SetLearnStatus("バインディングを保存しました。", isError: false);
+    }
 
     private void DiscardDraft()
     {
@@ -311,16 +357,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void Save()
-    {
-        var config = EditMapper.ToConfig(Profiles, _manager.CurrentConfig);
-        _repository.Save(config);
-        _manager.Reload(config);
-        CloseRequested?.Invoke(this, true);
-    }
-
-    [RelayCommand]
-    private void Cancel() => CloseRequested?.Invoke(this, false);
+    private void Close() => CloseRequested?.Invoke(this, false);
 
     [RelayCommand]
     private void Export()
@@ -354,7 +391,21 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         }
 
         SelectedProfile = Profiles.FirstOrDefault();
+        SaveNow(); // imported config persists immediately
     }
 
-    public void Dispose() => _source.MessageReceived -= OnMessageReceived;
+    public void Dispose()
+    {
+        if (_saveTimer.IsEnabled)
+        {
+            SaveNow(); // flush a pending debounced edit before closing
+        }
+
+        _saveTimer.Stop();
+        _source.MessageReceived -= OnMessageReceived;
+        if (_subscribedProfile is not null)
+        {
+            _subscribedProfile.PropertyChanged -= OnProfileFieldChanged;
+        }
+    }
 }

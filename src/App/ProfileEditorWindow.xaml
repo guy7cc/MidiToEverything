@@ -188,12 +188,9 @@
                                             <Button Content="最後の入力を取込"
                                                     ToolTip="直近に受信した MIDI 信号を、編集中のバインディングの種別/番号/ch/デバイスに取り込みます"
                                                     Command="{Binding DataContext.LearnCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                                            <Button Content="バインディングを保存" Style="{StaticResource AccentButton}" Margin="0,0,6,0"
-                                                    ToolTip="編集中の内容を一覧に確定します（ファイルへの保存は「保存して適用」）"
+                                            <Button Content="バインディングを保存" Style="{StaticResource AccentButton}"
+                                                    ToolTip="編集中のシグナル内容を確定して保存します（他のバインディングを選ぶか閉じると破棄）"
                                                     Command="{Binding DataContext.CommitBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                                            <Button Content="破棄"
-                                                    ToolTip="編集中の内容を破棄します（一覧には反映しません）"
-                                                    Command="{Binding DataContext.DiscardBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                                         </StackPanel>
                                     </Grid>
                                 <TextBlock Text="{Binding DataContext.LastSignalText, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -297,15 +294,14 @@
 
             <!-- Bottom bar -->
             <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                     <Button Content="インポート" Command="{Binding ImportCommand}" />
                     <Button Content="エクスポート" Command="{Binding ExportCommand}" />
+                    <TextBlock Text="変更は自動保存されます（シグナル内容のみ「バインディングを保存」で確定）"
+                               Foreground="{StaticResource TextFaintBrush}" FontSize="11"
+                               VerticalAlignment="Center" Margin="12,0,0,0" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="キャンセル" Command="{Binding CancelCommand}" />
-                    <Button Content="保存して適用" Command="{Binding SaveCommand}"
-                            Background="#FF2E5A3A" Foreground="#FFDFFFE9" />
-                </StackPanel>
+                <Button HorizontalAlignment="Right" Content="閉じる" Command="{Binding CloseCommand}" Margin="0" />
             </Grid>
         </Grid>
     </Grid>
