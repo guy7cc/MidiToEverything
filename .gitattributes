@@ -7,6 +7,8 @@
 *.props     text eol=crlf
 *.targets   text eol=crlf
 *.manifest  text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
 
 # Binary assets (none yet, declared for safety).
 *.png  binary
