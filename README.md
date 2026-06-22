@@ -32,14 +32,14 @@ dotnet run   --project src/App/App.csproj -c Release   # アプリ起動
 ```
 
 ## 配布（self-contained 単一ファイル）
-ローカルで作る場合は `publish.bat` をダブルクリック、または:
+公開リリースは **GitHub Releases** に自動添付される（バージョンタグの push で CI が生成）。
+リリース手順は [CONTRIBUTING.md](CONTRIBUTING.md) §6。
+
+ローカルで単一 exe を作る場合:
 ```sh
 dotnet publish src/App/App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
 ```
 → `publish/MidiToEverything.exe`（.NET ランタイム不要の単一 exe）。
-
-公開リリースは **GitHub Releases** に自動添付される（バージョンタグの push で CI が生成）。
-リリース手順は [CONTRIBUTING.md](CONTRIBUTING.md) §6。
 
 ## 設定ファイル
 `%APPDATA%\MidiToEverything\config.json`（初回起動時に既定生成）。スキーマは [docs/03_ProfileSchema.md](docs/03_ProfileSchema.md)、サンプルは [samples/config.sample.json](samples/config.sample.json)。
