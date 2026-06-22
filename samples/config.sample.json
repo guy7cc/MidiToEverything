@@ -1,0 +1,300 @@
+{
+  "version": 1,
+  "settings": {
+    "startWithWindows": false,
+    "emergencyStopHotkey": "ctrl+alt+pause",
+    "watchedDevices": [
+      "*"
+    ],
+    "monitor": {
+      "maxLogLines": 500,
+      "uiThrottleMs": 30
+    }
+  },
+  "activeContext": {
+    "currentProfileId": "clip-studio"
+  },
+  "baseProfile": {
+    "id": "base",
+    "name": "基本プロファイル",
+    "enabled": true,
+    "bindings": [
+      {
+        "signal": {
+          "device": "*",
+          "channel": "any",
+          "type": "noteOn",
+          "number": 36
+        },
+        "trigger": {
+          "mode": "trigger",
+          "threshold": 1,
+          "range": [
+            0,
+            127
+          ],
+          "deadzone": 0,
+          "invert": false,
+          "scale": 1,
+          "relativeFormat": "twosComplement"
+        },
+        "actions": [
+          {
+            "type": "key",
+            "keys": [
+              "ctrl",
+              "z"
+            ],
+            "hold": false,
+            "repeat": false
+          }
+        ],
+        "label": "元に戻す",
+        "enabled": true
+      },
+      {
+        "signal": {
+          "device": "*",
+          "channel": "any",
+          "type": "noteOn",
+          "number": 37
+        },
+        "trigger": {
+          "mode": "trigger",
+          "threshold": 1,
+          "range": [
+            0,
+            127
+          ],
+          "deadzone": 0,
+          "invert": false,
+          "scale": 1,
+          "relativeFormat": "twosComplement"
+        },
+        "actions": [
+          {
+            "type": "key",
+            "keys": [
+              "ctrl",
+              "c"
+            ],
+            "hold": false,
+            "repeat": false
+          }
+        ],
+        "label": "コピー",
+        "enabled": true
+      },
+      {
+        "signal": {
+          "device": "*",
+          "channel": "any",
+          "type": "noteOn",
+          "number": 51
+        },
+        "trigger": {
+          "mode": "trigger",
+          "threshold": 1,
+          "range": [
+            0,
+            127
+          ],
+          "deadzone": 0,
+          "invert": false,
+          "scale": 1,
+          "relativeFormat": "twosComplement"
+        },
+        "actions": [
+          {
+            "type": "switchProfile",
+            "target": "next"
+          }
+        ],
+        "label": "プロファイル切替(次)",
+        "enabled": true
+      }
+    ]
+  },
+  "profiles": [
+    {
+      "id": "clip-studio",
+      "name": "Clip Studio Paint",
+      "enabled": true,
+      "match": {
+        "processNames": [
+          "CLIPStudioPaint.exe"
+        ],
+        "priority": 10
+      },
+      "bindings": [
+        {
+          "signal": {
+            "device": "*",
+            "channel": "any",
+            "type": "cc",
+            "number": 74
+          },
+          "trigger": {
+            "mode": "absolute",
+            "threshold": 1,
+            "range": [
+              0,
+              127
+            ],
+            "deadzone": 0,
+            "invert": false,
+            "scale": 1,
+            "relativeFormat": "twosComplement"
+          },
+          "actions": [
+            {
+              "type": "scroll",
+              "axis": "vertical",
+              "amount": 120,
+              "useInputValue": true
+            }
+          ],
+          "label": "ブラシサイズ",
+          "enabled": true
+        },
+        {
+          "signal": {
+            "device": "*",
+            "channel": "any",
+            "type": "cc",
+            "number": 7
+          },
+          "trigger": {
+            "mode": "absolute",
+            "threshold": 1,
+            "range": [
+              0,
+              127
+            ],
+            "deadzone": 0,
+            "invert": false,
+            "scale": 1,
+            "relativeFormat": "twosComplement"
+          },
+          "actions": [
+            {
+              "type": "cursorMove",
+              "mode": "absolute",
+              "dx": 0,
+              "dy": 0,
+              "useInputValue": true
+            }
+          ],
+          "label": "不透明度スライダ",
+          "enabled": true
+        },
+        {
+          "signal": {
+            "device": "*",
+            "channel": "any",
+            "type": "note",
+            "number": 40
+          },
+          "trigger": {
+            "mode": "hold",
+            "threshold": 1,
+            "range": [
+              0,
+              127
+            ],
+            "deadzone": 0,
+            "invert": false,
+            "scale": 1,
+            "relativeFormat": "twosComplement"
+          },
+          "actions": [
+            {
+              "type": "key",
+              "keys": [
+                "space"
+              ],
+              "hold": true,
+              "repeat": false
+            }
+          ],
+          "label": "手のひらツール(押下中)",
+          "enabled": true
+        },
+        {
+          "signal": {
+            "device": "*",
+            "channel": "any",
+            "type": "noteOn",
+            "number": 37
+          },
+          "trigger": {
+            "mode": "trigger",
+            "threshold": 1,
+            "range": [
+              0,
+              127
+            ],
+            "deadzone": 0,
+            "invert": false,
+            "scale": 1,
+            "relativeFormat": "twosComplement"
+          },
+          "actions": [
+            {
+              "type": "none"
+            }
+          ],
+          "label": "（基本のコピーを無効化）",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "id": "obs",
+      "name": "OBS Studio",
+      "enabled": true,
+      "match": {
+        "processNames": [
+          "obs64.exe"
+        ],
+        "priority": 5
+      },
+      "bindings": [
+        {
+          "signal": {
+            "device": "*",
+            "channel": "any",
+            "type": "noteOn",
+            "number": 36
+          },
+          "trigger": {
+            "mode": "trigger",
+            "threshold": 1,
+            "range": [
+              0,
+              127
+            ],
+            "deadzone": 0,
+            "invert": false,
+            "scale": 1,
+            "relativeFormat": "twosComplement"
+          },
+          "actions": [
+            {
+              "type": "key",
+              "keys": [
+                "ctrl",
+                "shift",
+                "1"
+              ],
+              "hold": false,
+              "repeat": false
+            }
+          ],
+          "label": "シーン1へ",
+          "enabled": true
+        }
+      ]
+    }
+  ]
+}
