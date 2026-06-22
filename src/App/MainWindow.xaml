@@ -3,177 +3,148 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:vm="clr-namespace:MidiToEverything.App.ViewModels"
         mc:Ignorable="d"
-        Title="MidiToEverything" Height="620" Width="960"
-        Background="#1E1E22" TextElement.Foreground="#E6E6E6"
+        Title="MidiToEverything" Height="600" Width="940" MinWidth="640" MinHeight="420"
+        WindowStyle="None" ResizeMode="CanResize"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
         FontFamily="Segoe UI" d:DataContext="{d:DesignInstance vm:MainViewModel}">
 
-    <Window.Resources>
-        <!-- Visualizer indicator card -->
-        <DataTemplate x:Key="IndicatorTemplate" DataType="{x:Type vm:IndicatorViewModel}">
-            <Border Width="128" Height="92" Margin="6" CornerRadius="6" Padding="10"
-                    Background="#2A2A30" BorderBrush="#3A3A42" BorderThickness="1">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                <Setter Property="Background" Value="#2E5A3A" />
-                                <Setter Property="BorderBrush" Value="#5BD68A" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <StackPanel>
-                    <TextBlock Text="{Binding Label}" FontSize="12" Foreground="#CFCFD6"
-                               TextTrimming="CharacterEllipsis" />
-                    <ProgressBar Value="{Binding Value}" Maximum="1" Height="10" Margin="0,10,0,6"
-                                 Background="#1B1B20" Foreground="#4FA3FF" BorderThickness="0" />
-                    <TextBlock Text="{Binding ValueText}" FontSize="18" FontWeight="SemiBold"
-                               Foreground="#9FC8FF" />
-                </StackPanel>
-            </Border>
-        </DataTemplate>
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="38" CornerRadius="0" GlassFrameThickness="0"
+                            ResizeBorderThickness="6" UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
 
-        <!-- Monitor log row -->
+    <Window.Resources>
+        <!-- Input monitor row: fixed time/source columns, free-width detail (NoWrap → horizontal scroll). -->
         <DataTemplate x:Key="MonitorTemplate" DataType="{x:Type vm:MonitorEntry}">
-            <Grid Margin="0,1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="92" />
-                    <ColumnDefinition Width="150" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="{Binding Time}" Foreground="#7A7A85"
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Time}" Width="96" Foreground="{StaticResource TextFaintBrush}"
                            FontFamily="Consolas" FontSize="12" />
-                <TextBlock Grid.Column="1" Text="{Binding Source}" Foreground="#A6A6B0"
+                <TextBlock Text="{Binding Source}" Width="180" Foreground="{StaticResource TextDimBrush}"
                            FontFamily="Consolas" FontSize="12" TextTrimming="CharacterEllipsis" />
-                <TextBlock Grid.Column="2" Text="{Binding Detail}" Foreground="{Binding Accent}"
-                           FontFamily="Consolas" FontSize="12" />
-            </Grid>
+                <TextBlock Text="{Binding Detail}" Foreground="{Binding Accent}"
+                           FontFamily="Consolas" FontSize="12" TextWrapping="NoWrap" />
+            </StackPanel>
         </DataTemplate>
     </Window.Resources>
 
-    <Grid Margin="14">
+    <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="38" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Status bar -->
-        <Border Grid.Row="0" Background="#26262C" CornerRadius="8" Padding="16,12" Margin="0,0,0,12">
+        <!-- Title bar -->
+        <Grid Grid.Row="0" Background="{StaticResource CaptionBrush}">
+            <TextBlock Text="MidiToEverything" Foreground="{StaticResource TextDimBrush}"
+                       VerticalAlignment="Center" Margin="14,0" FontSize="12" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource CaptionButton}" Click="Minimize_Click"
+                        FontFamily="Segoe MDL2 Assets" FontSize="10" Content="&#xE921;" />
+                <Button x:Name="MaxRestoreButton" Style="{StaticResource CaptionButton}" Click="MaxRestore_Click"
+                        FontFamily="Segoe MDL2 Assets" FontSize="10" Content="&#xE922;" />
+                <Button Style="{StaticResource CaptionCloseButton}" Click="Close_Click"
+                        FontFamily="Segoe MDL2 Assets" FontSize="10" Content="&#xE8BB;" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Header bar -->
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="プロファイル: " Foreground="#9A9AA4" FontSize="14" />
+                        <TextBlock Text="プロファイル: " Foreground="{StaticResource TextDimBrush}" FontSize="14" />
                         <TextBlock Text="{Binding ActiveProfile}" FontSize="14" FontWeight="SemiBold" />
-                        <Border Background="#4A3A1E" CornerRadius="4" Padding="6,1" Margin="8,0,0,0"
+                        <Border Background="#FF4A3A1E" CornerRadius="4" Padding="6,1" Margin="8,0,0,0"
                                 Visibility="{Binding IsPinned, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="固定" Foreground="#F0C674" FontSize="11" />
+                            <TextBlock Text="固定" Foreground="{StaticResource WarnBrush}" FontSize="11" />
                         </Border>
                     </StackPanel>
-                    <TextBlock Text="{Binding ContextWindow}" Foreground="#8A8A94" FontSize="12" Margin="0,4,0,0"
-                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding ContextWindow}" Foreground="{StaticResource TextFaintBrush}"
+                               FontSize="12" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="プロファイル編集" Click="OpenEditor_Click"
-                            Padding="10,4" Margin="0,0,16,0" Background="#3A3A42" Foreground="#E6E6E6"
-                            BorderThickness="0" />
                     <Ellipse Width="10" Height="10" Margin="0,0,6,0">
                         <Ellipse.Style>
                             <Style TargetType="Ellipse">
-                                <Setter Property="Fill" Value="#5BD68A" />
+                                <Setter Property="Fill" Value="{StaticResource OkBrush}" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding EmissionEnabled}" Value="False">
-                                        <Setter Property="Fill" Value="#E06666" />
+                                        <Setter Property="Fill" Value="{StaticResource DangerBrush}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Ellipse.Style>
                     </Ellipse>
                     <TextBlock Text="{Binding EmissionLabel}" FontSize="13" VerticalAlignment="Center" Margin="0,0,12,0" />
-                    <Button Content="緊急停止 切替" Command="{Binding ToggleEmissionCommand}"
-                            Padding="10,4" Background="#3A3A42" Foreground="#E6E6E6" BorderThickness="0" />
+                    <Button Content="緊急停止 切替" Command="{Binding ToggleEmissionCommand}" Margin="0,0,8,0" />
+                    <Button Content="プロファイル編集" Click="OpenEditor_Click" Style="{StaticResource AccentButton}" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Main content -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2" Margin="12">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="170" />
+                <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="360" />
             </Grid.ColumnDefinitions>
 
-            <!-- Devices -->
-            <Border Grid.Column="0" Background="#26262C" CornerRadius="8" Padding="12" Margin="0,0,12,0">
+            <!-- Devices + detection mode (B-1) -->
+            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,12,0">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="デバイス" FontSize="13" FontWeight="SemiBold"
-                               Foreground="#B8B8C2" Margin="0,0,0,8" />
-                    <TextBlock DockPanel.Dock="Top" Text="(未接続)" Foreground="#6A6A74" FontSize="12"
+                    <TextBlock DockPanel.Dock="Top" Text="デバイス" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextDimBrush}" Margin="0,0,0,10" />
+                    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                        <ToggleButton IsChecked="{Binding IsAutoDetect}" Content="{Binding DetectModeLabel}"
+                                      HorizontalAlignment="Stretch"
+                                      ToolTip="自動更新: 定期的にデバイスを検出 ／ 手動更新: 「今すぐ更新」を押した時だけ検出" />
+                        <Button Content="今すぐ更新" Command="{Binding RescanDevicesCommand}"
+                                Margin="0,6,0,0" HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="(未接続)" Foreground="{StaticResource TextFaintBrush}" FontSize="12"
                                Visibility="{Binding Devices.Count, Converter={StaticResource ZeroToVisibility}}" />
-                    <ItemsControl ItemsSource="{Binding Devices}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Margin="0,3">
-                                    <Ellipse Width="8" Height="8" Fill="#5BD68A" Margin="0,0,6,0" />
-                                    <TextBlock Text="{Binding}" FontSize="12" TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </DockPanel>
-            </Border>
-
-            <!-- Visualizer -->
-            <Border Grid.Column="1" Background="#26262C" CornerRadius="8" Padding="12" Margin="0,0,12,0">
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="入力ビジュアライザ" FontSize="13" FontWeight="SemiBold"
-                               Foreground="#B8B8C2" Margin="0,0,0,8" />
-                    <TextBlock DockPanel.Dock="Top" Text="MIDI を操作すると、ここに各操作子が表示されます。"
-                               Foreground="#6A6A74" FontSize="12" Margin="2,0,0,0"
-                               Visibility="{Binding Indicators.Count, Converter={StaticResource ZeroToVisibility}}" />
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding Indicators}" ItemTemplate="{StaticResource IndicatorTemplate}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Devices}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,3">
+                                        <Ellipse Width="8" Height="8" Fill="{StaticResource OkBrush}" Margin="0,0,6,0"
+                                                 VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
                 </DockPanel>
             </Border>
 
-            <!-- Monitor -->
-            <Border Grid.Column="2" Background="#26262C" CornerRadius="8" Padding="12">
+            <!-- Input monitor (expanded, vertical + horizontal scroll) -->
+            <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="12">
                 <DockPanel>
                     <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
-                        <TextBlock Text="入力モニター" FontSize="13" FontWeight="SemiBold" Foreground="#B8B8C2"
+                        <TextBlock Text="入力モニター" FontWeight="SemiBold" Foreground="{StaticResource TextDimBrush}"
                                    VerticalAlignment="Center" />
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Content="{Binding MonitorPaused, Converter={StaticResource PauseLabel}}"
-                                    Command="{Binding TogglePauseCommand}" Padding="8,2" Margin="0,0,6,0"
-                                    Background="#3A3A42" Foreground="#E6E6E6" BorderThickness="0" />
-                            <Button Content="クリア" Command="{Binding ClearMonitorCommand}" Padding="8,2"
-                                    Background="#3A3A42" Foreground="#E6E6E6" BorderThickness="0" />
+                                    Command="{Binding TogglePauseCommand}" Margin="0,0,6,0" />
+                            <Button Content="クリア" Command="{Binding ClearMonitorCommand}" />
                         </StackPanel>
                     </Grid>
                     <ListBox ItemsSource="{Binding Monitor}" ItemTemplate="{StaticResource MonitorTemplate}"
-                             Background="#1B1B20" BorderThickness="0" Foreground="#E6E6E6"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             VirtualizingPanel.IsVirtualizing="True">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="Padding" Value="2,0" />
-                                <Setter Property="Background" Value="Transparent" />
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                    </ListBox>
+                             HorizontalContentAlignment="Left"
+                             Background="{StaticResource InputBgBrush}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.CanContentScroll="False" />
                 </DockPanel>
             </Border>
         </Grid>

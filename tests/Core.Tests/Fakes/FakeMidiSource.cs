@@ -14,6 +14,12 @@ public sealed class FakeMidiSource : IMidiSource
 
     public IReadOnlyList<MidiDeviceInfo> Devices => _devices;
 
+    public MidiDetectionMode DetectionMode { get; set; } = MidiDetectionMode.AutoPolling;
+
+    public int RescanCount { get; private set; }
+
+    public void Rescan() => RescanCount++;
+
     public bool Started { get; private set; }
 
     public void Start() => Started = true;

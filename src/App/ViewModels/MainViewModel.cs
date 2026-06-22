@@ -12,8 +12,9 @@ namespace MidiToEverything.App.ViewModels;
 
 /// <summary>
 /// Main-window view model (docs/02_Architecture.md §3.6). Subscribes to the engine and
-/// marshals updates to the UI thread, batching the high-rate monitor/visualizer feed on a
-/// timer so a busy controller never freezes the UI (FR-2.4).
+/// marshals updates to the UI thread, batching the high-rate monitor feed on a timer so a
+/// busy controller never freezes the UI (FR-2.4). Also drives the device-detection mode
+/// toggle and manual rescan (B-1).
 /// </summary>
 public partial class MainViewModel : ObservableObject, IDisposable
 {
@@ -25,7 +26,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _flushTimer;
     private readonly ConcurrentQueue<MidiMessage> _incoming = new();
-    private readonly Dictionary<string, IndicatorViewModel> _indicatorIndex = new();
 
     public MainViewModel(IMidiSource source, ProfileManager profiles, GatedInputSink gate)
     {
@@ -35,6 +35,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _dispatcher = Dispatcher.CurrentDispatcher;
 
         EmissionEnabled = gate.Enabled;
+        _isAutoDetect = source.DetectionMode == MidiDetectionMode.AutoPolling;
         ApplyState(profiles.State);
         foreach (var device in source.Devices)
         {
@@ -57,17 +58,25 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<string> Devices { get; } = new();
     public ObservableCollection<MonitorEntry> Monitor { get; } = new();
-    public ObservableCollection<IndicatorViewModel> Indicators { get; } = new();
 
     [ObservableProperty] private string _activeProfile = "—";
     [ObservableProperty] private string _contextWindow = "—";
     [ObservableProperty] private bool _isPinned;
     [ObservableProperty] private bool _emissionEnabled = true;
     [ObservableProperty] private bool _monitorPaused;
+    [ObservableProperty] private bool _isAutoDetect = true;
 
     public string EmissionLabel => EmissionEnabled ? "稼働中" : "停止中 (緊急停止)";
+    public string DetectModeLabel => IsAutoDetect ? "自動更新" : "手動更新";
 
     partial void OnEmissionEnabledChanged(bool value) => OnPropertyChanged(nameof(EmissionLabel));
+
+    // Device-detection mode toggle (B-1): switch between periodic polling and manual rescan.
+    partial void OnIsAutoDetectChanged(bool value)
+    {
+        _source.DetectionMode = value ? MidiDetectionMode.AutoPolling : MidiDetectionMode.Manual;
+        OnPropertyChanged(nameof(DetectModeLabel));
+    }
 
     [RelayCommand]
     private void ToggleEmission() => _gate.Toggle();
@@ -77,6 +86,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     private void ClearMonitor() => Monitor.Clear();
+
+    /// <summary>Force an immediate device re-scan (B-1; the manual "refresh" button).</summary>
+    [RelayCommand]
+    private void RescanDevices() => _source.Rescan();
 
     // ── Engine events (background threads) ────────────────────────────────────
 
@@ -108,8 +121,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void Flush()
     {
-        if (_incoming.IsEmpty)
+        if (_incoming.IsEmpty || MonitorPaused)
         {
+            // Still drain when paused so the queue does not grow unbounded.
+            while (_incoming.TryDequeue(out _)) { }
             return;
         }
 
@@ -118,69 +133,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         while (_incoming.TryDequeue(out var message) && drained < 512)
         {
             drained++;
-            UpdateIndicator(message);
-
-            if (!MonitorPaused)
-            {
-                Monitor.Insert(0, new MonitorEntry(message, time)); // newest first
-            }
+            Monitor.Insert(0, new MonitorEntry(message, time)); // newest first
         }
 
         while (Monitor.Count > MaxLogRows)
         {
             Monitor.RemoveAt(Monitor.Count - 1);
         }
-    }
-
-    private void UpdateIndicator(MidiMessage m)
-    {
-        var (key, label) = Describe(m);
-        if (!_indicatorIndex.TryGetValue(key, out var indicator))
-        {
-            indicator = new IndicatorViewModel(key, label);
-            _indicatorIndex[key] = indicator;
-            Indicators.Add(indicator);
-        }
-
-        switch (m.Type)
-        {
-            case MidiMessageType.NoteOn:
-                indicator.IsActive = true;
-                indicator.Value = m.Value / 127.0;
-                indicator.ValueText = m.Value.ToString();
-                break;
-            case MidiMessageType.NoteOff:
-                indicator.IsActive = false;
-                indicator.Value = 0;
-                indicator.ValueText = "off";
-                break;
-            case MidiMessageType.ControlChange:
-                indicator.Value = m.Value / 127.0;
-                indicator.ValueText = m.Value.ToString();
-                break;
-            case MidiMessageType.PitchBend:
-                indicator.Value = m.Value / 16383.0;
-                indicator.ValueText = m.Value.ToString();
-                break;
-            case MidiMessageType.ProgramChange:
-                indicator.Value = m.Value / 127.0;
-                indicator.ValueText = m.Value.ToString();
-                break;
-        }
-    }
-
-    private static (string Key, string Label) Describe(MidiMessage m)
-    {
-        var prefix = $"{m.Device}|ch{m.Channel}";
-        return m.Type switch
-        {
-            MidiMessageType.NoteOn or MidiMessageType.NoteOff =>
-                ($"{prefix}|note{m.Number}", $"Note {m.Number} {MonitorEntry.NoteName(m.Number!.Value)}"),
-            MidiMessageType.ControlChange => ($"{prefix}|cc{m.Number}", $"CC {m.Number}"),
-            MidiMessageType.PitchBend => ($"{prefix}|pitch", "Pitch Bend"),
-            MidiMessageType.ProgramChange => ($"{prefix}|prog", "Program"),
-            _ => ($"{prefix}|other", "Other"),
-        };
     }
 
     public void Dispose()

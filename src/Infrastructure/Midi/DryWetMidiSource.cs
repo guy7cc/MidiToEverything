@@ -33,6 +33,7 @@ public sealed class DryWetMidiSource : IMidiSource, IDisposable
     private readonly Dictionary<string, InputDevice> _attached = new(StringComparer.OrdinalIgnoreCase);
     private Timer? _pollTimer;
     private bool _started;
+    private MidiDetectionMode _mode = MidiDetectionMode.AutoPolling;
 
     public DryWetMidiSource(
         ILogger<DryWetMidiSource>? logger = null,
@@ -79,7 +80,48 @@ public sealed class DryWetMidiSource : IMidiSource, IDisposable
         Reconcile();
 
         // Reliable fallback for systems where the watcher does not fire (see class remarks).
-        _pollTimer = new Timer(_ => Reconcile(), null, _pollInterval, _pollInterval);
+        // Only runs in AutoPolling mode (B-1).
+        lock (_gate)
+        {
+            ApplyTimerState();
+        }
+    }
+
+    public MidiDetectionMode DetectionMode
+    {
+        get { lock (_gate) { return _mode; } }
+        set
+        {
+            lock (_gate)
+            {
+                if (_mode == value)
+                {
+                    return;
+                }
+
+                _mode = value;
+                if (_started)
+                {
+                    ApplyTimerState();
+                }
+            }
+        }
+    }
+
+    public void Rescan() => Reconcile();
+
+    /// <summary>Starts or stops the polling timer to match the current mode. Call under <see cref="_gate"/>.</summary>
+    private void ApplyTimerState()
+    {
+        if (_mode == MidiDetectionMode.AutoPolling)
+        {
+            _pollTimer ??= new Timer(_ => Reconcile(), null, _pollInterval, _pollInterval);
+        }
+        else
+        {
+            _pollTimer?.Dispose();
+            _pollTimer = null;
+        }
     }
 
     public void Stop()
