@@ -172,6 +172,20 @@ public class ConfigSerializerTests
         Assert.Equal(60, midi.Data1);
         Assert.Equal(100, midi.Data2);
         Assert.True(midi.UseInputValue);
+
+        var macro = Assert.IsType<MacroAction>(RoundTripAction(sig,
+            new MacroAction(new IReadOnlyList<string>[] { new[] { "ctrl", "c" }, new[] { "enter" } }, 50)));
+        Assert.Equal(2, macro.Steps.Count);
+        Assert.Equal(new[] { "ctrl", "c" }, macro.Steps[0]);
+        Assert.Equal(50, macro.StepDelayMs);
+
+        var toggle = Assert.IsType<ToggleAction>(RoundTripAction(sig,
+            new ToggleAction(new[] { "a" }, new[] { "b" }, "loopMIDI", 2, 36)));
+        Assert.Equal(new[] { "a" }, toggle.KeysA);
+        Assert.Equal(new[] { "b" }, toggle.KeysB);
+        Assert.Equal("loopMIDI", toggle.LedDevice);
+        Assert.Equal(2, toggle.LedChannel);
+        Assert.Equal(36, toggle.LedNote);
     }
 
     [Fact]

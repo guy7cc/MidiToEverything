@@ -105,6 +105,8 @@ internal static class ProfileMapper
         OscActionDto o => new OscAction(o.Target, o.Address, o.Args),
         ObsActionDto ob => new ObsAction(ob.Op, ob.Arg),
         MidiOutActionDto mo => new MidiOutAction(mo.Device, mo.Kind, mo.Channel, mo.Data1, mo.Data2, mo.UseInputValue),
+        MacroActionDto ma => new MacroAction(ma.Steps.Select(s => (IReadOnlyList<string>)s.ToArray()).ToArray(), ma.StepDelayMs),
+        ToggleActionDto tg => new ToggleAction(tg.KeysA.ToArray(), tg.KeysB.ToArray(), tg.LedDevice, tg.LedChannel, tg.LedNote),
         NoneActionDto => NoneAction.Instance,
         _ => throw new NotSupportedException($"Unknown action DTO: {a.GetType().Name}"),
     };
@@ -207,6 +209,8 @@ internal static class ProfileMapper
         OscAction o => new OscActionDto { Target = o.Target, Address = o.Address, Args = o.Args },
         ObsAction ob => new ObsActionDto { Op = ob.Op, Arg = ob.Arg },
         MidiOutAction mo => new MidiOutActionDto { Device = mo.Device, Kind = mo.Kind, Channel = mo.Channel, Data1 = mo.Data1, Data2 = mo.Data2, UseInputValue = mo.UseInputValue },
+        MacroAction ma => new MacroActionDto { Steps = ma.Steps.Select(s => s.ToList()).ToList(), StepDelayMs = ma.StepDelayMs },
+        ToggleAction tg => new ToggleActionDto { KeysA = tg.KeysA.ToList(), KeysB = tg.KeysB.ToList(), LedDevice = tg.LedDevice, LedChannel = tg.LedChannel, LedNote = tg.LedNote },
         NoneAction => new NoneActionDto(),
         _ => throw new NotSupportedException($"Unknown action: {a.GetType().Name}"),
     };

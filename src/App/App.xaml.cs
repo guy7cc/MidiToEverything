@@ -129,7 +129,11 @@ public partial class App : Application
                 .Append(new Core.Application.Handlers.ObsActionHandler(
                     sp.GetRequiredService<IObsClient>()))
                 .Append(new Core.Application.Handlers.MidiOutActionHandler(
-                    sp.GetRequiredService<IMidiOutput>()))));
+                    sp.GetRequiredService<IMidiOutput>()))
+                .Append(new Core.Application.Handlers.MacroActionHandler(
+                    sp.GetRequiredService<IInputSink>()))
+                .Append(new Core.Application.Handlers.ToggleActionHandler(
+                    sp.GetRequiredService<IInputSink>(), sp.GetRequiredService<IMidiOutput>()))));
         services.AddSingleton(sp => new MidiEventPipeline(
             sp.GetRequiredService<IMidiSource>(),
             sp.GetRequiredService<IMappingContext>(),

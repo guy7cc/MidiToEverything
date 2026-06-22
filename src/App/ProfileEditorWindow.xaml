@@ -103,6 +103,41 @@
             </StackPanel>
         </DataTemplate>
 
+        <!-- Macro: newline-separated key chords + step delay -->
+        <DataTemplate x:Key="MacroDetailTemplate">
+            <StackPanel>
+                <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True" TextWrapping="NoWrap" MinLines="2" MaxLines="5"
+                         VerticalScrollBarVisibility="Auto" FontFamily="Consolas"
+                         ToolTip="1行に1つのキー（例: ctrl+c / ctrl+v / enter）" />
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                    <TextBlock Text="ステップ間ディレイ(ms):" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" Margin="0,0,6,0" />
+                    <TextBox Width="70" Text="{Binding MacroDelay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- Toggle: chord A / chord B + optional LED feedback -->
+        <DataTemplate x:Key="ToggleDetailTemplate">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Margin="0,0,4,0"
+                             Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="キーA（奇数回。例 ctrl+r）" />
+                    <TextBox Grid.Column="1" Margin="4,0,0,0"
+                             Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="キーB（偶数回。空ならAと同じ）" />
+                </Grid>
+                <TextBox Margin="0,4,0,0" Text="{Binding ToggleLed, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="LEDフィードバック（任意）: 出力デバイス名 ノート番号 [ch]（例 loopMIDI 36 1）" />
+            </StackPanel>
+        </DataTemplate>
+
         <!-- MidiOut: output device + message spec -->
         <DataTemplate x:Key="MidiOutDetailTemplate">
             <StackPanel>
@@ -499,6 +534,12 @@
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="MidiOut">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource MidiOutDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="Macro">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource MacroDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="Toggle">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ToggleDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="None">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource NoneDetailTemplate}" />
