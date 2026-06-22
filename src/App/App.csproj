@@ -6,7 +6,11 @@
     <RootNamespace>MidiToEverything.App</RootNamespace>
     <AssemblyName>MidiToEverything</AssemblyName>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- WPF reads DPI awareness from the manifest; WinForms is used only for the tray icon.
+         Suppress the WinForms-specific "configure DPI via API" warning. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
