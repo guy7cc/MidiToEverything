@@ -246,22 +246,31 @@
                                 <ControlTemplate TargetType="ToggleButton">
                                     <Border Background="{StaticResource InputBgBrush}" CornerRadius="4"
                                             BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="22" />
-                                            </Grid.ColumnDefinitions>
-                                            <ContentPresenter Grid.Column="0" Margin="8,0" VerticalAlignment="Center"
-                                                              HorizontalAlignment="Left"
-                                                              Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
-                                                              ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}" />
-                                            <Path Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                  Data="M0,0 L8,0 L4,5 Z" Fill="{StaticResource TextDimBrush}" />
-                                        </Grid>
+                                        <Path HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                                              Data="M0,0 L8,0 L4,5 Z" Fill="{StaticResource TextDimBrush}" />
                                     </Border>
                                 </ControlTemplate>
                             </ToggleButton.Template>
                         </ToggleButton>
+
+                        <!-- Non-editable: shows the selected item -->
+                        <ContentPresenter x:Name="contentSite" IsHitTestVisible="False"
+                                          Margin="8,0,24,0" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" />
+
+                        <!-- Editable: free text + candidate list -->
+                        <TextBox x:Name="PART_EditableTextBox" Style="{x:Null}" Visibility="Hidden"
+                                 Margin="6,0,24,0" VerticalAlignment="Center"
+                                 Foreground="{StaticResource TextBrush}" CaretBrush="{StaticResource TextBrush}"
+                                 Background="Transparent" IsReadOnly="{TemplateBinding IsReadOnly}">
+                            <TextBox.Template>
+                                <ControlTemplate TargetType="TextBox">
+                                    <ScrollViewer x:Name="PART_ContentHost" />
+                                </ControlTemplate>
+                            </TextBox.Template>
+                        </TextBox>
+
                         <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True"
                                Focusable="False" PopupAnimation="Slide">
                             <Border Background="{StaticResource InputBgBrush}" BorderBrush="{StaticResource BorderBrush}"
@@ -273,6 +282,12 @@
                             </Border>
                         </Popup>
                     </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEditable" Value="True">
+                            <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="contentSite" Property="Visibility" Value="Hidden" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
