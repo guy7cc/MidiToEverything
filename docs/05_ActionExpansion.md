@@ -213,5 +213,10 @@ MIDIメッセージ → MidiEventPipeline → (Profile解決/Trigger評価)
   - 画面輝度（value-driven, WMI。内蔵ディスプレイ対応）。
   - 補足: 夜間モード/集中モードは安定 API が無いため未実装（`ms-settings:` を Launch で開く運用を推奨）。
     外部モニタ輝度（DDC/CI）も未対応。
-- **次は Phase 3**: OBS（obs-websocket）/ メディア(SMTC) / HTTP・Webhook / OSC / MIDI 出力。
+- **M-D Phase 3**（進行中）:
+  - HTTP / Webhook（URL＋メソッド＋本文）✅ — Home Assistant / IFTTT / 自作API。実機 localhost で検証。
+  - OSC 送信（UDP, host:port＋アドレス＋自動型付け引数）✅ — 照明/VJ/AV。実機 UDP で検証。
+  - OBS（obs-websocket）⏳ — 接続設定(host/port/password)＋常駐クライアント＋認証が要る独立スライス。
+  - MIDI 出力 ⏳ — 出力デバイス選択が要る（仮想MIDIポート向け）。
+  - メディア(SMTC) — Phase 1 の MediaKey（再生/停止/次/前/ミュート/音量）で実質カバー済みのため見送り。
 - **Phase 4**: LED フィードバック（双方向）/ マクロ・状態 / プラグイン SDK。

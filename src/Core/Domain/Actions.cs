@@ -105,6 +105,12 @@ public sealed record WindowsToggleAction(WindowsSetting Setting = WindowsSetting
 /// <summary>Set display brightness from the input value (Absolute fader → 0..100%, Phase 2).</summary>
 public sealed record BrightnessAction : InputAction;
 
+/// <summary>Send an HTTP request / webhook (docs/05 §5, Phase 3).</summary>
+public sealed record HttpAction(string Url = "", string Method = "GET", string? Body = null) : InputAction;
+
+/// <summary>Send an OSC message over UDP (docs/05 §5, Phase 3). Target is "host:port".</summary>
+public sealed record OscAction(string Target = "", string Address = "", string Args = "") : InputAction;
+
 /// <summary>
 /// Explicit "do nothing" that also blocks fallback to the base profile (FR-6.4).
 /// Its presence as the sole action marks a binding as a block.

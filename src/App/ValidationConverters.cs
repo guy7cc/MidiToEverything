@@ -71,6 +71,8 @@ public static class SignalValidation
             EditableActionKind.VirtualDesktop => lower is "next" or "previous",
             EditableActionKind.WindowsToggle => lower is "darkmode",
             EditableActionKind.Brightness => true, // value-driven, no detail
+            EditableActionKind.Http => d.Length > 0,  // URL required
+            EditableActionKind.Osc => d.StartsWith('/'), // OSC address starts with '/'
             EditableActionKind.SwitchProfile => d.Length > 0,
             EditableActionKind.None => true,
             _ => true,

@@ -76,6 +76,60 @@
                        VerticalAlignment="Center" Margin="2,6,0,0" />
         </DataTemplate>
 
+        <!-- Http: URL + method + body -->
+        <DataTemplate x:Key="HttpDetailTemplate">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0" Width="110" Margin="0,0,6,0"
+                              ItemsSource="{Binding DataContext.HttpMethods, RelativeSource={RelativeSource AncestorType=Window}}"
+                              SelectedItem="{Binding HttpMethod}" ToolTip="HTTPメソッド" />
+                    <TextBox Grid.Column="1" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="URL（http(s):// または http://localhost:8123/... など）">
+                        <TextBox.Foreground>
+                            <MultiBinding Converter="{StaticResource DetailValidBrush}">
+                                <Binding Path="Detail" />
+                                <Binding Path="ActionKind" />
+                            </MultiBinding>
+                        </TextBox.Foreground>
+                    </TextBox>
+                </Grid>
+                <TextBox Margin="0,4,0,0" Text="{Binding HttpBody, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True" TextWrapping="Wrap" MinLines="1" MaxLines="4"
+                         VerticalScrollBarVisibility="Auto" ToolTip="本文（任意、JSON 等。POST/PUT 時）" />
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- Osc: address + target host:port + args -->
+        <DataTemplate x:Key="OscDetailTemplate">
+            <StackPanel>
+                <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="OSCアドレス（例 /1/fader1）">
+                    <TextBox.Foreground>
+                        <MultiBinding Converter="{StaticResource DetailValidBrush}">
+                            <Binding Path="Detail" />
+                            <Binding Path="ActionKind" />
+                        </MultiBinding>
+                    </TextBox.Foreground>
+                </TextBox>
+                <Grid Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Margin="0,0,4,0"
+                             Text="{Binding OscTarget, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="宛先 host:port（例 127.0.0.1:9000）" />
+                    <TextBox Grid.Column="1" Margin="4,0,0,0"
+                             Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="引数（空白区切り。整数/小数/文字列を自動判別）" />
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+
         <!-- TypeText: a free-text snippet (newlines allowed) -->
         <DataTemplate x:Key="TypeTextDetailTemplate">
             <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
@@ -407,6 +461,12 @@
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Brightness">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource BrightnessDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="Http">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource HttpDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="Osc">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource OscDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="None">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource NoneDetailTemplate}" />

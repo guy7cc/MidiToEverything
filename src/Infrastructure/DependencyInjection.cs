@@ -37,6 +37,12 @@ public static class DependencyInjection
         services.AddSingleton<IDisplayBrightness>(sp =>
             new Display.WmiDisplayBrightness(sp.GetService<ILogger<Display.WmiDisplayBrightness>>()));
 
+        // Network senders (Phase 3 actions): HTTP/webhook + OSC over UDP.
+        services.AddSingleton<IHttpSender>(sp =>
+            new Net.HttpSender(sp.GetService<ILogger<Net.HttpSender>>()));
+        services.AddSingleton<IOscSender>(sp =>
+            new Net.OscSender(sp.GetService<ILogger<Net.OscSender>>()));
+
         // Input emission (SendInput) behind an emergency-stop gate.
         services.AddSingleton<Win32InputSink>(sp =>
             new Win32InputSink(sp.GetService<ILogger<Win32InputSink>>()));

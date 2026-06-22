@@ -59,6 +59,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     public Array TriggerModes { get; } = Enum.GetValues<TriggerMode>();
     public Array ActionKinds { get; } = Enum.GetValues<EditableActionKind>();
     public string[] UiaVerbs { get; } = { "invoke", "toggle", "setvalue" };
+    public string[] HttpMethods { get; } = { "GET", "POST", "PUT", "DELETE", "PATCH" };
 
     [ObservableProperty] private EditableProfile? _selectedProfile;
     [ObservableProperty] private EditableBinding? _selectedBinding;

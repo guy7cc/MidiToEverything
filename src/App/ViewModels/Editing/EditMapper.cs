@@ -65,6 +65,16 @@ internal static class EditMapper
             editable.UiaVerb = u.Verb.ToString().ToLowerInvariant();
             editable.UiaValue = u.Value ?? "";
         }
+        else if (action is HttpAction h)
+        {
+            editable.HttpMethod = h.Method;
+            editable.HttpBody = h.Body ?? "";
+        }
+        else if (action is OscAction o)
+        {
+            editable.OscTarget = o.Target;
+            editable.Arguments = o.Args;
+        }
 
         return editable;
     }
@@ -84,6 +94,8 @@ internal static class EditMapper
         VirtualDesktopAction vd => (EditableActionKind.VirtualDesktop, vd.Op == DesktopOp.Previous ? "previous" : "next"),
         WindowsToggleAction wt => (EditableActionKind.WindowsToggle, wt.Setting.ToString().ToLowerInvariant()),
         BrightnessAction => (EditableActionKind.Brightness, ""),
+        HttpAction h => (EditableActionKind.Http, h.Url),
+        OscAction o => (EditableActionKind.Osc, o.Address),
         SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
         _ => (EditableActionKind.None, ""),
     };
@@ -185,6 +197,8 @@ internal static class EditMapper
                 detail.Trim().ToLowerInvariant() is "previous" or "prev" ? DesktopOp.Previous : DesktopOp.Next),
             EditableActionKind.WindowsToggle => new WindowsToggleAction(WindowsSetting.DarkMode),
             EditableActionKind.Brightness => new BrightnessAction(),
+            EditableActionKind.Http => new HttpAction(detail, b.HttpMethod, NullIfBlank(b.HttpBody)),
+            EditableActionKind.Osc => new OscAction(b.OscTarget.Trim(), detail, b.Arguments.Trim()),
             EditableActionKind.SwitchProfile => ParseSwitch(detail),
             _ => NoneAction.Instance,
         };
