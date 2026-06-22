@@ -22,6 +22,8 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     private readonly ProfileManager _manager;
     private readonly IMidiSource _source;
     private volatile MidiMessage? _lastMessage;
+    private EditableBinding? _editingOriginal; // the list binding being edited (null = creating new)
+    private bool _loadingDraft;                // guards programmatic SelectedBinding changes
 
     public ProfileEditorViewModel(IProfileRepository repository, ProfileManager manager, IMidiSource source)
     {
@@ -50,6 +52,31 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] private EditableProfile? _selectedProfile;
     [ObservableProperty] private EditableBinding? _selectedBinding;
+
+    /// <summary>The binding currently being edited (a draft). Committed to the list on "save".</summary>
+    [ObservableProperty] private EditableBinding? _draftBinding;
+
+    /// <summary>True while a binding draft is open in the editor.</summary>
+    public bool HasDraft => DraftBinding is not null;
+
+    partial void OnDraftBindingChanged(EditableBinding? value) => OnPropertyChanged(nameof(HasDraft));
+
+    // Switching profiles abandons any open draft (it belonged to the previous profile).
+    partial void OnSelectedProfileChanged(EditableProfile? value) => DiscardDraft();
+
+    // Clicking a binding in the list opens a working copy to edit (changes apply on commit).
+    partial void OnSelectedBindingChanged(EditableBinding? value)
+    {
+        if (_loadingDraft || value is null)
+        {
+            return;
+        }
+
+        _editingOriginal = value;
+        DraftBinding = value.Clone();
+        SetLearnStatus("一覧のバインディングを編集中。設定後に「バインディングを保存」で確定します。", isError: false);
+    }
+
     [ObservableProperty] private RunningProcess? _selectedRunningProcess;
     [ObservableProperty] private string _processNameInput = "";
     [ObservableProperty] private string _matchStatus = "";
@@ -153,32 +180,78 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>Start a new binding draft (not added to the list until "save").</summary>
     [RelayCommand]
     private void AddBinding()
     {
         if (SelectedProfile is null)
         {
+            SetLearnStatus("先にプロファイルを選択してください。", isError: true);
             return;
         }
 
-        var binding = new EditableBinding();
-        if (_lastMessage is not null)
-        {
-            ApplyLearn(binding, _lastMessage); // seed from the last received signal if any
-        }
-
-        SelectedProfile.Bindings.Add(binding);
-        SelectedBinding = binding;
+        SetSelectedBindingGuarded(null); // creating a new one — clear list selection
+        _editingOriginal = null;
+        DraftBinding = new EditableBinding();
+        SetLearnStatus("新規バインディングを編集中。設定後に「バインディングを保存」で確定します。", isError: false);
     }
 
+    /// <summary>Remove the selected (committed) binding and close the editor.</summary>
     [RelayCommand]
     private void RemoveBinding()
     {
         if (SelectedProfile is not null && SelectedBinding is not null)
         {
             SelectedProfile.Bindings.Remove(SelectedBinding);
-            SelectedBinding = null;
         }
+
+        DiscardDraft();
+    }
+
+    /// <summary>Commit the draft into the profile's binding list (add new, or update the edited one).</summary>
+    [RelayCommand]
+    private void CommitBinding()
+    {
+        if (DraftBinding is null || SelectedProfile is null)
+        {
+            SetLearnStatus("編集中のバインディングがありません。「追加」するか一覧から選んでください。", isError: true);
+            return;
+        }
+
+        if (_editingOriginal is not null)
+        {
+            _editingOriginal.CopyValuesFrom(DraftBinding);
+            SetSelectedBindingGuarded(_editingOriginal);
+            SetLearnStatus("バインディングを更新しました。", isError: false);
+        }
+        else
+        {
+            var committed = DraftBinding.Clone();
+            SelectedProfile.Bindings.Add(committed);
+            _editingOriginal = committed;
+            DraftBinding = committed.Clone();
+            SetSelectedBindingGuarded(committed);
+            SetLearnStatus("バインディングを追加しました。", isError: false);
+        }
+    }
+
+    /// <summary>Abandon the current draft without committing.</summary>
+    [RelayCommand]
+    private void DiscardBinding() => DiscardDraft();
+
+    private void DiscardDraft()
+    {
+        _editingOriginal = null;
+        DraftBinding = null;
+        SetSelectedBindingGuarded(null);
+        SetLearnStatus("", isError: false);
+    }
+
+    private void SetSelectedBindingGuarded(EditableBinding? value)
+    {
+        _loadingDraft = true;
+        SelectedBinding = value;
+        _loadingDraft = false;
     }
 
     /// <summary>
@@ -195,9 +268,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var target = SelectedBinding;
-        var created = false;
-        if (target is null)
+        if (DraftBinding is null)
         {
             if (SelectedProfile is null)
             {
@@ -205,16 +276,16 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            target = new EditableBinding();
-            SelectedProfile.Bindings.Add(target);
-            SelectedBinding = target;
-            created = true;
+            // No draft open yet — start a new one so "learn" always does something.
+            SetSelectedBindingGuarded(null);
+            _editingOriginal = null;
+            DraftBinding = new EditableBinding();
         }
 
-        ApplyLearn(target, message);
+        ApplyLearn(DraftBinding, message);
 
-        var desc = $"{target.Signal.Type} 番号{message.Number?.ToString() ?? "-"} ch{message.Channel}";
-        SetLearnStatus(created ? $"新規バインディングに取り込みました（{desc}）。" : $"取り込みました（{desc}）。", isError: false);
+        var desc = $"{DraftBinding.Signal.Type} 番号{message.Number?.ToString() ?? "-"} ch{message.Channel}";
+        SetLearnStatus($"取り込みました（{desc}）。「バインディングを保存」で確定します。", isError: false);
     }
 
     private void SetLearnStatus(string message, bool isError)

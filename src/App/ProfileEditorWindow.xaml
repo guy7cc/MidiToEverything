@@ -170,20 +170,32 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <!-- Binding editor -->
-                        <Border Background="{StaticResource InputBgBrush}" CornerRadius="6" Padding="12" Margin="0,10,0,0"
-                                DataContext="{Binding DataContext.SelectedBinding, RelativeSource={RelativeSource AncestorType=Window}}">
-                            <StackPanel>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="シグナル" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                    <Button Grid.Column="1" Content="最後の入力を取込"
-                                            ToolTip="直近に受信した MIDI 信号を、このバインディングの種別/番号/ch/デバイスに取り込みます（未選択なら新規作成）"
-                                            Command="{Binding DataContext.LearnCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                                </Grid>
+                        <!-- Binding editor (edits a draft; committed to the list with "保存") -->
+                        <Border Background="{StaticResource InputBgBrush}" CornerRadius="6" Padding="12" Margin="0,10,0,0">
+                            <Grid>
+                                <TextBlock Text="バインディングを「追加」するか、一覧から選択すると、ここで編集できます。"
+                                           Foreground="{StaticResource TextFaintBrush}" FontSize="12" TextWrapping="Wrap"
+                                           Visibility="{Binding DataContext.HasDraft, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBoolToVisibility}}" />
+                                <StackPanel DataContext="{Binding DataContext.DraftBinding, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            Visibility="{Binding DataContext.HasDraft, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="シグナル (編集中)" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                            <Button Content="最後の入力を取込"
+                                                    ToolTip="直近に受信した MIDI 信号を、編集中のバインディングの種別/番号/ch/デバイスに取り込みます"
+                                                    Command="{Binding DataContext.LearnCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                            <Button Content="バインディングを保存" Style="{StaticResource AccentButton}" Margin="0,0,6,0"
+                                                    ToolTip="編集中の内容を一覧に確定します（ファイルへの保存は「保存して適用」）"
+                                                    Command="{Binding DataContext.CommitBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                            <Button Content="破棄"
+                                                    ToolTip="編集中の内容を破棄します（一覧には反映しません）"
+                                                    Command="{Binding DataContext.DiscardBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                        </StackPanel>
+                                    </Grid>
                                 <TextBlock Text="{Binding DataContext.LastSignalText, RelativeSource={RelativeSource AncestorType=Window}}"
                                            Foreground="#FF7A9AC8" FontSize="11" Margin="0,2,0,0" />
                                 <TextBlock Text="{Binding DataContext.LearnStatus, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -274,9 +286,10 @@
                                     </StackPanel>
                                 </Border>
 
-                                <TextBlock Text="ラベル (任意)" Margin="0,8,0,0" />
-                                <TextBox Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
+                                    <TextBlock Text="ラベル (任意)" Margin="0,8,0,0" />
+                                    <TextBox Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                            </Grid>
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
