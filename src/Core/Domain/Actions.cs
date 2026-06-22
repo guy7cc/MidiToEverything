@@ -111,6 +111,9 @@ public sealed record HttpAction(string Url = "", string Method = "GET", string? 
 /// <summary>Send an OSC message over UDP (docs/05 §5, Phase 3). Target is "host:port".</summary>
 public sealed record OscAction(string Target = "", string Address = "", string Args = "") : InputAction;
 
+/// <summary>MIDI message kinds emitted by a MIDI-output action (docs/05 §5, Phase 3).</summary>
+public enum MidiOutKind { NoteOn, NoteOff, ControlChange, ProgramChange }
+
 /// <summary>OBS WebSocket operations (docs/05 §5, Phase 3).</summary>
 public enum ObsOp
 {
@@ -123,6 +126,19 @@ public enum ObsOp
 /// name (SceneSwitch) or input name (ToggleMute); unused by the others.
 /// </summary>
 public sealed record ObsAction(ObsOp Op = ObsOp.ToggleRecord, string? Arg = null) : InputAction;
+
+/// <summary>
+/// Send a MIDI message to an output device (docs/05 §5, Phase 3; e.g. a virtual MIDI port).
+/// <see cref="Device"/> is a name regex. When <see cref="UseInputValue"/>, the input value drives
+/// <c>Data2</c> (0..127) — useful for fader → CC remapping.
+/// </summary>
+public sealed record MidiOutAction(
+    string Device = "",
+    MidiOutKind Kind = MidiOutKind.ControlChange,
+    int Channel = 1,
+    int Data1 = 0,
+    int Data2 = 0,
+    bool UseInputValue = false) : InputAction;
 
 /// <summary>
 /// Explicit "do nothing" that also blocks fallback to the base profile (FR-6.4).

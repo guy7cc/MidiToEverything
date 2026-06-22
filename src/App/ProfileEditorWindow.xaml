@@ -103,6 +103,17 @@
             </StackPanel>
         </DataTemplate>
 
+        <!-- MidiOut: output device + message spec -->
+        <DataTemplate x:Key="MidiOutDetailTemplate">
+            <StackPanel>
+                <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="出力デバイス名の正規表現（例 ^loopMIDI）"
+                         Foreground="{Binding Detail, Converter={StaticResource DeviceValidBrush}}" />
+                <TextBox Margin="0,4,0,0" Text="{Binding MidiOutSpec, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="メッセージ: 種別 ch 番号 値（cc 1 7 64 / note 1 60 100 / cc 1 7 value で入力値連動 / pc 1 5）" />
+            </StackPanel>
+        </DataTemplate>
+
         <!-- Obs: operation + argument (scene/input name) -->
         <DataTemplate x:Key="ObsDetailTemplate">
             <Grid>
@@ -485,6 +496,9 @@
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Obs">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource ObsDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="MidiOut">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource MidiOutDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="None">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource NoneDetailTemplate}" />
