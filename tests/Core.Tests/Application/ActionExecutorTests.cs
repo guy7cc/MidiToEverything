@@ -358,4 +358,36 @@ public class ActionExecutorTests
         public void Send(string devicePattern, MidiOutKind kind, int channel, int data1, int data2)
             => Calls.Add((devicePattern, kind, channel, data1, data2));
     }
+
+    [Fact]
+    public async Task Macro_RunsStepsInOrder()
+    {
+        var executor = new ActionExecutor(new IActionHandler[] { new MacroActionHandler(_sink) });
+        var steps = new IReadOnlyList<string>[] { new[] { "ctrl", "c" }, new[] { "ctrl", "v" } };
+
+        executor.Execute(With(new MacroAction(steps, 0)), new TriggerResult(TriggerPhase.Press, 0), Msg);
+        await _sink.WaitForCountAsync(2, TimeSpan.FromSeconds(2));
+
+        Assert.Collection(_sink.Calls,
+            c => Assert.Equal(new[] { "ctrl", "c" }, Assert.IsType<KeyTapCall>(c).Keys),
+            c => Assert.Equal(new[] { "ctrl", "v" }, Assert.IsType<KeyTapCall>(c).Keys));
+    }
+
+    [Fact]
+    public void Toggle_AlternatesKeysAndDrivesLed()
+    {
+        var midi = new RecordingMidiOut();
+        var executor = new ActionExecutor(new IActionHandler[] { new ToggleActionHandler(_sink, midi) });
+        var action = new ToggleAction(new[] { "a" }, new[] { "b" }, "^loop", 1, 36);
+
+        executor.Execute(With(action), new TriggerResult(TriggerPhase.Press, 0), Msg);
+        executor.Execute(With(action), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Collection(_sink.Calls,
+            c => Assert.Equal(new[] { "a" }, Assert.IsType<KeyTapCall>(c).Keys),
+            c => Assert.Equal(new[] { "b" }, Assert.IsType<KeyTapCall>(c).Keys));
+        Assert.Collection(midi.Calls,
+            c => Assert.Equal(127, c.Data2), // first press: state A, LED lit
+            c => Assert.Equal(0, c.Data2));  // second press: state B, LED off
+    }
 }

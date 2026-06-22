@@ -75,6 +75,8 @@ public static class SignalValidation
             EditableActionKind.Osc => d.StartsWith('/'), // OSC address starts with '/'
             EditableActionKind.Obs => true, // arg optional (depends on the op)
             EditableActionKind.MidiOut => d.Length > 0, // output device required
+            EditableActionKind.Macro => d.Length > 0,   // at least one chord
+            EditableActionKind.Toggle => d.Length > 0,  // chord A required
             EditableActionKind.SwitchProfile => d.Length > 0,
             EditableActionKind.None => true,
             _ => true,

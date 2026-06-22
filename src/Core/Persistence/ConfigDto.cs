@@ -116,6 +116,8 @@ internal sealed class TriggerDto
 [JsonDerivedType(typeof(OscActionDto), "osc")]
 [JsonDerivedType(typeof(ObsActionDto), "obs")]
 [JsonDerivedType(typeof(MidiOutActionDto), "midiOut")]
+[JsonDerivedType(typeof(MacroActionDto), "macro")]
+[JsonDerivedType(typeof(ToggleActionDto), "toggle")]
 [JsonDerivedType(typeof(NoneActionDto), "none")]
 internal abstract class ActionDto;
 
@@ -228,6 +230,21 @@ internal sealed class MidiOutActionDto : ActionDto
     public int Data1 { get; set; }
     public int Data2 { get; set; }
     public bool UseInputValue { get; set; }
+}
+
+internal sealed class MacroActionDto : ActionDto
+{
+    public List<List<string>> Steps { get; set; } = new();
+    public int StepDelayMs { get; set; } = 30;
+}
+
+internal sealed class ToggleActionDto : ActionDto
+{
+    public List<string> KeysA { get; set; } = new();
+    public List<string> KeysB { get; set; } = new();
+    public string? LedDevice { get; set; }
+    public int LedChannel { get; set; } = 1;
+    public int LedNote { get; set; }
 }
 
 internal sealed class NoneActionDto : ActionDto;

@@ -83,6 +83,15 @@ internal static class EditMapper
         {
             editable.MidiOutSpec = FormatMidiOut(mo);
         }
+        else if (action is MacroAction mac)
+        {
+            editable.MacroDelay = mac.StepDelayMs.ToString();
+        }
+        else if (action is ToggleAction tg)
+        {
+            editable.Arguments = string.Join("+", tg.KeysB);
+            editable.ToggleLed = tg.LedDevice is null ? "" : $"{tg.LedDevice} {tg.LedNote} {tg.LedChannel}";
+        }
 
         return editable;
     }
@@ -106,6 +115,8 @@ internal static class EditMapper
         OscAction o => (EditableActionKind.Osc, o.Address),
         ObsAction ob => (EditableActionKind.Obs, ob.Arg ?? ""),
         MidiOutAction mo => (EditableActionKind.MidiOut, mo.Device),
+        MacroAction mac => (EditableActionKind.Macro, string.Join("\n", mac.Steps.Select(s => string.Join("+", s)))),
+        ToggleAction tg => (EditableActionKind.Toggle, string.Join("+", tg.KeysA)),
         SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
         _ => (EditableActionKind.None, ""),
     };
@@ -211,6 +222,8 @@ internal static class EditMapper
             EditableActionKind.Osc => new OscAction(b.OscTarget.Trim(), detail, b.Arguments.Trim()),
             EditableActionKind.Obs => new ObsAction(ParseObsOp(b.ObsOpName), NullIfBlank(detail)),
             EditableActionKind.MidiOut => ParseMidiOut(detail, b.MidiOutSpec),
+            EditableActionKind.Macro => ParseMacro(b.Detail, b.MacroDelay),
+            EditableActionKind.Toggle => ParseToggle(detail, b.Arguments, b.ToggleLed),
             EditableActionKind.SwitchProfile => ParseSwitch(detail),
             _ => NoneAction.Instance,
         };
@@ -234,6 +247,41 @@ internal static class EditMapper
 
     public static ObsOp ParseObsOp(string name) =>
         Enum.TryParse<ObsOp>(name.Trim(), ignoreCase: true, out var op) ? op : ObsOp.ToggleRecord;
+
+    /// <summary>Parse newline-separated key chords + a delay into a macro action.</summary>
+    public static MacroAction ParseMacro(string chordsText, string delayText)
+    {
+        var steps = chordsText
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(line => (IReadOnlyList<string>)SplitKeys(line))
+            .Where(chord => chord.Count > 0)
+            .ToArray();
+        var delay = int.TryParse(delayText.Trim(), out var d) ? Math.Max(0, d) : 30;
+        return new MacroAction(steps, delay);
+    }
+
+    /// <summary>Parse chord A + chord B + an optional "device note [ch]" LED spec into a toggle.</summary>
+    public static ToggleAction ParseToggle(string chordA, string chordB, string ledSpec)
+    {
+        var keysA = SplitKeys(chordA);
+        var keysB = string.IsNullOrWhiteSpace(chordB) ? keysA : SplitKeys(chordB);
+
+        string? device = null;
+        var note = 0;
+        var channel = 1;
+        var led = ledSpec.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (led.Length >= 2)
+        {
+            device = led[0];
+            int.TryParse(led[1], out note);
+            if (led.Length >= 3)
+            {
+                int.TryParse(led[2], out channel);
+            }
+        }
+
+        return new ToggleAction(keysA, keysB, device, channel == 0 ? 1 : channel, note);
+    }
 
     /// <summary>Display a MIDI-out action as "kind ch data1 data2" (data2 = "value" when input-driven).</summary>
     public static string FormatMidiOut(MidiOutAction m)

@@ -59,6 +59,8 @@ public static class EditorHelp
         EditableActionKind.Osc => "OSCメッセージ送信(UDP)。詳細=アドレス(例 /1/fader1)、宛先 host:port と引数は下の欄",
         EditableActionKind.Obs => "OBSを制御(obs-websocket)。操作を選択。sceneswitch=シーン名 / togglemute=入力名 を詳細に。接続はメイン画面のOBS設定",
         EditableActionKind.MidiOut => "MIDIメッセージを出力デバイスへ送信（仮想ポート向け）。詳細=出力デバイス名(正規表現)、メッセージは下の欄",
+        EditableActionKind.Macro => "複数のキー入力を順番に実行。1行=1チョード（例 ctrl+c）。ステップ間ディレイ(ms)は下の欄",
+        EditableActionKind.Toggle => "押すたびにキーAとキーBを交互に実行。LED欄に「デバイス 番号 [ch]」でコントローラLEDに状態を反映",
         EditableActionKind.SwitchProfile => "プロファイル切替。詳細に next / prev / toggle / プロファイルID",
         EditableActionKind.None => "何もしない（基本プロファイルの同じ割当を無効化＝ブロック）",
         _ => "",

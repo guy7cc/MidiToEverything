@@ -9,7 +9,8 @@ public enum EditableActionKind
 {
     Key, MouseClick, Scroll, CursorMove, WindowControl,
     MediaKey, TypeText, Launch, SetVolume, Uia,
-    VirtualDesktop, WindowsToggle, Brightness, Http, Osc, Obs, MidiOut, SwitchProfile, None,
+    VirtualDesktop, WindowsToggle, Brightness, Http, Osc, Obs, MidiOut,
+    Macro, Toggle, SwitchProfile, None,
 }
 
 /// <summary>Editable view of a <see cref="Signal"/> (docs/03_ProfileSchema.md §1).</summary>
@@ -69,6 +70,12 @@ public partial class EditableBinding : ObservableObject
     /// <summary>MidiOut action: message spec "kind ch data1 data2" (e.g. "cc 1 7 64").</summary>
     [ObservableProperty] private string _midiOutSpec = "cc 1 7 64";
 
+    /// <summary>Macro action: delay between steps (ms).</summary>
+    [ObservableProperty] private string _macroDelay = "30";
+
+    /// <summary>Toggle action: LED feedback spec "device note [ch]" (optional).</summary>
+    [ObservableProperty] private string _toggleLed = "";
+
     [ObservableProperty] private string _label = "";
 
     /// <summary>A deep copy, used as the editable draft so changes only apply on commit.</summary>
@@ -88,6 +95,8 @@ public partial class EditableBinding : ObservableObject
         OscTarget = OscTarget,
         ObsOpName = ObsOpName,
         MidiOutSpec = MidiOutSpec,
+        MacroDelay = MacroDelay,
+        ToggleLed = ToggleLed,
         Label = Label,
     };
 
@@ -108,6 +117,8 @@ public partial class EditableBinding : ObservableObject
         OscTarget = other.OscTarget;
         ObsOpName = other.ObsOpName;
         MidiOutSpec = other.MidiOutSpec;
+        MacroDelay = other.MacroDelay;
+        ToggleLed = other.ToggleLed;
         Label = other.Label;
     }
 }

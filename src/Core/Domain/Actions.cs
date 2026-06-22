@@ -141,6 +141,24 @@ public sealed record MidiOutAction(
     bool UseInputValue = false) : InputAction;
 
 /// <summary>
+/// Run a sequence of key chords with an optional delay between steps (docs/05 §5, Phase 4).
+/// </summary>
+public sealed record MacroAction(
+    IReadOnlyList<IReadOnlyList<string>> Steps,
+    int StepDelayMs = 30) : InputAction;
+
+/// <summary>
+/// Alternate between two key chords on each press, and optionally reflect the state on a
+/// controller LED via MIDI out (docs/05 §5, Phase 4 — toggle state + LED feedback).
+/// </summary>
+public sealed record ToggleAction(
+    IReadOnlyList<string> KeysA,
+    IReadOnlyList<string> KeysB,
+    string? LedDevice = null,
+    int LedChannel = 1,
+    int LedNote = 0) : InputAction;
+
+/// <summary>
 /// Explicit "do nothing" that also blocks fallback to the base profile (FR-6.4).
 /// Its presence as the sole action marks a binding as a block.
 /// </summary>
