@@ -24,10 +24,11 @@ C# / .NET 8 ・ WPF(MVVM) ・ Melanchall.DryWetMIDI ・ Win32 P/Invoke（SetWinE
 | 3 | [docs/03_ProfileSchema.md](docs/03_ProfileSchema.md) | プロファイル設定スキーマ（JSON 例・C# 型） |
 | 4 | [docs/04_Roadmap.md](docs/04_Roadmap.md) | タスク分解・マイルストーン・着手手順 |
 
-## 動作確認（M4: MIDI入力）
-`run-midi-monitor.bat` をダブルクリックすると、MIDI入力モニタ（コンソール）が起動します。
-接続済みデバイスの一覧、抜き差し（ホットプラグ）の検知、Note/CC/Pitch Bend などの
-受信イベントをリアルタイム表示します（要 .NET 8 SDK）。
+## 動作確認（要 .NET 8 SDK）
+- **`run-midi-monitor.bat`**（M4: MIDI入力）— MIDI入力モニタ。デバイス一覧・抜き差し検知・
+  Note/CC/Pitch Bend の受信イベントをリアルタイム表示。
+- **`run-key-test.bat`**（M5: キー送信）— 実機 MIDI を弾くと、最前面のウィンドウに実際にキーが
+  入力される（各ノート→アルファベット1文字）。メモ帳を最前面にして動作を目視確認できる。
 
 ## 既知の制約
 - Windows 専用（初期リリース）。
