@@ -11,9 +11,6 @@ using MidiToEverything.Infrastructure.Input;
 
 namespace MidiToEverything.App.ViewModels;
 
-/// <summary>A selectable UI language (code + native display name).</summary>
-public sealed record LanguageOption(string Code, string Display);
-
 /// <summary>
 /// Main-window view model (docs/02_Architecture.md §3.6). Subscribes to the engine and
 /// marshals updates to the UI thread, batching the high-rate monitor feed on a timer so a
@@ -49,7 +46,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _obsHost = settings.ObsHost;
         _obsPort = settings.ObsPort;
         _obsPassword = settings.ObsPassword;
-        _selectedLanguage = Array.Find(Languages, l => l.Code == Loc.Instance.Language) ?? Languages[0];
+        _selectedLanguage = Languages.FirstOrDefault(l => l.Code == Loc.Instance.Language) ?? Languages.FirstOrDefault();
         Loc.Instance.LanguageChanged += OnLanguageChanged;
         _isAutoDetect = source.DetectionMode == MidiDetectionMode.AutoPolling;
         ApplyState(profiles.State);
@@ -89,16 +86,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public string EmissionLabel => Loc.T(EmissionEnabled ? "main.status.running" : "main.status.stopped");
     public string DetectModeLabel => Loc.T(IsAutoDetect ? "main.detect.auto" : "main.detect.manual");
 
-    /// <summary>Available UI languages (native names; not themselves translated).</summary>
-    public LanguageOption[] Languages { get; } =
-    {
-        new("ja", "日本語"),
-        new("en", "English"),
-    };
+    /// <summary>Available UI languages (discovered from the translation files).</summary>
+    public IReadOnlyList<LanguageOption> Languages => Loc.Instance.Languages;
 
-    [ObservableProperty] private LanguageOption _selectedLanguage;
+    [ObservableProperty] private LanguageOption? _selectedLanguage;
 
-    partial void OnSelectedLanguageChanged(LanguageOption value)
+    partial void OnSelectedLanguageChanged(LanguageOption? value)
     {
         if (value is null || value.Code == Loc.Instance.Language)
         {

@@ -33,6 +33,11 @@
   <ItemGroup>
     <!-- App icon, available as a pack-URI resource for window + tray icons. -->
     <Resource Include="app.ico" />
+    <!-- Per-language translation files (key -> text). Shipped next to the exe and loaded at
+         runtime by Loc; users can edit them or drop in a new strings.<code>.json language. -->
+    <None Update="Resources\Localization\strings.*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

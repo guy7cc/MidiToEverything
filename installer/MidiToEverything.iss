@@ -56,6 +56,8 @@ Name: "{app}\plugins"
 Source: "{#SourceExe}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "..\samples\config.sample.json"; DestDir: "{app}"; Flags: ignoreversion
+; Per-language UI translation files (docs/07). Users can edit or add languages here.
+Source: "..\src\App\Resources\Localization\strings.*.json"; DestDir: "{app}\Resources\Localization"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
