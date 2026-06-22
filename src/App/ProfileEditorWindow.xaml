@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="プロファイル編集" Height="660" Width="940" MinWidth="600" MinHeight="440"
         WindowStyle="None" ResizeMode="CanResize"
-        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}" FontFamily="Segoe UI"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}" Icon="pack://application:,,,/app.ico" FontFamily="Segoe UI"
         WindowStartupLocation="CenterOwner"
         d:DataContext="{d:DesignInstance edit:ProfileEditorViewModel}">
 

@@ -167,11 +167,33 @@ public partial class App : Application
             () => sp.GetRequiredService<ProfileEditorWindow>());
     }
 
+    /// <summary>Load the bundled app icon for the tray (falls back to the system icon).</summary>
+    private static System.Drawing.Icon LoadAppIcon()
+    {
+        try
+        {
+            var info = Application.GetResourceStream(new Uri("pack://application:,,,/app.ico"));
+            if (info?.Stream is { } stream)
+            {
+                using (stream)
+                {
+                    return new System.Drawing.Icon(stream, 32, 32);
+                }
+            }
+        }
+        catch
+        {
+            // fall through to the system icon
+        }
+
+        return SystemIcons.Application;
+    }
+
     private void SetupTray()
     {
         _tray = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = LoadAppIcon(),
             Visible = true,
             Text = AppInfo.Name,
         };

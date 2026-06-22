@@ -4,7 +4,7 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="アクション設定" Height="560" Width="600" MinWidth="460" MinHeight="380"
         WindowStyle="None" ResizeMode="CanResize"
-        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}" FontFamily="Segoe UI"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}" Icon="pack://application:,,,/app.ico" FontFamily="Segoe UI"
         WindowStartupLocation="CenterOwner">
 
     <shell:WindowChrome.WindowChrome>
