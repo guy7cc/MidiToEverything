@@ -136,7 +136,10 @@ resolve(signal, context):
 
 ### 3.3 Infra: MIDI（`IMidiSource`）
 - DryWetMIDI の `InputDevice` をラップ。受信イベントを Domain の `Signal` ＋値へ正規化。
-- `DevicesWatcher` を購読し `DeviceConnected/Disconnected` を発行（FR-1.2）。切断後の同名デバイス再接続で自動再 Attach（FR-1.4）。
+- ホットプラグ検知（FR-1.2）: `DevicesWatcher` は物理 USB MIDI で発火しない環境があるため、
+  **`InputDevice.GetAll()` の定期ポーリング（既定 1s）＋差分リコンサイル**を確実な土台とし、
+  watcher 購読は即応用の補助として併用する。切断後の同名再接続で自動再 Attach（FR-1.4）。
+  → 将来、自動ポーリング ⇔ 手動認識を切り替え可能にする（[04_Roadmap.md](04_Roadmap.md) B-1）。
 - 複数デバイスを `DeviceId` で識別し並行監視（FR-1.3）。
 
 ### 3.4 Infra: OS 連携
