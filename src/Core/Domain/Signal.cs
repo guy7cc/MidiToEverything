@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace MidiToEverything.Core.Domain;
 
 /// <summary>
@@ -10,7 +12,7 @@ public sealed record Signal
     public const string AnyDevice = "*";
     public const string AnyChannel = "any";
 
-    /// <summary>Device identifier, or "*" for any device.</summary>
+    /// <summary>Device-name regex, or "*"/empty for any device (matched case-insensitively).</summary>
     public string Device { get; init; } = AnyDevice;
 
     /// <summary>MIDI channel as "any" or "1".."16".</summary>
@@ -28,8 +30,7 @@ public sealed record Signal
     /// <summary>True when this pattern matches the given concrete message.</summary>
     public bool Matches(MidiMessage message)
     {
-        if (Device != AnyDevice &&
-            !string.Equals(Device, message.Device, StringComparison.OrdinalIgnoreCase))
+        if (!DeviceMatches(message.Device))
         {
             return false;
         }
@@ -70,6 +71,23 @@ public sealed record Signal
             if (Number is not null) score++;
             if (Type != SignalKind.Note) score++; // Note (on+off) is broader than a specific kind
             return score;
+        }
+    }
+
+    private bool DeviceMatches(string deviceName)
+    {
+        if (Device == AnyDevice || string.IsNullOrEmpty(Device))
+        {
+            return true;
+        }
+
+        try
+        {
+            return Regex.IsMatch(deviceName, Device, RegexOptions.IgnoreCase);
+        }
+        catch (ArgumentException)
+        {
+            return false; // invalid regex matches nothing
         }
     }
 

@@ -17,6 +17,10 @@
             <local:TriggerModeHelpConverter x:Key="TriggerModeHelp" />
             <local:ActionKindHelpConverter x:Key="ActionKindHelp" />
             <local:ActionDetailCandidatesConverter x:Key="ActionDetailCandidates" />
+            <local:NumberValidBrushConverter x:Key="NumberValidBrush" />
+            <local:ChannelValidBrushConverter x:Key="ChannelValidBrush" />
+            <local:DeviceValidBrushConverter x:Key="DeviceValidBrush" />
+            <local:DetailValidBrushConverter x:Key="DetailValidBrush" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -262,7 +262,7 @@
                         <!-- Editable: free text + candidate list -->
                         <TextBox x:Name="PART_EditableTextBox" Style="{x:Null}" Visibility="Hidden"
                                  Margin="6,0,24,0" VerticalAlignment="Center"
-                                 Foreground="{StaticResource TextBrush}" CaretBrush="{StaticResource TextBrush}"
+                                 Foreground="{TemplateBinding Foreground}" CaretBrush="{StaticResource TextBrush}"
                                  Background="Transparent" IsReadOnly="{TemplateBinding IsReadOnly}">
                             <TextBox.Template>
                                 <ControlTemplate TargetType="TextBox">

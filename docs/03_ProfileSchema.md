@@ -13,7 +13,7 @@
 
 | フィールド | 型 | 説明 |
 |------|----|----|
-| `device` | string | デバイス識別子（名前ベース。`"*"` で任意デバイス） |
+| `device` | string | デバイス判別の**正規表現**（大文字小文字を無視・部分一致）。`"*"` または空で任意デバイス。例: `"^MPK"` |
 | `channel` | int (1–16) or `"any"` | MIDI チャンネル |
 | `type` | enum | `noteOn` / `noteOff` / `note`（On/Off 両方）/ `cc` / `pitchBend` / `programChange` |
 | `number` | int (0–127) | Note 番号 or CC 番号（pitchBend では省略） |
