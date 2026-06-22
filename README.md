@@ -33,11 +33,14 @@ dotnet run   --project src/App/App.csproj -c Release   # アプリ起動
 ```
 
 ## 配布（self-contained 単一ファイル）
-`publish.bat` をダブルクリック、または:
+ローカルで作る場合は `publish.bat` をダブルクリック、または:
 ```sh
 dotnet publish src/App/App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
 ```
 → `publish/MidiToEverything.exe`（.NET ランタイム不要の単一 exe）。
+
+公開リリースは **GitHub Releases** に自動添付される（バージョンタグの push で CI が生成）。
+リリース手順は [CONTRIBUTING.md](CONTRIBUTING.md) §6。
 
 ## 動作確認用ツール（要 .NET 8 SDK）
 - **`run-midi-monitor.bat`** — MIDI入力モニタ。デバイス一覧・抜き差し検知・Note/CC/Pitch Bend をリアルタイム表示。
