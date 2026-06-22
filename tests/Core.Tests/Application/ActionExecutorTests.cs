@@ -1,4 +1,5 @@
 using MidiToEverything.Core.Application;
+using MidiToEverything.Core.Application.Handlers;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
 using MidiToEverything.Core.Mapping;
@@ -92,5 +93,35 @@ public class ActionExecutorTests
         public int Count { get; private set; }
         public bool CanHandle(InputAction action) => action is MouseClickAction;
         public void Execute(InputAction action, TriggerResult trigger, MidiMessage message) => Count++;
+    }
+
+    [Fact]
+    public void WindowControl_AppliesOpOnPress()
+    {
+        var windows = new RecordingWindowController();
+        var executor = new ActionExecutor(new IActionHandler[] { new WindowControlActionHandler(windows) });
+
+        executor.Execute(With(new WindowControlAction(WindowOp.Maximize)),
+            new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(WindowOp.Maximize, Assert.Single(windows.Ops));
+    }
+
+    [Fact]
+    public void WindowControl_IgnoresRelease()
+    {
+        var windows = new RecordingWindowController();
+        var executor = new ActionExecutor(new IActionHandler[] { new WindowControlActionHandler(windows) });
+
+        executor.Execute(With(new WindowControlAction()),
+            new TriggerResult(TriggerPhase.Release, 0), Msg);
+
+        Assert.Empty(windows.Ops);
+    }
+
+    private sealed class RecordingWindowController : IWindowController
+    {
+        public List<WindowOp> Ops { get; } = new();
+        public void Apply(WindowOp op) => Ops.Add(op);
     }
 }

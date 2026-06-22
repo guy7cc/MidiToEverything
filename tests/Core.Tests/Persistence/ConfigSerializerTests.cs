@@ -97,6 +97,25 @@ public class ConfigSerializerTests
         }
     }
 
+    [Theory]
+    [InlineData(WindowOp.Minimize)]
+    [InlineData(WindowOp.Maximize)]
+    [InlineData(WindowOp.Close)]
+    [InlineData(WindowOp.ToggleTopMost)]
+    public void WindowControlAction_RoundTrips(WindowOp op)
+    {
+        var config = SingleBinding(
+            new Signal { Type = SignalKind.NoteOn, Number = 60 },
+            new WindowControlAction(op));
+
+        var json = ConfigSerializer.Serialize(config);
+        Assert.Contains("\"type\": \"windowControl\"", json);
+
+        var loaded = ConfigSerializer.Deserialize(json);
+        var action = Assert.IsType<WindowControlAction>(loaded.BaseProfile.Bindings[0].Actions[0]);
+        Assert.Equal(op, action.Op);
+    }
+
     [Fact]
     public void ContinuousTrigger_RoundTrips_RangeAndMode()
     {

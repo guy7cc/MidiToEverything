@@ -46,6 +46,7 @@ public static class EditorHelp
         EditableActionKind.MouseClick => "マウスクリック。詳細に left / right / middle（x2 でダブルクリック）",
         EditableActionKind.Scroll => "ホイールスクロール。詳細に vertical / horizontal",
         EditableActionKind.CursorMove => "カーソル移動。詳細に relative（相対）/ absolute（絶対）",
+        EditableActionKind.WindowControl => "最前面ウィンドウを操作。詳細に minimize / maximize / restore / close / topmost",
         EditableActionKind.SwitchProfile => "プロファイル切替。詳細に next / prev / toggle / プロファイルID",
         EditableActionKind.None => "何もしない（基本プロファイルの同じ割当を無効化＝ブロック）",
         _ => "",
@@ -63,6 +64,7 @@ public static class EditorHelp
         EditableActionKind.MouseClick => new[] { "left", "right", "middle", "left x2", "right x2" },
         EditableActionKind.Scroll => new[] { "vertical", "horizontal" },
         EditableActionKind.CursorMove => new[] { "relative", "absolute" },
+        EditableActionKind.WindowControl => new[] { "minimize", "maximize", "restore", "close", "topmost" },
         EditableActionKind.SwitchProfile => new[] { "next", "prev", "toggle" },
         _ => Array.Empty<string>(),
     };

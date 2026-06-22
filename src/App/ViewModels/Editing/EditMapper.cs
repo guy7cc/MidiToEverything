@@ -60,6 +60,7 @@ internal static class EditMapper
         MouseClickAction m => (EditableActionKind.MouseClick, (m.Double ? $"{m.Button} x2" : m.Button.ToString()).ToLowerInvariant()),
         ScrollAction s => (EditableActionKind.Scroll, s.Axis.ToString().ToLowerInvariant()),
         CursorMoveAction c => (EditableActionKind.CursorMove, c.Mode.ToString().ToLowerInvariant()),
+        WindowControlAction w => (EditableActionKind.WindowControl, WindowOpDetail(w.Op)),
         SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
         _ => (EditableActionKind.None, ""),
     };
@@ -70,6 +71,25 @@ internal static class EditMapper
         ProfileSwitchTarget.Previous => "prev",
         ProfileSwitchTarget.Toggle => "toggle",
         _ => sp.ProfileId ?? "",
+    };
+
+    /// <summary>Display/round-trip string for a window op (matches the editor candidates).</summary>
+    public static string WindowOpDetail(WindowOp op) => op switch
+    {
+        WindowOp.Maximize => "maximize",
+        WindowOp.Restore => "restore",
+        WindowOp.Close => "close",
+        WindowOp.ToggleTopMost => "topmost",
+        _ => "minimize",
+    };
+
+    public static WindowOp ParseWindowOp(string detail) => detail.Trim().ToLowerInvariant() switch
+    {
+        "maximize" or "max" => WindowOp.Maximize,
+        "restore" => WindowOp.Restore,
+        "close" => WindowOp.Close,
+        "topmost" or "toggletopmost" or "pin" => WindowOp.ToggleTopMost,
+        _ => WindowOp.Minimize,
     };
 
     // ── Editable → Domain ─────────────────────────────────────────────────────
@@ -132,6 +152,7 @@ internal static class EditMapper
             EditableActionKind.MouseClick => ParseMouse(detail),
             EditableActionKind.Scroll => new ScrollAction(ParseAxis(detail), UseInputValue: true),
             EditableActionKind.CursorMove => new CursorMoveAction(ParseMove(detail), UseInputValue: true),
+            EditableActionKind.WindowControl => new WindowControlAction(ParseWindowOp(detail)),
             EditableActionKind.SwitchProfile => ParseSwitch(detail),
             _ => NoneAction.Instance,
         };

@@ -17,6 +17,9 @@ public enum ScrollAxis { Vertical, Horizontal }
 /// <summary>Profile-switch targets (docs/03_ProfileSchema.md §3).</summary>
 public enum ProfileSwitchTarget { Next, Previous, Toggle, Specific }
 
+/// <summary>Operations on the foreground window (docs/05_ActionExpansion.md §5, Phase 1).</summary>
+public enum WindowOp { Minimize, Maximize, Restore, Close, ToggleTopMost }
+
 /// <summary>Send a keyboard shortcut. <see cref="Hold"/> keeps keys down until release.</summary>
 public sealed record KeyAction(
     IReadOnlyList<string> Keys,
@@ -45,6 +48,9 @@ public sealed record ScrollAction(
 public sealed record SwitchProfileAction(
     ProfileSwitchTarget Target = ProfileSwitchTarget.Next,
     string? ProfileId = null) : InputAction;
+
+/// <summary>Apply a window operation to the foreground window (docs/05 §5, Phase 1).</summary>
+public sealed record WindowControlAction(WindowOp Op = WindowOp.Minimize) : InputAction;
 
 /// <summary>
 /// Explicit "do nothing" that also blocks fallback to the base profile (FR-6.4).

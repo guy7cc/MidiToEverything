@@ -62,6 +62,7 @@ public static class SignalValidation
             EditableActionKind.MouseClick => lower.Contains("left") || lower.Contains("right") || lower.Contains("middle"),
             EditableActionKind.Scroll => lower is "vertical" or "horizontal",
             EditableActionKind.CursorMove => lower is "relative" or "absolute",
+            EditableActionKind.WindowControl => lower is "minimize" or "maximize" or "restore" or "close" or "topmost",
             EditableActionKind.SwitchProfile => d.Length > 0,
             EditableActionKind.None => true,
             _ => true,

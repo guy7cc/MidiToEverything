@@ -84,7 +84,10 @@ public partial class App : Application
             sp.GetRequiredService<IWindowWatcher>(),
             sp.GetService<ILogger<ProfileManager>>()));
         services.AddSingleton<IMappingContext>(sp => sp.GetRequiredService<ProfileManager>());
-        services.AddSingleton(sp => new ActionExecutor(sp.GetRequiredService<IInputSink>()));
+        services.AddSingleton(sp => new ActionExecutor(
+            ActionExecutor.DefaultHandlers(sp.GetRequiredService<IInputSink>())
+                .Append(new Core.Application.Handlers.WindowControlActionHandler(
+                    sp.GetRequiredService<IWindowController>()))));
         services.AddSingleton(sp => new MidiEventPipeline(
             sp.GetRequiredService<IMidiSource>(),
             sp.GetRequiredService<IMappingContext>(),

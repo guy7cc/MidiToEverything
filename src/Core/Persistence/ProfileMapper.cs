@@ -88,6 +88,7 @@ internal static class ProfileMapper
         CursorMoveActionDto c => new CursorMoveAction(c.Mode, c.Dx, c.Dy, c.UseInputValue),
         ScrollActionDto s => new ScrollAction(s.Axis, s.Amount, s.UseInputValue),
         SwitchProfileActionDto sp => ToSwitchProfile(sp.Target),
+        WindowControlActionDto w => new WindowControlAction(w.Op),
         NoneActionDto => NoneAction.Instance,
         _ => throw new NotSupportedException($"Unknown action DTO: {a.GetType().Name}"),
     };
@@ -173,6 +174,7 @@ internal static class ProfileMapper
         CursorMoveAction c => new CursorMoveActionDto { Mode = c.Mode, Dx = c.Dx, Dy = c.Dy, UseInputValue = c.UseInputValue },
         ScrollAction s => new ScrollActionDto { Axis = s.Axis, Amount = s.Amount, UseInputValue = s.UseInputValue },
         SwitchProfileAction sp => new SwitchProfileActionDto { Target = FromSwitchProfile(sp) },
+        WindowControlAction w => new WindowControlActionDto { Op = w.Op },
         NoneAction => new NoneActionDto(),
         _ => throw new NotSupportedException($"Unknown action: {a.GetType().Name}"),
     };

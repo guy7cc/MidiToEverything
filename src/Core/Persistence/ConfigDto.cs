@@ -99,6 +99,7 @@ internal sealed class TriggerDto
 [JsonDerivedType(typeof(CursorMoveActionDto), "cursorMove")]
 [JsonDerivedType(typeof(ScrollActionDto), "scroll")]
 [JsonDerivedType(typeof(SwitchProfileActionDto), "switchProfile")]
+[JsonDerivedType(typeof(WindowControlActionDto), "windowControl")]
 [JsonDerivedType(typeof(NoneActionDto), "none")]
 internal abstract class ActionDto;
 
@@ -134,6 +135,11 @@ internal sealed class SwitchProfileActionDto : ActionDto
 {
     /// <summary>"next" | "prev" | "toggle" | a profile id (docs/03_ProfileSchema.md §3).</summary>
     public string Target { get; set; } = "next";
+}
+
+internal sealed class WindowControlActionDto : ActionDto
+{
+    public WindowOp Op { get; set; } = WindowOp.Minimize;
 }
 
 internal sealed class NoneActionDto : ActionDto;

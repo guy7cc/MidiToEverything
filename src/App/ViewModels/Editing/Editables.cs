@@ -5,7 +5,7 @@ using MidiToEverything.Core.Domain;
 namespace MidiToEverything.App.ViewModels.Editing;
 
 /// <summary>The action shapes the editor exposes (a single action per binding; macros via JSON).</summary>
-public enum EditableActionKind { Key, MouseClick, Scroll, CursorMove, SwitchProfile, None }
+public enum EditableActionKind { Key, MouseClick, Scroll, CursorMove, WindowControl, SwitchProfile, None }
 
 /// <summary>Editable view of a <see cref="Signal"/> (docs/03_ProfileSchema.md §1).</summary>
 public partial class EditableSignal : ObservableObject

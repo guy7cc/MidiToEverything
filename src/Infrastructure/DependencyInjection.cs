@@ -22,6 +22,9 @@ public static class DependencyInjection
             new WinEventWindowWatcher(sp.GetService<ILogger<WinEventWindowWatcher>>()));
         services.AddSingleton<IWindowWatcher>(sp => sp.GetRequiredService<WinEventWindowWatcher>());
 
+        // Foreground-window control (ShowWindow/SetWindowPos).
+        services.AddSingleton<IWindowController>(_ => new Win32WindowController());
+
         // Input emission (SendInput) behind an emergency-stop gate.
         services.AddSingleton<Win32InputSink>(sp =>
             new Win32InputSink(sp.GetService<ILogger<Win32InputSink>>()));
