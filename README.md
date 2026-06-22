@@ -29,6 +29,8 @@ C# / .NET 8 ・ WPF(MVVM) ・ Melanchall.DryWetMIDI ・ Win32 P/Invoke（SetWinE
   Note/CC/Pitch Bend の受信イベントをリアルタイム表示。
 - **`run-key-test.bat`**（M5: キー送信）— 実機 MIDI を弾くと、最前面のウィンドウに実際にキーが
   入力される（各ノート→アルファベット1文字）。メモ帳を最前面にして動作を目視確認できる。
+- **`run-window-watch.bat`**（M6: 窓連動）— 前面ウィンドウ（メモ帳/ブラウザ/エクスプローラー）に
+  応じてプロファイルが自動切替。MIDI パッドで手動切替（Note 36/37/38）も確認できる。
 
 ## 既知の制約
 - Windows 専用（初期リリース）。
