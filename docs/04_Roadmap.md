@@ -185,9 +185,13 @@ M0 ─▶ M1 ─▶ M2 ─▶ M3 ─┬─▶ M4(MIDI実機) ─┐
 実装順は未定。マイルストーン進行の合間、または該当 UI 着手時（M7/M8）に取り込む。
 
 ### B-1. MIDI デバイス検出モードの切り替え（自動ポーリング ⇔ 手動認識）
-- **背景**: 現状 `DryWetMidiSource` は `DevicesWatcher` が物理 USB で発火しないため、1 秒間隔の
+- **状態**: ✅ 基本実装済み（UI overhaul で対応）。`IMidiSource.DetectionMode`（`AutoPolling`/`Manual`）と
+  `Rescan()` を追加。`DryWetMidiSource` は Manual 時にポーリングタイマーを停止。メインウィンドウの
+  デバイスパネルに「自動更新/手動更新」トグルと「今すぐ更新」ボタンを実装。
+- **残り（任意）**: 設定への永続化（現状はセッション内のみ・既定 AutoPolling）、ポーリング間隔の設定 UI、
+  フォアグラウンド復帰時の自動再スキャン。
+- **背景**: `DryWetMidiSource` は `DevicesWatcher` が物理 USB で発火しないため、1 秒間隔の
   `InputDevice.GetAll()` ポーリングでホットプラグを検知している（[02_Architecture.md](02_Architecture.md) §3.3）。
-  常時ポーリングは軽微とはいえ無駄なので、モードを選べるようにする。
 - **設計案**:
   - `MidiDetectionMode { AutoPolling, Manual }` を導入。検出のプリミティブは既存の
     リコンサイル処理を公開した `Rescan()`（= 現在の `Reconcile()`）。

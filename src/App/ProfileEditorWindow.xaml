@@ -6,31 +6,20 @@
         xmlns:edit="clr-namespace:MidiToEverything.App.ViewModels.Editing"
         mc:Ignorable="d"
         Title="プロファイル編集" Height="640" Width="940"
-        Background="#1E1E22" TextElement.Foreground="#E6E6E6" FontFamily="Segoe UI"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}" FontFamily="Segoe UI"
         WindowStartupLocation="CenterOwner"
         d:DataContext="{d:DesignInstance edit:ProfileEditorViewModel}">
 
+    <!-- Inherit the global theme; keep only the editor's local spacing tweaks. -->
     <Window.Resources>
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#1B1B20" />
-            <Setter Property="Foreground" Value="#E6E6E6" />
-            <Setter Property="BorderBrush" Value="#3A3A42" />
-            <Setter Property="Padding" Value="4,2" />
+        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
             <Setter Property="Margin" Value="0,2" />
         </Style>
-        <Style TargetType="ComboBox">
+        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
             <Setter Property="Margin" Value="0,2" />
-            <Setter Property="Padding" Value="4,2" />
         </Style>
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="#3A3A42" />
-            <Setter Property="Foreground" Value="#E6E6E6" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="10,4" />
+        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
             <Setter Property="Margin" Value="0,0,6,0" />
-        </Style>
-        <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#C8C8D0" />
         </Style>
     </Window.Resources>
 
@@ -45,7 +34,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Profile list -->
-        <Border Grid.Row="0" Grid.Column="0" Background="#26262C" CornerRadius="8" Padding="10" Margin="0,0,12,0">
+        <Border Grid.Row="0" Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="10" Margin="0,0,12,0">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Top" Text="プロファイル" FontWeight="SemiBold" Margin="0,0,0,8" />
                 <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
@@ -53,7 +42,7 @@
                     <Button Content="削除" Command="{Binding RemoveProfileCommand}" />
                 </StackPanel>
                 <ListBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}"
-                         Background="#1B1B20" BorderThickness="0" Foreground="#E6E6E6">
+                         Background="{StaticResource InputBgBrush}" BorderThickness="0" Foreground="{StaticResource TextBrush}">
                     <ListBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type edit:EditableProfile}">
                             <TextBlock Text="{Binding DisplayName}" />
@@ -64,7 +53,7 @@
         </Border>
 
         <!-- Profile details + bindings -->
-        <Border Grid.Row="0" Grid.Column="1" Background="#26262C" CornerRadius="8" Padding="14">
+        <Border Grid.Row="0" Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="14">
             <DockPanel DataContext="{Binding SelectedProfile}">
                 <!-- Profile fields -->
                 <StackPanel DockPanel.Dock="Top">
@@ -122,7 +111,7 @@
                             </StackPanel>
                         </Grid>
                     </StackPanel>
-                    <Border Height="1" Background="#3A3A42" Margin="0,12" />
+                    <Border Height="1" Background="{StaticResource BorderBrush}" Margin="0,12" />
                 </StackPanel>
 
                 <!-- Binding list -->
@@ -137,23 +126,23 @@
                 </Grid>
                 <ListBox Height="150" DockPanel.Dock="Top" ItemsSource="{Binding Bindings}"
                          SelectedItem="{Binding DataContext.SelectedBinding, RelativeSource={RelativeSource AncestorType=Window}}"
-                         Background="#1B1B20" BorderThickness="0" Foreground="#E6E6E6">
+                         Background="{StaticResource InputBgBrush}" BorderThickness="0" Foreground="{StaticResource TextBrush}">
                     <ListBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type edit:EditableBinding}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding Signal.Type}" Foreground="#9FC8FF" />
-                                <TextBlock Text="{Binding Signal.NumberText}" Margin="6,0,0,0" Foreground="#9FC8FF" />
-                                <TextBlock Text="  →  " Foreground="#7A7A85" />
-                                <TextBlock Text="{Binding ActionKind}" Foreground="#5BD68A" />
+                                <TextBlock Text="{Binding Signal.Type}" Foreground="{StaticResource AccentTextBrush}" />
+                                <TextBlock Text="{Binding Signal.NumberText}" Margin="6,0,0,0" Foreground="{StaticResource AccentTextBrush}" />
+                                <TextBlock Text="  →  " Foreground="{StaticResource TextFaintBrush}" />
+                                <TextBlock Text="{Binding ActionKind}" Foreground="{StaticResource OkBrush}" />
                                 <TextBlock Text="{Binding Detail}" Margin="6,0,0,0" />
-                                <TextBlock Text="{Binding Label}" Margin="10,0,0,0" Foreground="#7A7A85" />
+                                <TextBlock Text="{Binding Label}" Margin="10,0,0,0" Foreground="{StaticResource TextFaintBrush}" />
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
 
                 <!-- Binding editor -->
-                <Border DockPanel.Dock="Bottom" Background="#22222A" CornerRadius="6" Padding="12" Margin="0,10,0,0"
+                <Border DockPanel.Dock="Bottom" Background="{StaticResource SurfaceBrush}" CornerRadius="6" Padding="12" Margin="0,10,0,0"
                         DataContext="{Binding DataContext.SelectedBinding, RelativeSource={RelativeSource AncestorType=Window}}">
                     <StackPanel>
                         <Grid>
@@ -219,7 +208,7 @@
                                      Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}" />
                         </Grid>
 
-                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="#7A7A85" TextWrapping="Wrap"
+                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="{StaticResource TextFaintBrush}" TextWrapping="Wrap"
                                    Text="詳細の書式 — Key: ctrl+z ／ MouseClick: left|right|middle [x2] ／ Scroll: vertical|horizontal ／ CursorMove: relative|absolute ／ SwitchProfile: next|prev|toggle|&lt;profileId&gt; ／ None: 空 (基本を無効化)" />
 
                         <TextBlock Text="ラベル (任意)" Margin="0,8,0,0" />
