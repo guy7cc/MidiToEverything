@@ -106,6 +106,25 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         SelectedProfile.ProcessNames = string.Join(", ", existing);
     }
 
+    /// <summary>
+    /// Suggest a robust title regex from the selected running process, so the profile keeps
+    /// matching the same app on future launches despite the changing document part of the title.
+    /// </summary>
+    [RelayCommand]
+    private void SuggestTitlePattern()
+    {
+        if (SelectedProfile is null || SelectedRunningProcess is null)
+        {
+            return;
+        }
+
+        var pattern = TitlePatternSuggester.Suggest(SelectedRunningProcess.Title);
+        if (!string.IsNullOrEmpty(pattern))
+        {
+            SelectedProfile.TitlePattern = pattern;
+        }
+    }
+
     [RelayCommand]
     private void RemoveProfile()
     {
