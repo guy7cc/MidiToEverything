@@ -3,37 +3,48 @@ using System.Text.RegularExpressions;
 namespace MidiToEverything.Core.Domain;
 
 /// <summary>
-/// Conditions for auto-selecting a profile based on the foreground window
+/// Condition for auto-selecting a profile based on the foreground window
 /// (docs/03_ProfileSchema.md §4). The base profile has no match rule.
+///
+/// A single regex (<see cref="Pattern"/>) is matched against a two-line target,
+/// <c>"{processName}\n{windowTitle}"</c>, evaluated in multiline mode. This lets one pattern
+/// reference the process (e.g. <c>^chrome\.exe$</c> on the first line) and/or the title
+/// (e.g. <c>Google Chrome$</c> on the second), so the process name and title discrimination
+/// live in one editable expression.
 /// </summary>
 public sealed record MatchRule
 {
-    /// <summary>Executable names (case-insensitive), e.g. "CLIPStudioPaint.exe".</summary>
-    public IReadOnlyList<string> ProcessNames { get; init; } = Array.Empty<string>();
+    public const string Separator = "\n";
 
-    /// <summary>Optional window-title regex.</summary>
-    public string? TitlePattern { get; init; }
+    /// <summary>Regex matched against "process\ntitle". Empty matches nothing.</summary>
+    public string Pattern { get; init; } = "";
 
     /// <summary>Tie-break priority when several profiles match (higher wins).</summary>
     public int Priority { get; init; }
 
-    /// <summary>True when the given foreground window satisfies this rule.</summary>
+    /// <summary>Builds the multiline match target the pattern is evaluated against.</summary>
+    public static string BuildTarget(string processName, string windowTitle)
+        => processName + Separator + windowTitle;
+
+    /// <summary>
+    /// True when the foreground window satisfies this rule. An empty or invalid pattern never
+    /// matches (the editor allows free editing, so a transiently invalid regex must not throw).
+    /// </summary>
     public bool Matches(string processName, string windowTitle)
     {
-        var processOk = ProcessNames.Count == 0 ||
-            ProcessNames.Any(p => string.Equals(p, processName, StringComparison.OrdinalIgnoreCase));
-        if (!processOk)
+        if (string.IsNullOrWhiteSpace(Pattern))
         {
             return false;
         }
 
-        if (!string.IsNullOrEmpty(TitlePattern) &&
-            !Regex.IsMatch(windowTitle, TitlePattern))
+        try
         {
-            return false;
+            return Regex.IsMatch(BuildTarget(processName, windowTitle), Pattern, RegexOptions.Multiline);
         }
-
-        return true;
+        catch (ArgumentException)
+        {
+            return false; // invalid regex
+        }
     }
 }
 

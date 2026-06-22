@@ -1,13 +1,14 @@
+using System.Text.RegularExpressions;
+
 namespace MidiToEverything.Core.Persistence;
 
 /// <summary>
 /// Upgrades a parsed <see cref="ConfigDto"/> to the current schema version (FR-7.5).
-/// Today there is a single version; the stepwise structure is in place so future schema
-/// changes add one case each without touching callers.
+/// Each schema change adds one stepwise migration.
 /// </summary>
 internal static class ConfigMigrator
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     /// <summary>
     /// Migrates the DTO in place to <see cref="CurrentVersion"/>.
@@ -22,10 +23,48 @@ internal static class ConfigMigrator
                 "Update the application.");
         }
 
-        // Stepwise migrations would run here, e.g.:
-        //   if (dto.Version < 2) { /* v1 -> v2 */ dto.Version = 2; }
+        if (dto.Version < 2)
+        {
+            // v1 -> v2: fold processNames + titlePattern into a single match regex.
+            MigrateMatch(dto.BaseProfile);
+            foreach (var profile in dto.Profiles)
+            {
+                MigrateMatch(profile);
+            }
+        }
 
         dto.Version = CurrentVersion;
         return dto;
+    }
+
+    private static void MigrateMatch(ProfileDto profile)
+    {
+        var match = profile.Match;
+        if (match is null || !string.IsNullOrEmpty(match.Pattern))
+        {
+            return;
+        }
+
+        var clauses = new List<string>();
+        if (match.ProcessNames is { } names)
+        {
+            clauses.AddRange(names
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Select(n => "^" + Regex.Escape(n.Trim()) + "$"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(match.TitlePattern))
+        {
+            clauses.Add(match.TitlePattern!);
+        }
+
+        match.Pattern = clauses.Count switch
+        {
+            0 => "",
+            1 => clauses[0],
+            _ => string.Join("|", clauses.Select(c => $"(?:{c})")),
+        };
+        match.ProcessNames = null;
+        match.TitlePattern = null;
     }
 }

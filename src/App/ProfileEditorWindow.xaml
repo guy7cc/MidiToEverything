@@ -71,37 +71,50 @@
                     <TextBlock Text="プロファイル名" />
                     <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
                     <StackPanel Visibility="{Binding IsBase, Converter={StaticResource InverseBoolToVisibility}}">
-                        <TextBlock Text="対象プロセス名 (カンマ区切り 例: notepad.exe, chrome.exe)" Margin="0,8,0,0" />
-                        <TextBox Text="{Binding ProcessNames, UpdateSourceTrigger=PropertyChanged}" />
-                        <Grid Margin="0,4,0,0">
+                        <TextBlock Text="対象アプリ (起動中から選択、または名前を直接入力 → 候補を追加)" Margin="0,8,0,0" />
+                        <Grid Margin="0,2,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <ComboBox Grid.Column="0"
+                            <ComboBox Grid.Column="0" Margin="0,0,6,0"
                                       ItemsSource="{Binding DataContext.RunningProcesses, RelativeSource={RelativeSource AncestorType=Window}}"
                                       SelectedItem="{Binding DataContext.SelectedRunningProcess, RelativeSource={RelativeSource AncestorType=Window}}"
                                       DisplayMemberPath="Display"
                                       ToolTip="起動中のウィンドウを持つプロセスから選べます" />
-                            <Button Grid.Column="1" Content="候補を追加" Margin="6,0,0,0"
-                                    Command="{Binding DataContext.AddProcessCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                            <Button Grid.Column="2" Content="更新" Margin="6,0,0,0"
+                            <TextBox Grid.Column="1" Margin="0,0,6,0"
+                                     Text="{Binding DataContext.ProcessNameInput, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="手入力 (例: notepad.exe)" />
+                            <Button Grid.Column="2" Content="候補を追加" Margin="0,0,6,0"
+                                    Command="{Binding DataContext.AddProcessToPatternCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                            <Button Grid.Column="3" Content="更新"
                                     Command="{Binding DataContext.RefreshProcessesCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                         </Grid>
-                        <Grid Margin="0,4,0,0">
+                        <TextBlock Margin="0,4,0,0" FontSize="11" TextWrapping="Wrap"
+                                   Text="{Binding DataContext.MatchStatus, RelativeSource={RelativeSource AncestorType=Window}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#7FBF7F" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.MatchStatusIsError, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                            <Setter Property="Foreground" Value="#E58A8A" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <Grid Margin="0,8,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="120" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                <Grid>
-                                    <TextBlock Text="タイトル正規表現 (任意)" VerticalAlignment="Center" />
-                                    <Button HorizontalAlignment="Right" Content="選択中の候補から提案" Padding="6,1"
-                                            ToolTip="上で選んだ起動中プロセスのタイトルから、将来も一致しやすい正規表現を生成します"
-                                            Command="{Binding DataContext.SuggestTitlePatternCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                                </Grid>
-                                <TextBox Text="{Binding TitlePattern, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="ウィンドウ判別 (正規表現・自由に編集可)" />
+                                <TextBox Text="{Binding Pattern, UpdateSourceTrigger=PropertyChanged}"
+                                         FontFamily="Consolas"
+                                         ToolTip="&quot;プロセス名&#x0a;ウィンドウタイトル&quot; に対してマッチします (複数行)" />
                             </StackPanel>
                             <StackPanel Grid.Column="1">
                                 <TextBlock Text="優先度" />

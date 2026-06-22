@@ -127,6 +127,30 @@ public class ConfigSerializerTests
     }
 
     [Fact]
+    public void V1Config_MigratesProcessNamesAndTitleToUnifiedPattern()
+    {
+        // A version-1 config using the old processNames/titlePattern fields.
+        var json = """
+        {
+          "version": 1,
+          "baseProfile": { "id": "base", "name": "b" },
+          "profiles": [
+            { "id": "csp", "name": "CSP",
+              "match": { "processNames": ["CLIPStudioPaint.exe"], "priority": 7 } }
+          ]
+        }
+        """;
+
+        var config = ConfigSerializer.Deserialize(json);
+
+        Assert.Equal(2, config.Version);
+        var match = config.Profiles.Single().Match!;
+        Assert.Equal(7, match.Priority);
+        Assert.True(match.Matches("CLIPStudioPaint.exe", "anything"));
+        Assert.False(match.Matches("chrome.exe", "anything"));
+    }
+
+    [Fact]
     public void NewerSchemaVersion_Throws()
     {
         var json = "{ \"version\": 999, \"baseProfile\": { \"id\": \"base\", \"name\": \"b\" } }";

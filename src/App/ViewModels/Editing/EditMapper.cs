@@ -23,8 +23,7 @@ internal static class EditMapper
             Id = profile.Id,
             Name = profile.Name,
             IsBase = isBase,
-            ProcessNames = profile.Match is null ? "" : string.Join(", ", profile.Match.ProcessNames),
-            TitlePattern = profile.Match?.TitlePattern ?? "",
+            Pattern = profile.Match?.Pattern ?? "",
             Priority = profile.Match?.Priority ?? 0,
         };
 
@@ -90,16 +89,9 @@ internal static class EditMapper
     private static Profile ToDomain(EditableProfile p)
     {
         MatchRule? match = null;
-        if (!p.IsBase)
+        if (!p.IsBase && !string.IsNullOrWhiteSpace(p.Pattern))
         {
-            var names = p.ProcessNames
-                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            match = new MatchRule
-            {
-                ProcessNames = names,
-                TitlePattern = string.IsNullOrWhiteSpace(p.TitlePattern) ? null : p.TitlePattern.Trim(),
-                Priority = p.Priority,
-            };
+            match = new MatchRule { Pattern = p.Pattern.Trim(), Priority = p.Priority };
         }
 
         return new Profile
