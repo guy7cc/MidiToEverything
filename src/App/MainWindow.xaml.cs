@@ -20,13 +20,22 @@ public partial class MainWindow : Window
     private const uint VK_PAUSE = 0x13;
 
     private readonly MainViewModel _viewModel;
+    private readonly Func<ProfileEditorWindow> _editorFactory;
     private IntPtr _handle;
 
-    public MainWindow(MainViewModel viewModel)
+    public MainWindow(MainViewModel viewModel, Func<ProfileEditorWindow> editorFactory)
     {
         _viewModel = viewModel;
+        _editorFactory = editorFactory;
         InitializeComponent();
         DataContext = viewModel;
+    }
+
+    private void OpenEditor_Click(object sender, RoutedEventArgs e)
+    {
+        var editor = _editorFactory();
+        editor.Owner = this;
+        editor.ShowDialog();
     }
 
     protected override void OnSourceInitialized(EventArgs e)

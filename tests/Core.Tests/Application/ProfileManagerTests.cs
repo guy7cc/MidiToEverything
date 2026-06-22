@@ -139,6 +139,35 @@ public class ProfileManagerTests
     }
 
     [Fact]
+    public void Reload_AppliesNewProfilesAndReevaluatesContext()
+    {
+        var (manager, watcher) = Build(App("notepad", "notepad.exe"));
+        watcher.SetForeground("obs64.exe", "");
+        Assert.Null(manager.State.Context); // no profile matches obs yet
+
+        manager.Reload(new AppConfig
+        {
+            BaseProfile = Base(),
+            Profiles = new[] { App("obs", "obs64.exe") },
+        });
+
+        Assert.Equal("obs", manager.State.Context?.Id); // re-evaluated against the current window
+        Assert.Single(manager.CurrentConfig.Profiles);
+    }
+
+    [Fact]
+    public void Reload_ClearsPinPointingAtRemovedProfile()
+    {
+        var (manager, _) = Build(App("a", "a.exe"), App("b", "b.exe"));
+        manager.Pin("b");
+        Assert.True(manager.State.IsPinned);
+
+        manager.Reload(new AppConfig { BaseProfile = Base(), Profiles = new[] { App("a", "a.exe") } });
+
+        Assert.False(manager.State.IsPinned); // "b" no longer exists
+    }
+
+    [Fact]
     public void Changed_RaisedOnForegroundAndManualSwitch()
     {
         var (manager, watcher) = Build(App("notepad", "notepad.exe"));

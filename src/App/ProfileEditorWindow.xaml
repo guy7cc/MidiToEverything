@@ -1,0 +1,211 @@
+<Window x:Class="MidiToEverything.App.ProfileEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:edit="clr-namespace:MidiToEverything.App.ViewModels.Editing"
+        mc:Ignorable="d"
+        Title="プロファイル編集" Height="640" Width="940"
+        Background="#1E1E22" TextElement.Foreground="#E6E6E6" FontFamily="Segoe UI"
+        WindowStartupLocation="CenterOwner"
+        d:DataContext="{d:DesignInstance edit:ProfileEditorViewModel}">
+
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#1B1B20" />
+            <Setter Property="Foreground" Value="#E6E6E6" />
+            <Setter Property="BorderBrush" Value="#3A3A42" />
+            <Setter Property="Padding" Value="4,2" />
+            <Setter Property="Margin" Value="0,2" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Padding" Value="4,2" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#3A3A42" />
+            <Setter Property="Foreground" Value="#E6E6E6" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#C8C8D0" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Profile list -->
+        <Border Grid.Row="0" Grid.Column="0" Background="#26262C" CornerRadius="8" Padding="10" Margin="0,0,12,0">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="プロファイル" FontWeight="SemiBold" Margin="0,0,0,8" />
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="追加" Command="{Binding AddProfileCommand}" />
+                    <Button Content="削除" Command="{Binding RemoveProfileCommand}" />
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}"
+                         Background="#1B1B20" BorderThickness="0" Foreground="#E6E6E6">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type edit:EditableProfile}">
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Profile details + bindings -->
+        <Border Grid.Row="0" Grid.Column="1" Background="#26262C" CornerRadius="8" Padding="14">
+            <DockPanel DataContext="{Binding SelectedProfile}">
+                <!-- Profile fields -->
+                <StackPanel DockPanel.Dock="Top">
+                    <TextBlock Text="プロファイル名" />
+                    <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                    <StackPanel Visibility="{Binding IsBase, Converter={StaticResource InverseBoolToVisibility}}">
+                        <TextBlock Text="対象プロセス名 (カンマ区切り 例: notepad.exe, chrome.exe)" Margin="0,8,0,0" />
+                        <TextBox Text="{Binding ProcessNames, UpdateSourceTrigger=PropertyChanged}" />
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="120" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <TextBlock Text="タイトル正規表現 (任意)" />
+                                <TextBox Text="{Binding TitlePattern, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="優先度" />
+                                <TextBox Text="{Binding Priority, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                    <Border Height="1" Background="#3A3A42" Margin="0,12" />
+                </StackPanel>
+
+                <!-- Binding list -->
+                <Grid DockPanel.Dock="Top" Margin="0,0,0,6">
+                    <TextBlock Text="バインディング" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="追加" Command="{Binding DataContext.AddBindingCommand,
+                                RelativeSource={RelativeSource AncestorType=Window}}" />
+                        <Button Content="削除" Command="{Binding DataContext.RemoveBindingCommand,
+                                RelativeSource={RelativeSource AncestorType=Window}}" />
+                    </StackPanel>
+                </Grid>
+                <ListBox Height="150" DockPanel.Dock="Top" ItemsSource="{Binding Bindings}"
+                         SelectedItem="{Binding DataContext.SelectedBinding, RelativeSource={RelativeSource AncestorType=Window}}"
+                         Background="#1B1B20" BorderThickness="0" Foreground="#E6E6E6">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type edit:EditableBinding}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Signal.Type}" Foreground="#9FC8FF" />
+                                <TextBlock Text="{Binding Signal.NumberText}" Margin="6,0,0,0" Foreground="#9FC8FF" />
+                                <TextBlock Text="  →  " Foreground="#7A7A85" />
+                                <TextBlock Text="{Binding ActionKind}" Foreground="#5BD68A" />
+                                <TextBlock Text="{Binding Detail}" Margin="6,0,0,0" />
+                                <TextBlock Text="{Binding Label}" Margin="10,0,0,0" Foreground="#7A7A85" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Binding editor -->
+                <Border DockPanel.Dock="Bottom" Background="#22222A" CornerRadius="6" Padding="12" Margin="0,10,0,0"
+                        DataContext="{Binding DataContext.SelectedBinding, RelativeSource={RelativeSource AncestorType=Window}}">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="シグナル" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Content="ラーン (最後の入力を取込)"
+                                        Command="{Binding DataContext.LearnCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="{Binding DataContext.LastSignalText, RelativeSource={RelativeSource AncestorType=Window}}"
+                                   Foreground="#7A9AC8" FontSize="11" Margin="0,0,0,6" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="種別" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="番号" />
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="ch" />
+                            <TextBlock Grid.Row="0" Grid.Column="3" Text="デバイス (* = 任意)" />
+                            <ComboBox Grid.Row="1" Grid.Column="0" Margin="0,0,8,0"
+                                      ItemsSource="{Binding DataContext.SignalKinds, RelativeSource={RelativeSource AncestorType=Window}}"
+                                      SelectedItem="{Binding Signal.Type}" />
+                            <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,0"
+                                     Text="{Binding Signal.NumberText, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox Grid.Row="1" Grid.Column="2" Margin="0,0,8,0"
+                                     Text="{Binding Signal.Channel, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox Grid.Row="1" Grid.Column="3"
+                                     Text="{Binding Signal.Device, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="2*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="トリガー" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="アクション" />
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="詳細" />
+                            <ComboBox Grid.Row="1" Grid.Column="0" Margin="0,0,8,0"
+                                      ItemsSource="{Binding DataContext.TriggerModes, RelativeSource={RelativeSource AncestorType=Window}}"
+                                      SelectedItem="{Binding Mode}" />
+                            <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,0"
+                                      ItemsSource="{Binding DataContext.ActionKinds, RelativeSource={RelativeSource AncestorType=Window}}"
+                                      SelectedItem="{Binding ActionKind}" />
+                            <TextBox Grid.Row="1" Grid.Column="2"
+                                     Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}" />
+                        </Grid>
+
+                        <TextBlock Margin="0,6,0,0" FontSize="11" Foreground="#7A7A85" TextWrapping="Wrap"
+                                   Text="詳細の書式 — Key: ctrl+z ／ MouseClick: left|right|middle [x2] ／ Scroll: vertical|horizontal ／ CursorMove: relative|absolute ／ SwitchProfile: next|prev|toggle|&lt;profileId&gt; ／ None: 空 (基本を無効化)" />
+
+                        <TextBlock Text="ラベル (任意)" Margin="0,8,0,0" />
+                        <TextBox Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </Border>
+            </DockPanel>
+        </Border>
+
+        <!-- Bottom bar -->
+        <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button Content="インポート" Command="{Binding ImportCommand}" />
+                <Button Content="エクスポート" Command="{Binding ExportCommand}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="キャンセル" Command="{Binding CancelCommand}" />
+                <Button Content="保存して適用" Command="{Binding SaveCommand}"
+                        Background="#2E5A3A" Foreground="#DFFFE9" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
