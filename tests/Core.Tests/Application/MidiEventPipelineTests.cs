@@ -1,0 +1,112 @@
+using MidiToEverything.Core.Application;
+using MidiToEverything.Core.Domain;
+using MidiToEverything.Core.Mapping;
+using MidiToEverything.Core.Persistence;
+using MidiToEverything.Core.Tests.Fakes;
+
+namespace MidiToEverything.Core.Tests.Application;
+
+/// <summary>
+/// End-to-end (through fakes) verification of the hot path: FakeMidiSource → pipeline →
+/// resolver → trigger → ActionExecutor → RecordingInputSink (docs/04_Roadmap.md M3).
+/// </summary>
+public sealed class MidiEventPipelineTests : IAsyncLifetime
+{
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(2);
+
+    private readonly AppConfig _config = DefaultConfig.Create();
+    private readonly FakeMidiSource _source = new();
+    private readonly RecordingInputSink _sink = new();
+    private readonly MutableMappingContext _context;
+    private readonly MidiEventPipeline _pipeline;
+
+    public MidiEventPipelineTests()
+    {
+        _context = new MutableMappingContext(new ProfileLayers(_config.BaseProfile));
+        _pipeline = new MidiEventPipeline(_source, _context, new ActionExecutor(_sink));
+    }
+
+    public Task InitializeAsync()
+    {
+        _pipeline.Start();
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync() => await _pipeline.DisposeAsync();
+
+    private Profile Profile(string id) => _config.Profiles.Single(p => p.Id == id);
+
+    private static MidiMessage NoteOn(int n, int velocity = 100) => new("akai", 1, MidiMessageType.NoteOn, n, velocity);
+    private static MidiMessage NoteOff(int n) => new("akai", 1, MidiMessageType.NoteOff, n, 0);
+    private static MidiMessage Cc(int n, int value) => new("akai", 1, MidiMessageType.ControlChange, n, value);
+
+    [Fact]
+    public async Task BaseUndo_NoContext_EmitsKeyTap()
+    {
+        _source.Emit(NoteOn(36));
+
+        await _sink.WaitForCountAsync(1, Timeout);
+        var tap = Assert.IsType<KeyTapCall>(_sink.Calls[0]);
+        Assert.Equal(new[] { "ctrl", "z" }, tap.Keys);
+    }
+
+    [Fact]
+    public async Task HoldKey_InClipStudio_EmitsDownThenUp()
+    {
+        _context.Set(new ProfileLayers(_config.BaseProfile, Context: Profile("clip-studio")));
+
+        _source.Emit(NoteOn(40));   // press the pad
+        _source.Emit(NoteOff(40));  // release it
+
+        await _sink.WaitForCountAsync(2, Timeout);
+        Assert.Equal(new[] { "space" }, Assert.IsType<KeyDownCall>(_sink.Calls[0]).Keys);
+        Assert.Equal(new[] { "space" }, Assert.IsType<KeyUpCall>(_sink.Calls[1]).Keys);
+    }
+
+    [Fact]
+    public async Task BlockedSignal_InClipStudio_EmitsNothing()
+    {
+        _context.Set(new ProfileLayers(_config.BaseProfile, Context: Profile("clip-studio")));
+
+        _source.Emit(NoteOn(37)); // CSP blocks Note37 with NoneAction
+
+        await _sink.AssertNoCallsAsync(TimeSpan.FromMilliseconds(150));
+    }
+
+    [Fact]
+    public async Task Cc74_Absolute_InClipStudio_EmitsScrollWithMagnitude()
+    {
+        _context.Set(new ProfileLayers(_config.BaseProfile, Context: Profile("clip-studio")));
+
+        _source.Emit(Cc(74, 127)); // full value → normalized 1.0
+
+        await _sink.WaitForCountAsync(1, Timeout);
+        var scroll = Assert.IsType<ScrollCall>(_sink.Calls[0]);
+        Assert.Equal(ScrollAxis.Vertical, scroll.Axis);
+        Assert.Equal(1.0, scroll.Amount, 3);
+    }
+
+    [Fact]
+    public async Task SwitchProfileBinding_RaisesEvent()
+    {
+        var tcs = new TaskCompletionSource<SwitchProfileAction>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _pipeline.ProfileSwitchRequested += (_, a) => tcs.TrySetResult(a);
+
+        _source.Emit(NoteOn(51)); // base: switchProfile next
+
+        var completed = await Task.WhenAny(tcs.Task, Task.Delay(Timeout));
+        Assert.Same(tcs.Task, completed);
+        Assert.Equal(ProfileSwitchTarget.Next, (await tcs.Task).Target);
+    }
+
+    [Fact]
+    public async Task MessageOrder_IsPreserved()
+    {
+        _source.Emit(NoteOn(36)); // undo
+        _source.Emit(NoteOn(37)); // copy
+
+        await _sink.WaitForCountAsync(2, Timeout);
+        Assert.Equal(new[] { "ctrl", "z" }, Assert.IsType<KeyTapCall>(_sink.Calls[0]).Keys);
+        Assert.Equal(new[] { "ctrl", "c" }, Assert.IsType<KeyTapCall>(_sink.Calls[1]).Keys);
+    }
+}
