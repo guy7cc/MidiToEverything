@@ -9,11 +9,19 @@ namespace MidiToEverything.Infrastructure.Midi;
 /// <summary>
 /// <see cref="IMidiSource"/> backed by DryWetMIDI (docs/02_Architecture.md §3.3). Listens to
 /// every accepted input device, normalizes events via <see cref="MidiMessageFactory"/>, and
-/// uses <see cref="DevicesWatcher"/> for hot-plug add/remove (FR-1.2). Reconnection of a
-/// same-named device re-attaches automatically because matching is name-based (FR-1.4).
+/// uses <see cref="DevicesWatcher"/> for hot-plug (FR-1.2).
 ///
-/// <see cref="MessageReceived"/> is raised on a DryWetMIDI callback thread; handlers must be
-/// cheap (the pipeline only enqueues).
+/// Hot-plug handling is reconciliation-based: each watcher event re-scans
+/// <see cref="InputDevice.GetAll"/> and diffs it against the attached set. This avoids
+/// depending on the runtime type of <c>e.Device</c> or reading its <c>Name</c> after removal
+/// (which DryWetMIDI documents as throwing), and makes same-name reconnection automatic (FR-1.4).
+///
+/// NOTE: on Windows, DevicesWatcher delivers physical device changes via Win32
+/// <c>WM_DEVICECHANGE</c>, so the host must run a message loop (the WPF Dispatcher in the app;
+/// a Win32 message pump in the console monitor). Without a pump, initial enumeration and input
+/// still work but add/remove events never fire.
+///
+/// <see cref="MessageReceived"/> is raised on a DryWetMIDI callback thread; handlers must be cheap.
 /// </summary>
 public sealed class DryWetMidiSource : IMidiSource, IDisposable
 {
@@ -60,13 +68,9 @@ public sealed class DryWetMidiSource : IMidiSource, IDisposable
             _started = true;
         }
 
-        DevicesWatcher.Instance.DeviceAdded += OnDeviceAdded;
-        DevicesWatcher.Instance.DeviceRemoved += OnDeviceRemoved;
-
-        foreach (var device in InputDevice.GetAll())
-        {
-            TryAttach(device);
-        }
+        DevicesWatcher.Instance.DeviceAdded += OnDevicesChanged;
+        DevicesWatcher.Instance.DeviceRemoved += OnDevicesChanged;
+        Reconcile();
     }
 
     public void Stop()
@@ -81,8 +85,8 @@ public sealed class DryWetMidiSource : IMidiSource, IDisposable
             _started = false;
         }
 
-        DevicesWatcher.Instance.DeviceAdded -= OnDeviceAdded;
-        DevicesWatcher.Instance.DeviceRemoved -= OnDeviceRemoved;
+        DevicesWatcher.Instance.DeviceAdded -= OnDevicesChanged;
+        DevicesWatcher.Instance.DeviceRemoved -= OnDevicesChanged;
 
         foreach (var info in Devices)
         {
@@ -92,63 +96,62 @@ public sealed class DryWetMidiSource : IMidiSource, IDisposable
 
     public void Dispose() => Stop();
 
-    private void OnDeviceAdded(object? sender, DeviceAddedRemovedEventArgs e)
+    private void OnDevicesChanged(object? sender, DeviceAddedRemovedEventArgs e) => Reconcile();
+
+    /// <summary>Diff current input devices against the attached set, attaching/detaching as needed.</summary>
+    private void Reconcile()
     {
-        if (e.Device is not InputDevice)
+        // Snapshot the system's input devices by name (fresh handles we own).
+        var current = new Dictionary<string, InputDevice>(StringComparer.OrdinalIgnoreCase);
+        foreach (var device in InputDevice.GetAll())
         {
-            return; // outputs are not input sources
+            if (!current.TryAdd(device.Name, device))
+            {
+                device.Dispose(); // duplicate name in this scan
+            }
         }
 
-        try
-        {
-            TryAttach(InputDevice.GetByName(e.Device.Name));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Device added but no usable input: {Name}", e.Device.Name);
-        }
-    }
-
-    private void OnDeviceRemoved(object? sender, DeviceAddedRemovedEventArgs e)
-    {
-        if (e.Device is InputDevice)
-        {
-            Detach(e.Device.Name);
-        }
-    }
-
-    private void TryAttach(InputDevice device)
-    {
-        var name = device.Name;
-        var attached = false;
+        var connected = new List<string>();
+        List<string> disconnected;
 
         lock (_gate)
         {
-            if (_accept(name) && !_attached.ContainsKey(name))
+            disconnected = _attached.Keys.Where(name => !current.ContainsKey(name)).ToList();
+
+            foreach (var (name, device) in current)
             {
+                if (_attached.ContainsKey(name) || !_accept(name))
+                {
+                    device.Dispose(); // already attached, or filtered out
+                    continue;
+                }
+
                 try
                 {
                     device.EventReceived += OnEventReceived;
                     device.StartEventsListening();
                     _attached[name] = device;
-                    attached = true;
+                    connected.Add(name);
                 }
                 catch (Exception ex)
                 {
                     // Common when a DAW already holds the device (PRD §6 known limitation).
                     _logger.LogWarning(ex, "Could not listen to MIDI device {Name}", name);
+                    device.Dispose();
                 }
             }
         }
 
-        if (!attached)
+        foreach (var name in disconnected)
         {
-            device.Dispose();
-            return;
+            Detach(name);
         }
 
-        _logger.LogInformation("MIDI device attached: {Name}", name);
-        DeviceConnected?.Invoke(this, new MidiDeviceInfo(name, name));
+        foreach (var name in connected)
+        {
+            _logger.LogInformation("MIDI device attached: {Name}", name);
+            DeviceConnected?.Invoke(this, new MidiDeviceInfo(name, name));
+        }
     }
 
     private void Detach(string name)
@@ -184,8 +187,7 @@ public sealed class DryWetMidiSource : IMidiSource, IDisposable
 
     private void OnEventReceived(object? sender, MidiEventReceivedEventArgs e)
     {
-        var device = sender as InputDevice;
-        var name = device?.Name ?? "unknown";
+        var name = (sender as InputDevice)?.Name ?? "unknown";
 
         if (MidiMessageFactory.TryCreate(e.Event, name, out var message))
         {
