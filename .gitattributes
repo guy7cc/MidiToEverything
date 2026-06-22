@@ -1,0 +1,14 @@
+# Normalize line endings: store text as LF in the repo, check out native.
+* text=auto eol=lf
+
+# Windows-centric tooling files keep CRLF on checkout.
+*.sln       text eol=crlf
+*.csproj    text eol=crlf
+*.props     text eol=crlf
+*.targets   text eol=crlf
+*.manifest  text eol=crlf
+
+# Binary assets (none yet, declared for safety).
+*.png  binary
+*.ico  binary
+*.snk  binary
