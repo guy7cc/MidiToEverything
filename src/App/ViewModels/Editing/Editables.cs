@@ -32,8 +32,9 @@ public partial class EditableProfile : ObservableObject
     [ObservableProperty] private string _id = "";
     [ObservableProperty] private string _name = "";
     [ObservableProperty] private bool _isBase;
-    [ObservableProperty] private string _processNames = "";
-    [ObservableProperty] private string _titlePattern = "";
+
+    /// <summary>Unified window-match regex (matched against "process\ntitle").</summary>
+    [ObservableProperty] private string _pattern = "";
     [ObservableProperty] private int _priority;
 
     public ObservableCollection<EditableBinding> Bindings { get; } = new();

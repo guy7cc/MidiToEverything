@@ -40,8 +40,7 @@ internal static class ProfileMapper
             ? null
             : new MatchRule
             {
-                ProcessNames = p.Match.ProcessNames.ToArray(),
-                TitlePattern = p.Match.TitlePattern,
+                Pattern = p.Match.Pattern,
                 Priority = p.Match.Priority,
             },
         Bindings = p.Bindings.Select(ToDomain).ToArray(),
@@ -137,8 +136,7 @@ internal static class ProfileMapper
             ? null
             : new MatchDto
             {
-                ProcessNames = p.Match.ProcessNames.ToList(),
-                TitlePattern = p.Match.TitlePattern,
+                Pattern = p.Match.Pattern,
                 Priority = p.Match.Priority,
             },
         Bindings = p.Bindings.Select(ToDto).ToList(),

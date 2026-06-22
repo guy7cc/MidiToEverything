@@ -75,10 +75,11 @@
 | `name` | string | 表示名 |
 | `enabled` | bool | 有効/無効 |
 | `match` | object | コンテキスト自動切替条件（基本プロファイルでは無し） |
-| `match.processNames` | string[] | 実行ファイル名（例: `["CLIPStudioPaint.exe"]`、大文字小文字無視） |
-| `match.titlePattern` | string(regex) | ウィンドウタイトル正規表現（任意） |
+| `match.pattern` | string(regex) | **単一の正規表現**。`"<プロセス名>\n<ウィンドウタイトル>"` の2行文字列に対し**複数行モード**で評価。例: `^chrome\.exe$`（プロセス名行に一致）/ `Google Chrome$`（タイトル行に一致）/ 両方を `(?:…)|(?:…)` でOR結合。空文字は不一致。不正な正規表現は例外を投げず不一致扱い |
 | `match.priority` | int | 複数一致時の優先度（大きいほど優先） |
 | `bindings` | Binding[] | シグナル→アクションの対応 |
+
+> プロセス名とタイトル判別を1つの編集可能な正規表現に統合（schema v2）。エディタの「候補を追加」は、選択/入力したプロセスを表す節 `^name$` を既存パターンへ OR 結合し、失敗時（空入力・手編集で再構成不能）はユーザに通知する。v1 の `processNames`/`titlePattern` はロード時に `pattern` へ自動移行。
 
 `Binding`:
 ```jsonc
@@ -97,7 +98,7 @@
 
 ```jsonc
 {
-  "version": 1,                         // スキーマバージョン（マイグレーション用 FR-7.5）
+  "version": 2,                         // スキーマバージョン（マイグレーション用 FR-7.5）
   "settings": {
     "startWithWindows": false,          // ログオン時自動起動 FR-7.6
     "emergencyStopHotkey": "ctrl+alt+pause",
@@ -144,8 +145,7 @@
       "name": "Clip Studio Paint",
       "enabled": true,
       "match": {
-        "processNames": ["CLIPStudioPaint.exe"],
-        "titlePattern": null,
+        "pattern": "^CLIPStudioPaint\\.exe$",
         "priority": 10
       },
       "bindings": [
@@ -184,7 +184,7 @@
       "id": "obs",
       "name": "OBS Studio",
       "enabled": true,
-      "match": { "processNames": ["obs64.exe"], "priority": 5 },
+      "match": { "pattern": "^obs64\\.exe$", "priority": 5 },
       "bindings": [
         {
           "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 36 },

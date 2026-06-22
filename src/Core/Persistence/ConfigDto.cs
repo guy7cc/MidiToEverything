@@ -48,9 +48,14 @@ internal sealed class ProfileDto
 
 internal sealed class MatchDto
 {
-    public List<string> ProcessNames { get; set; } = new();
-    public string? TitlePattern { get; set; }
+    /// <summary>Unified match regex (v2+), evaluated against "process\ntitle".</summary>
+    public string Pattern { get; set; } = "";
+
     public int Priority { get; set; }
+
+    // ── v1 legacy fields: read for migration only, never written (null is omitted) ──
+    public List<string>? ProcessNames { get; set; }
+    public string? TitlePattern { get; set; }
 }
 
 internal sealed class BindingDto

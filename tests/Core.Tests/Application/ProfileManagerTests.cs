@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using MidiToEverything.Core.Application;
 using MidiToEverything.Core.Domain;
 using MidiToEverything.Core.Tests.Fakes;
@@ -12,7 +13,7 @@ public class ProfileManagerTests
     {
         Id = id,
         Name = id,
-        Match = new MatchRule { ProcessNames = new[] { process }, Priority = priority },
+        Match = new MatchRule { Pattern = "^" + Regex.Escape(process) + "$", Priority = priority },
     };
 
     private static AppConfig Config(params Profile[] profiles) => new()

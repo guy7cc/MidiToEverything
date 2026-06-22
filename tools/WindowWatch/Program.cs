@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using MidiToEverything.Core.Application;
 using MidiToEverything.Core.Domain;
 using MidiToEverything.Infrastructure.Midi;
@@ -69,7 +70,11 @@ AppConfig BuildConfig()
     {
         Id = id,
         Name = name,
-        Match = new MatchRule { ProcessNames = processes },
+        // Unified match regex: any of the process names on the first line of "process\ntitle".
+        Match = new MatchRule
+        {
+            Pattern = string.Join("|", processes.Select(p => "^" + Regex.Escape(p) + "$")),
+        },
     };
 
     var @base = new Profile

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "settings": {
     "startWithWindows": false,
     "emergencyStopHotkey": "ctrl+alt+pause",
@@ -121,9 +121,7 @@
       "name": "Clip Studio Paint",
       "enabled": true,
       "match": {
-        "processNames": [
-          "CLIPStudioPaint.exe"
-        ],
+        "pattern": "^CLIPStudioPaint\\.exe$",
         "priority": 10
       },
       "bindings": [
@@ -254,9 +252,7 @@
       "name": "OBS Studio",
       "enabled": true,
       "match": {
-        "processNames": [
-          "obs64.exe"
-        ],
+        "pattern": "^obs64\\.exe$",
         "priority": 5
       },
       "bindings": [

@@ -51,7 +51,19 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     [ObservableProperty] private EditableProfile? _selectedProfile;
     [ObservableProperty] private EditableBinding? _selectedBinding;
     [ObservableProperty] private RunningProcess? _selectedRunningProcess;
+    [ObservableProperty] private string _processNameInput = "";
+    [ObservableProperty] private string _matchStatus = "";
+    [ObservableProperty] private bool _matchStatusIsError;
     [ObservableProperty] private string _lastSignalText = "(まだ受信していません)";
+
+    // Selecting a running process fills the input box with its exe (the user may still edit it).
+    partial void OnSelectedRunningProcessChanged(RunningProcess? value)
+    {
+        if (value is not null)
+        {
+            ProcessNameInput = value.Exe;
+        }
+    }
 
     /// <summary>Raised with true on Save, false on Cancel, so the window can close.</summary>
     public event EventHandler<bool>? CloseRequested;
@@ -67,7 +79,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AddProfile()
     {
-        var profile = new EditableProfile { Id = "", Name = "新しいプロファイル", ProcessNames = "" };
+        var profile = new EditableProfile { Id = "", Name = "新しいプロファイル" };
         Profiles.Add(profile);
         SelectedProfile = profile;
     }
@@ -84,45 +96,49 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void RefreshProcesses() => LoadProcesses();
 
-    /// <summary>Append the selected running process to the profile's target list (no duplicates).</summary>
-    [RelayCommand]
-    private void AddProcess()
-    {
-        if (SelectedProfile is null || SelectedRunningProcess is null)
-        {
-            return;
-        }
-
-        var existing = SelectedProfile.ProcessNames
-            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
-
-        if (existing.Any(name => string.Equals(name, SelectedRunningProcess.Exe, StringComparison.OrdinalIgnoreCase)))
-        {
-            return;
-        }
-
-        existing.Add(SelectedRunningProcess.Exe);
-        SelectedProfile.ProcessNames = string.Join(", ", existing);
-    }
-
     /// <summary>
-    /// Suggest a robust title regex from the selected running process, so the profile keeps
-    /// matching the same app on future launches despite the changing document part of the title.
+    /// Fold the selected/typed process into the profile's match regex (OR-merged). The user can
+    /// pick a running process or type a name; the result is notified, including failures
+    /// (empty name, or a hand-edited pattern that can no longer be extended automatically).
     /// </summary>
     [RelayCommand]
-    private void SuggestTitlePattern()
+    private void AddProcessToPattern()
     {
-        if (SelectedProfile is null || SelectedRunningProcess is null)
+        if (SelectedProfile is null)
         {
             return;
         }
 
-        var pattern = TitlePatternSuggester.Suggest(SelectedRunningProcess.Title);
-        if (!string.IsNullOrEmpty(pattern))
+        var name = ProcessNameInput?.Trim() ?? "";
+        if (name.Length == 0 && SelectedRunningProcess is not null)
         {
-            SelectedProfile.TitlePattern = pattern;
+            name = SelectedRunningProcess.Exe;
         }
+
+        var result = MatchPatternBuilder.AddProcess(SelectedProfile.Pattern, name);
+        switch (result.Status)
+        {
+            case AddProcessStatus.Added:
+                SelectedProfile.Pattern = result.Pattern;
+                SetMatchStatus($"「{name}」を判別パターンに追加しました。", isError: false);
+                ProcessNameInput = "";
+                break;
+            case AddProcessStatus.AlreadyPresent:
+                SetMatchStatus($"「{name}」はすでに含まれています。", isError: false);
+                break;
+            case AddProcessStatus.EmptyName:
+                SetMatchStatus("起動中プロセスを選ぶか、プロセス名を入力してください。", isError: true);
+                break;
+            case AddProcessStatus.ReconstructionFailed:
+                SetMatchStatus("正規表現の自動再構成に失敗しました。下の正規表現を手動で編集してください。", isError: true);
+                break;
+        }
+    }
+
+    private void SetMatchStatus(string message, bool isError)
+    {
+        MatchStatus = message;
+        MatchStatusIsError = isError;
     }
 
     [RelayCommand]

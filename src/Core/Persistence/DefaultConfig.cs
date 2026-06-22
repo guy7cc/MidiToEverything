@@ -52,7 +52,7 @@ public static class DefaultConfig
     {
         Id = "clip-studio",
         Name = "Clip Studio Paint",
-        Match = new MatchRule { ProcessNames = new[] { "CLIPStudioPaint.exe" }, Priority = 10 },
+        Match = new MatchRule { Pattern = @"^CLIPStudioPaint\.exe$", Priority = 10 },
         Bindings = new[]
         {
             new Binding
@@ -89,7 +89,7 @@ public static class DefaultConfig
     {
         Id = "obs",
         Name = "OBS Studio",
-        Match = new MatchRule { ProcessNames = new[] { "obs64.exe" }, Priority = 5 },
+        Match = new MatchRule { Pattern = @"^obs64\.exe$", Priority = 5 },
         Bindings = new[]
         {
             new Binding
