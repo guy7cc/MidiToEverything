@@ -25,6 +25,12 @@ public static class DependencyInjection
         // Foreground-window control (ShowWindow/SetWindowPos).
         services.AddSingleton<IWindowController>(_ => new Win32WindowController());
 
+        // Shell launch + system audio (Phase 1 actions).
+        services.AddSingleton<IShellLauncher>(sp =>
+            new Shell.ShellLauncher(sp.GetService<ILogger<Shell.ShellLauncher>>()));
+        services.AddSingleton<ISystemAudio>(sp =>
+            new Audio.Win32SystemAudio(sp.GetService<ILogger<Audio.Win32SystemAudio>>()));
+
         // Input emission (SendInput) behind an emergency-stop gate.
         services.AddSingleton<Win32InputSink>(sp =>
             new Win32InputSink(sp.GetService<ILogger<Win32InputSink>>()));

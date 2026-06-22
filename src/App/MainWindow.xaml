@@ -84,6 +84,9 @@
                         </Ellipse.Style>
                     </Ellipse>
                     <TextBlock Text="{Binding EmissionLabel}" FontSize="13" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <CheckBox Content="外部起動を許可" IsChecked="{Binding AllowExternalLaunch}"
+                              VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" Margin="0,0,12,0"
+                              ToolTip="起動アクション（アプリ/ファイル/URL）を有効化。安全のため既定は無効" />
                     <Button Content="緊急停止 切替" Command="{Binding ToggleEmissionCommand}" Margin="0,0,8,0" />
                     <Button Content="プロファイル編集" Click="OpenEditor_Click" Style="{StaticResource AccentButton}" />
                 </StackPanel>

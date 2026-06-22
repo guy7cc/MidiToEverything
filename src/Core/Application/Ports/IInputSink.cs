@@ -28,4 +28,10 @@ public interface IInputSink
 
     /// <summary>Scroll the wheel; positive is up/right.</summary>
     void Scroll(ScrollAxis axis, double amount);
+
+    /// <summary>Tap a media/transport key (play-pause, next, mute, ...).</summary>
+    void SendMediaKey(MediaKey key);
+
+    /// <summary>Type a literal Unicode string.</summary>
+    void TypeText(string text);
 }

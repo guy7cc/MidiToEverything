@@ -69,6 +69,40 @@
                        Foreground="{StaticResource TextFaintBrush}" TextWrapping="Wrap"
                        VerticalAlignment="Center" Margin="2,6,0,0" />
         </DataTemplate>
+
+        <!-- TypeText: a free-text snippet (newlines allowed) -->
+        <DataTemplate x:Key="TypeTextDetailTemplate">
+            <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                     AcceptsReturn="True" TextWrapping="Wrap" MinLines="1" MaxLines="4"
+                     VerticalScrollBarVisibility="Auto" ToolTip="入力する文字列（改行可）" />
+        </DataTemplate>
+
+        <!-- Launch: target + optional arguments + working directory -->
+        <DataTemplate x:Key="LaunchDetailTemplate">
+            <StackPanel>
+                <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="対象: 実行ファイル / ファイル / URL / ms-settings: など">
+                    <TextBox.Foreground>
+                        <MultiBinding Converter="{StaticResource DetailValidBrush}">
+                            <Binding Path="Detail" />
+                            <Binding Path="ActionKind" />
+                        </MultiBinding>
+                    </TextBox.Foreground>
+                </TextBox>
+                <Grid Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Margin="0,0,4,0"
+                             Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="引数（任意）" />
+                    <TextBox Grid.Column="1" Margin="4,0,0,0"
+                             Text="{Binding WorkingDir, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="作業ディレクトリ（任意）" />
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -318,6 +352,12 @@
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="SwitchProfile">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource SwitchProfileDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="TypeText">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource TypeTextDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="Launch">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource LaunchDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="None">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource NoneDetailTemplate}" />

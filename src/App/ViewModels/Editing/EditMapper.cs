@@ -37,8 +37,9 @@ internal static class EditMapper
 
     private static EditableBinding ToEditable(Binding binding)
     {
-        var (kind, detail) = DescribeAction(binding.Actions.Count > 0 ? binding.Actions[0] : NoneAction.Instance);
-        return new EditableBinding
+        var action = binding.Actions.Count > 0 ? binding.Actions[0] : NoneAction.Instance;
+        var (kind, detail) = DescribeAction(action);
+        var editable = new EditableBinding
         {
             Signal = new EditableSignal
             {
@@ -52,6 +53,14 @@ internal static class EditMapper
             Detail = detail,
             Label = binding.Label ?? "",
         };
+
+        if (action is LaunchAction l)
+        {
+            editable.Arguments = l.Arguments ?? "";
+            editable.WorkingDir = l.WorkingDir ?? "";
+        }
+
+        return editable;
     }
 
     private static (EditableActionKind Kind, string Detail) DescribeAction(InputAction action) => action switch
@@ -61,6 +70,10 @@ internal static class EditMapper
         ScrollAction s => (EditableActionKind.Scroll, s.Axis.ToString().ToLowerInvariant()),
         CursorMoveAction c => (EditableActionKind.CursorMove, c.Mode.ToString().ToLowerInvariant()),
         WindowControlAction w => (EditableActionKind.WindowControl, WindowOpDetail(w.Op)),
+        MediaKeyAction mk => (EditableActionKind.MediaKey, mk.Key.ToString().ToLowerInvariant()),
+        TypeTextAction tt => (EditableActionKind.TypeText, tt.Text),
+        LaunchAction l => (EditableActionKind.Launch, l.Target),
+        SetVolumeAction v => (EditableActionKind.SetVolume, v.Target.ToString().ToLowerInvariant()),
         SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
         _ => (EditableActionKind.None, ""),
     };
@@ -153,10 +166,30 @@ internal static class EditMapper
             EditableActionKind.Scroll => new ScrollAction(ParseAxis(detail), UseInputValue: true),
             EditableActionKind.CursorMove => new CursorMoveAction(ParseMove(detail), UseInputValue: true),
             EditableActionKind.WindowControl => new WindowControlAction(ParseWindowOp(detail)),
+            EditableActionKind.MediaKey => new MediaKeyAction(ParseMediaKey(detail)),
+            EditableActionKind.TypeText => new TypeTextAction(b.Detail), // keep raw text (spaces/newlines)
+            EditableActionKind.Launch => new LaunchAction(detail, NullIfBlank(b.Arguments), NullIfBlank(b.WorkingDir)),
+            EditableActionKind.SetVolume => new SetVolumeAction(ParseVolumeTarget(detail)),
             EditableActionKind.SwitchProfile => ParseSwitch(detail),
             _ => NoneAction.Instance,
         };
     }
+
+    private static string? NullIfBlank(string s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+
+    public static MediaKey ParseMediaKey(string detail) => detail.Trim().ToLowerInvariant() switch
+    {
+        "next" => MediaKey.Next,
+        "previous" or "prev" => MediaKey.Previous,
+        "stop" => MediaKey.Stop,
+        "mute" => MediaKey.Mute,
+        "volumeup" or "volup" => MediaKey.VolumeUp,
+        "volumedown" or "voldown" => MediaKey.VolumeDown,
+        _ => MediaKey.PlayPause,
+    };
+
+    public static VolumeTarget ParseVolumeTarget(string detail) =>
+        detail.Trim().ToLowerInvariant() is "microphone" or "mic" ? VolumeTarget.Microphone : VolumeTarget.Master;
 
     private static string[] SplitKeys(string detail) => detail
         .Split(new[] { '+', ',', ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

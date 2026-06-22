@@ -53,4 +53,14 @@ public sealed class GatedInputSink : IInputSink
     {
         if (Enabled) _inner.Scroll(axis, amount);
     }
+
+    public void SendMediaKey(MediaKey key)
+    {
+        if (Enabled) _inner.SendMediaKey(key);
+    }
+
+    public void TypeText(string text)
+    {
+        if (Enabled) _inner.TypeText(text);
+    }
 }
