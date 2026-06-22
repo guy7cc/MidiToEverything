@@ -105,6 +105,7 @@ internal sealed class TriggerDto
 [JsonDerivedType(typeof(TypeTextActionDto), "typeText")]
 [JsonDerivedType(typeof(LaunchActionDto), "launch")]
 [JsonDerivedType(typeof(SetVolumeActionDto), "setVolume")]
+[JsonDerivedType(typeof(UiaActionDto), "uia")]
 [JsonDerivedType(typeof(NoneActionDto), "none")]
 internal abstract class ActionDto;
 
@@ -167,6 +168,14 @@ internal sealed class LaunchActionDto : ActionDto
 internal sealed class SetVolumeActionDto : ActionDto
 {
     public VolumeTarget Target { get; set; } = VolumeTarget.Master;
+}
+
+internal sealed class UiaActionDto : ActionDto
+{
+    public string WindowPattern { get; set; } = "";
+    public string ElementName { get; set; } = "";
+    public UiaVerb Verb { get; set; } = UiaVerb.Invoke;
+    public string? Value { get; set; }
 }
 
 internal sealed class NoneActionDto : ActionDto;

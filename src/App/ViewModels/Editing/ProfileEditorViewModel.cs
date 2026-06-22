@@ -23,6 +23,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     private readonly IProfileRepository _repository;
     private readonly ProfileManager _manager;
     private readonly IMidiSource _source;
+    private readonly IUiaElementPicker _uiaPicker;
     private volatile MidiMessage? _lastMessage;
     private EditableBinding? _editingOriginal; // the list binding being edited (null = creating new)
     private bool _loadingDraft;                // guards programmatic SelectedBinding changes
@@ -30,11 +31,13 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     // Debounces auto-save: every change except an in-progress binding signal persists automatically.
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
 
-    public ProfileEditorViewModel(IProfileRepository repository, ProfileManager manager, IMidiSource source)
+    public ProfileEditorViewModel(IProfileRepository repository, ProfileManager manager, IMidiSource source,
+        IUiaElementPicker uiaPicker)
     {
         _repository = repository;
         _manager = manager;
         _source = source;
+        _uiaPicker = uiaPicker;
         _saveTimer.Tick += (_, _) => SaveNow();
 
         foreach (var profile in EditMapper.ToEditable(manager.CurrentConfig))
@@ -55,6 +58,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     public Array SignalKinds { get; } = Enum.GetValues<SignalKind>();
     public Array TriggerModes { get; } = Enum.GetValues<TriggerMode>();
     public Array ActionKinds { get; } = Enum.GetValues<EditableActionKind>();
+    public string[] UiaVerbs { get; } = { "invoke", "toggle", "setvalue" };
 
     [ObservableProperty] private EditableProfile? _selectedProfile;
     [ObservableProperty] private EditableBinding? _selectedBinding;
@@ -332,6 +336,29 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
 
         var desc = $"{DraftBinding.Signal.Type} 番号{message.Number?.ToString() ?? "-"} ch{message.Channel}";
         SetLearnStatus($"取り込みました（{desc}）。「バインディングを保存」で確定します。", isError: false);
+    }
+
+    /// <summary>Capture the UI element under the cursor (after a short hover delay) into the draft.</summary>
+    [RelayCommand]
+    private async Task PickUiaElement()
+    {
+        if (DraftBinding is null)
+        {
+            SetLearnStatus("先にバインディングを追加/選択してください。", isError: true);
+            return;
+        }
+
+        SetLearnStatus("3秒以内に対象のUI要素へカーソルを合わせてください…", isError: false);
+        var pick = await _uiaPicker.PickAsync();
+        if (pick is null)
+        {
+            SetLearnStatus("要素を取得できませんでした。もう一度お試しください。", isError: true);
+            return;
+        }
+
+        DraftBinding.UiaWindow = pick.WindowPattern;
+        DraftBinding.Detail = pick.ElementName;
+        SetLearnStatus($"取得しました（要素「{pick.ElementName}」／ウィンドウ {pick.WindowPattern}）。", isError: false);
     }
 
     private void SetLearnStatus(string message, bool isError)

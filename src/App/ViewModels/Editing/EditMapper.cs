@@ -59,6 +59,12 @@ internal static class EditMapper
             editable.Arguments = l.Arguments ?? "";
             editable.WorkingDir = l.WorkingDir ?? "";
         }
+        else if (action is UiaAction u)
+        {
+            editable.UiaWindow = u.WindowPattern;
+            editable.UiaVerb = u.Verb.ToString().ToLowerInvariant();
+            editable.UiaValue = u.Value ?? "";
+        }
 
         return editable;
     }
@@ -74,6 +80,7 @@ internal static class EditMapper
         TypeTextAction tt => (EditableActionKind.TypeText, tt.Text),
         LaunchAction l => (EditableActionKind.Launch, l.Target),
         SetVolumeAction v => (EditableActionKind.SetVolume, v.Target.ToString().ToLowerInvariant()),
+        UiaAction u => (EditableActionKind.Uia, u.ElementName),
         SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
         _ => (EditableActionKind.None, ""),
     };
@@ -170,6 +177,7 @@ internal static class EditMapper
             EditableActionKind.TypeText => new TypeTextAction(b.Detail), // keep raw text (spaces/newlines)
             EditableActionKind.Launch => new LaunchAction(detail, NullIfBlank(b.Arguments), NullIfBlank(b.WorkingDir)),
             EditableActionKind.SetVolume => new SetVolumeAction(ParseVolumeTarget(detail)),
+            EditableActionKind.Uia => new UiaAction(b.UiaWindow.Trim(), detail, ParseUiaVerb(b.UiaVerb), NullIfBlank(b.UiaValue)),
             EditableActionKind.SwitchProfile => ParseSwitch(detail),
             _ => NoneAction.Instance,
         };
@@ -190,6 +198,13 @@ internal static class EditMapper
 
     public static VolumeTarget ParseVolumeTarget(string detail) =>
         detail.Trim().ToLowerInvariant() is "microphone" or "mic" ? VolumeTarget.Microphone : VolumeTarget.Master;
+
+    public static UiaVerb ParseUiaVerb(string verb) => verb.Trim().ToLowerInvariant() switch
+    {
+        "toggle" => UiaVerb.Toggle,
+        "setvalue" or "value" => UiaVerb.SetValue,
+        _ => UiaVerb.Invoke,
+    };
 
     private static string[] SplitKeys(string detail) => detail
         .Split(new[] { '+', ',', ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

@@ -26,6 +26,9 @@ public enum MediaKey { PlayPause, Next, Previous, Stop, Mute, VolumeUp, VolumeDo
 /// <summary>Audio endpoint a volume action targets (docs/05 §5, Phase 1).</summary>
 public enum VolumeTarget { Master, Microphone }
 
+/// <summary>How a UI Automation element is actuated (docs/05 §5, Phase 2).</summary>
+public enum UiaVerb { Invoke, Toggle, SetValue }
+
 /// <summary>Send a keyboard shortcut. <see cref="Hold"/> keeps keys down until release.</summary>
 public sealed record KeyAction(
     IReadOnlyList<string> Keys,
@@ -75,6 +78,17 @@ public sealed record LaunchAction(
 
 /// <summary>Set an audio endpoint volume from the input value (Absolute fader → 0..100%).</summary>
 public sealed record SetVolumeAction(VolumeTarget Target = VolumeTarget.Master) : InputAction;
+
+/// <summary>
+/// Actuate a control in another window via UI Automation (docs/05 §5, Phase 2). The target
+/// window is matched by <see cref="WindowPattern"/> (regex over "process\ntitle"); the element
+/// is found by Name or AutomationId.
+/// </summary>
+public sealed record UiaAction(
+    string WindowPattern = "",
+    string ElementName = "",
+    UiaVerb Verb = UiaVerb.Invoke,
+    string? Value = null) : InputAction;
 
 /// <summary>
 /// Explicit "do nothing" that also blocks fallback to the base profile (FR-6.4).

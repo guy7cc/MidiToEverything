@@ -197,4 +197,37 @@ public class ActionExecutorTests
         public List<(VolumeTarget Target, double Level)> Calls { get; } = new();
         public void SetVolume(VolumeTarget target, double level) => Calls.Add((target, level));
     }
+
+    [Fact]
+    public void Uia_ActuatesElementOnPress()
+    {
+        var driver = new RecordingUiaDriver();
+        var executor = new ActionExecutor(new IActionHandler[] { new UiaActionHandler(driver) });
+
+        executor.Execute(With(new UiaAction("^notepad", "OK", UiaVerb.Invoke)),
+            new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        var call = Assert.Single(driver.Calls);
+        Assert.Equal("^notepad", call.Window);
+        Assert.Equal("OK", call.Element);
+        Assert.Equal(UiaVerb.Invoke, call.Verb);
+    }
+
+    [Fact]
+    public void Uia_NoOpsWhenElementNameBlank()
+    {
+        var driver = new RecordingUiaDriver();
+        var executor = new ActionExecutor(new IActionHandler[] { new UiaActionHandler(driver) });
+
+        executor.Execute(With(new UiaAction("^notepad", "")), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Empty(driver.Calls);
+    }
+
+    private sealed class RecordingUiaDriver : IUiaDriver
+    {
+        public List<(string Window, string Element, UiaVerb Verb, string? Value)> Calls { get; } = new();
+        public void Actuate(string windowPattern, string elementName, UiaVerb verb, string? value)
+            => Calls.Add((windowPattern, elementName, verb, value));
+    }
 }
