@@ -76,140 +76,12 @@
                        VerticalAlignment="Center" Margin="2,6,0,0" />
         </DataTemplate>
 
-        <!-- Http: URL + method + body -->
-        <DataTemplate x:Key="HttpDetailTemplate">
-            <StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ComboBox Grid.Column="0" Width="110" Margin="0,0,6,0"
-                              ItemsSource="{Binding DataContext.HttpMethods, RelativeSource={RelativeSource AncestorType=Window}}"
-                              SelectedItem="{Binding HttpMethod}" ToolTip="HTTPメソッド" />
-                    <TextBox Grid.Column="1" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="URL（http(s):// または http://localhost:8123/... など）">
-                        <TextBox.Foreground>
-                            <MultiBinding Converter="{StaticResource DetailValidBrush}">
-                                <Binding Path="Detail" />
-                                <Binding Path="ActionKind" />
-                            </MultiBinding>
-                        </TextBox.Foreground>
-                    </TextBox>
-                </Grid>
-                <TextBox Margin="0,4,0,0" Text="{Binding HttpBody, UpdateSourceTrigger=PropertyChanged}"
-                         AcceptsReturn="True" TextWrapping="Wrap" MinLines="1" MaxLines="4"
-                         VerticalScrollBarVisibility="Auto" ToolTip="本文（任意、JSON 等。POST/PUT 時）" />
-            </StackPanel>
-        </DataTemplate>
 
-        <!-- Plugin: plugin id + command + argument -->
-        <DataTemplate x:Key="PluginDetailTemplate">
-            <StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Margin="0,0,4,0"
-                             Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="プラグインID（plugins フォルダの拡張が公開するID）" />
-                    <TextBox Grid.Column="1" Margin="4,0,0,0"
-                             Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="コマンド名（プラグインが解釈）" />
-                </Grid>
-                <TextBox Margin="0,4,0,0" Text="{Binding PluginArg, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="引数（任意）" />
-            </StackPanel>
-        </DataTemplate>
 
-        <!-- Macro: newline-separated key chords + step delay -->
-        <DataTemplate x:Key="MacroDetailTemplate">
-            <StackPanel>
-                <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                         AcceptsReturn="True" TextWrapping="NoWrap" MinLines="2" MaxLines="5"
-                         VerticalScrollBarVisibility="Auto" FontFamily="Consolas"
-                         ToolTip="1行に1つのキー（例: ctrl+c / ctrl+v / enter）" />
-                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                    <TextBlock Text="ステップ間ディレイ(ms):" VerticalAlignment="Center"
-                               Foreground="{StaticResource TextDimBrush}" Margin="0,0,6,0" />
-                    <TextBox Width="70" Text="{Binding MacroDelay, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-            </StackPanel>
-        </DataTemplate>
 
-        <!-- Toggle: chord A / chord B + optional LED feedback -->
-        <DataTemplate x:Key="ToggleDetailTemplate">
-            <StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Margin="0,0,4,0"
-                             Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="キーA（奇数回。例 ctrl+r）" />
-                    <TextBox Grid.Column="1" Margin="4,0,0,0"
-                             Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="キーB（偶数回。空ならAと同じ）" />
-                </Grid>
-                <TextBox Margin="0,4,0,0" Text="{Binding ToggleLed, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="LEDフィードバック（任意）: 出力デバイス名 ノート番号 [ch]（例 loopMIDI 36 1）" />
-            </StackPanel>
-        </DataTemplate>
 
-        <!-- MidiOut: output device + message spec -->
-        <DataTemplate x:Key="MidiOutDetailTemplate">
-            <StackPanel>
-                <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="出力デバイス名の正規表現（例 ^loopMIDI）"
-                         Foreground="{Binding Detail, Converter={StaticResource DeviceValidBrush}}" />
-                <TextBox Margin="0,4,0,0" Text="{Binding MidiOutSpec, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="メッセージ: 種別 ch 番号 値（cc 1 7 64 / note 1 60 100 / cc 1 7 value で入力値連動 / pc 1 5）" />
-            </StackPanel>
-        </DataTemplate>
 
-        <!-- Obs: operation + argument (scene/input name) -->
-        <DataTemplate x:Key="ObsDetailTemplate">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <ComboBox Grid.Column="0" Width="190" Margin="0,0,6,0"
-                          ItemsSource="{Binding DataContext.ObsOps, RelativeSource={RelativeSource AncestorType=Window}}"
-                          SelectedItem="{Binding ObsOpName}" ToolTip="OBS操作" />
-                <TextBox Grid.Column="1" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="sceneswitch=シーン名 / togglemute=入力名（他の操作では不要）" />
-            </Grid>
-        </DataTemplate>
 
-        <!-- Osc: address + target host:port + args -->
-        <DataTemplate x:Key="OscDetailTemplate">
-            <StackPanel>
-                <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="OSCアドレス（例 /1/fader1）">
-                    <TextBox.Foreground>
-                        <MultiBinding Converter="{StaticResource DetailValidBrush}">
-                            <Binding Path="Detail" />
-                            <Binding Path="ActionKind" />
-                        </MultiBinding>
-                    </TextBox.Foreground>
-                </TextBox>
-                <Grid Margin="0,4,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Margin="0,0,4,0"
-                             Text="{Binding OscTarget, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="宛先 host:port（例 127.0.0.1:9000）" />
-                    <TextBox Grid.Column="1" Margin="4,0,0,0"
-                             Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="引数（空白区切り。整数/小数/文字列を自動判別）" />
-                </Grid>
-            </StackPanel>
-        </DataTemplate>
 
         <!-- TypeText: a free-text snippet (newlines allowed) -->
         <DataTemplate x:Key="TypeTextDetailTemplate">
@@ -218,69 +90,7 @@
                      VerticalScrollBarVisibility="Auto" ToolTip="入力する文字列（改行可）" />
         </DataTemplate>
 
-        <!-- Launch: target + optional arguments + working directory -->
-        <DataTemplate x:Key="LaunchDetailTemplate">
-            <StackPanel>
-                <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="対象: 実行ファイル / ファイル / URL / ms-settings: など">
-                    <TextBox.Foreground>
-                        <MultiBinding Converter="{StaticResource DetailValidBrush}">
-                            <Binding Path="Detail" />
-                            <Binding Path="ActionKind" />
-                        </MultiBinding>
-                    </TextBox.Foreground>
-                </TextBox>
-                <Grid Margin="0,4,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Margin="0,0,4,0"
-                             Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="引数（任意）" />
-                    <TextBox Grid.Column="1" Margin="4,0,0,0"
-                             Text="{Binding WorkingDir, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="作業ディレクトリ（任意）" />
-                </Grid>
-            </StackPanel>
-        </DataTemplate>
 
-        <!-- Uia: element name (+ picker) + target window + verb + value -->
-        <DataTemplate x:Key="UiaDetailTemplate">
-            <StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="要素名（Name または AutomationId）">
-                        <TextBox.Foreground>
-                            <MultiBinding Converter="{StaticResource DetailValidBrush}">
-                                <Binding Path="Detail" />
-                                <Binding Path="ActionKind" />
-                            </MultiBinding>
-                        </TextBox.Foreground>
-                    </TextBox>
-                    <Button Grid.Column="1" Content="要素を取得" Margin="6,0,0,0"
-                            ToolTip="押した後3秒以内に対象のUI要素へカーソルを合わせると取り込みます"
-                            Command="{Binding DataContext.PickUiaElementCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                </Grid>
-                <TextBox Margin="0,4,0,0" Text="{Binding UiaWindow, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="対象ウィンドウの正規表現（process\ntitle に一致）。例: ^notepad" />
-                <Grid Margin="0,4,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ComboBox Grid.Column="0" Width="150" Margin="0,0,6,0"
-                              ItemsSource="{Binding DataContext.UiaVerbs, RelativeSource={RelativeSource AncestorType=Window}}"
-                              SelectedItem="{Binding UiaVerb}" ToolTip="動作: invoke / toggle / setvalue" />
-                    <TextBox Grid.Column="1" Text="{Binding UiaValue, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="setvalue のとき入力する値" />
-                </Grid>
-            </StackPanel>
-        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -535,34 +345,34 @@
                                                         <Setter Property="ContentTemplate" Value="{StaticResource TypeTextDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Launch">
-                                                        <Setter Property="ContentTemplate" Value="{StaticResource LaunchDetailTemplate}" />
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ComplexActionDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Uia">
-                                                        <Setter Property="ContentTemplate" Value="{StaticResource UiaDetailTemplate}" />
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ComplexActionDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Brightness">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource BrightnessDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Http">
-                                                        <Setter Property="ContentTemplate" Value="{StaticResource HttpDetailTemplate}" />
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ComplexActionDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Osc">
-                                                        <Setter Property="ContentTemplate" Value="{StaticResource OscDetailTemplate}" />
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ComplexActionDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Obs">
-                                                        <Setter Property="ContentTemplate" Value="{StaticResource ObsDetailTemplate}" />
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ComplexActionDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="MidiOut">
-                                                        <Setter Property="ContentTemplate" Value="{StaticResource MidiOutDetailTemplate}" />
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ComplexActionDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Macro">
-                                                        <Setter Property="ContentTemplate" Value="{StaticResource MacroDetailTemplate}" />
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ComplexActionDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Toggle">
-                                                        <Setter Property="ContentTemplate" Value="{StaticResource ToggleDetailTemplate}" />
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ComplexActionDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Plugin">
-                                                        <Setter Property="ContentTemplate" Value="{StaticResource PluginDetailTemplate}" />
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ComplexActionDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="None">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource NoneDetailTemplate}" />

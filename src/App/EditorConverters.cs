@@ -67,6 +67,53 @@ public static class EditorHelp
         _ => "",
     };
 
+    /// <summary>Step-by-step instructions for configuring a complex action (shown in the config dialog).</summary>
+    public static string Instructions(EditableActionKind kind) => kind switch
+    {
+        EditableActionKind.Launch =>
+            "アプリ・ファイル・URL・ms-settings: を起動します。\n" +
+            "• 対象: 実行ファイルのパス / ドキュメント / https://… / ms-settings:nightlight など\n" +
+            "• 引数・作業ディレクトリは任意\n" +
+            "※ メイン画面で「外部起動を許可」をONにする必要があります（既定OFF）。",
+        EditableActionKind.Uia =>
+            "別アプリのUI要素（ボタン等）を操作します。\n" +
+            "1. 「要素を取得」を押し、3秒以内に対象の要素へマウスカーソルを合わせます\n" +
+            "   → 要素名と対象ウィンドウが自動入力されます\n" +
+            "2. 動作を選択: invoke=押す / toggle=切替 / setvalue=値を設定\n" +
+            "3. setvalue のときは値を入力します。",
+        EditableActionKind.Http =>
+            "HTTPリクエスト / Webhook を送信します（Home Assistant・IFTTT・自作API 等）。\n" +
+            "• メソッド(GET/POST…)、URL、本文(JSON等)を指定\n" +
+            "• 例: POST  http://localhost:8123/api/...   本文 {\"state\":\"on\"}",
+        EditableActionKind.Osc =>
+            "OSCメッセージをUDPで送信します（照明・VJ・AV機器）。\n" +
+            "• アドレス（例 /1/fader1）、宛先 host:port、引数（空白区切り）\n" +
+            "• 引数は 整数 / 小数 / 文字列 を自動判別します。",
+        EditableActionKind.Obs =>
+            "OBS Studio を obs-websocket で制御します。\n" +
+            "• 先にメイン画面の「OBS接続」(host/port/password) を設定してください\n" +
+            "• 操作を選択。sceneswitch はシーン名、togglemute は入力名を「詳細」に入力。",
+        EditableActionKind.MidiOut =>
+            "出力デバイス（仮想MIDIポート等）へMIDIを送信します。\n" +
+            "• デバイス: 出力先の名前を正規表現で（例 ^loopMIDI）\n" +
+            "• メッセージ: 種別 ch 番号 値（cc 1 7 64 / note 1 60 100 / pc 1 5）\n" +
+            "• 値を value にすると入力値連動（トリガー=Absolute のフェーダー向け）。",
+        EditableActionKind.Macro =>
+            "複数のキー入力を順番に送ります。\n" +
+            "• 1行に1つのキー（例: ctrl+c / ctrl+v / enter）\n" +
+            "• ステップ間ディレイ(ms)で間隔を調整\n" +
+            "※ 動作確認では対象ウィンドウにフォーカスしてから実行してください。",
+        EditableActionKind.Toggle =>
+            "押すたびにキーAとキーBを交互に送ります（Bが空ならAと同じ）。\n" +
+            "• LED欄に「出力デバイス名 ノート番号 [ch]」を指定すると、状態を\n" +
+            "  コントローラのLEDに反映します（例 loopMIDI 36 1）。",
+        EditableActionKind.Plugin =>
+            "plugins フォルダのDLL拡張を呼び出します。\n" +
+            "• プラグインID・コマンド名・引数を指定（プラグインの仕様に従います）\n" +
+            "• 詳しくは docs/05 §10 を参照。",
+        _ => "",
+    };
+
     /// <summary>Suggested "detail" values for an action kind (the combo dropdown; free text still allowed).</summary>
     public static IReadOnlyList<string> DetailCandidates(EditableActionKind kind) => kind switch
     {
@@ -124,6 +171,16 @@ public sealed class ActionKindHelpConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value is EditableActionKind k ? EditorHelp.ActionKind(k) : "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Binds an <see cref="EditableActionKind"/> to its configuration instructions.</summary>
+public sealed class ActionInstructionsConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is EditableActionKind k ? EditorHelp.Instructions(k) : "";
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();

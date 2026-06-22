@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using MidiToEverything.Core.Application;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
+using MidiToEverything.Core.Mapping;
 using MidiToEverything.Core.Persistence;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
@@ -24,6 +25,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     private readonly ProfileManager _manager;
     private readonly IMidiSource _source;
     private readonly IUiaElementPicker _uiaPicker;
+    private readonly ActionExecutor _executor;
     private volatile MidiMessage? _lastMessage;
     private EditableBinding? _editingOriginal; // the list binding being edited (null = creating new)
     private bool _loadingDraft;                // guards programmatic SelectedBinding changes
@@ -32,12 +34,13 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
 
     public ProfileEditorViewModel(IProfileRepository repository, ProfileManager manager, IMidiSource source,
-        IUiaElementPicker uiaPicker)
+        IUiaElementPicker uiaPicker, ActionExecutor executor)
     {
         _repository = repository;
         _manager = manager;
         _source = source;
         _uiaPicker = uiaPicker;
+        _executor = executor;
         _saveTimer.Tick += (_, _) => SaveNow();
 
         foreach (var profile in EditMapper.ToEditable(manager.CurrentConfig))
@@ -372,6 +375,52 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     {
         LearnStatus = message;
         LearnStatusIsError = isError;
+    }
+
+    /// <summary>Raised when a complex action requests its dedicated config dialog.</summary>
+    public event EventHandler? ActionConfigRequested;
+
+    /// <summary>Status line in the action-config dialog (test-run result).</summary>
+    [ObservableProperty] private string _testStatus = "";
+
+    [RelayCommand]
+    private void OpenActionConfig()
+    {
+        if (DraftBinding is not null)
+        {
+            TestStatus = "";
+            ActionConfigRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>Run the draft action once with its current (unsaved) settings, to verify it works.</summary>
+    [RelayCommand]
+    private void TestAction()
+    {
+        if (DraftBinding is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var action = EditMapper.ToAction(DraftBinding);
+            var binding = new MidiToEverything.Core.Domain.Binding
+            {
+                Signal = new Signal(),
+                Actions = new[] { action },
+            };
+            // Value-driven actions fire on Change; the rest fire on Press.
+            var trigger = action is MidiOutAction { UseInputValue: true }
+                ? new TriggerResult(TriggerPhase.Change, 1.0)
+                : new TriggerResult(TriggerPhase.Press, 0);
+            _executor.Execute(binding, trigger, new MidiMessage("test", 1, MidiMessageType.NoteOn, 0, 127));
+            TestStatus = "実行しました。対象アプリ/デバイスで結果を確認してください。";
+        }
+        catch (Exception ex)
+        {
+            TestStatus = $"失敗: {ex.Message}";
+        }
     }
 
     private static void ApplyLearn(EditableBinding binding, MidiMessage message)

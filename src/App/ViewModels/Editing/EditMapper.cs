@@ -205,7 +205,8 @@ internal static class EditMapper
         };
     }
 
-    private static InputAction ToAction(EditableBinding b)
+    /// <summary>Build the domain action from a draft binding (also used for the editor's test-run).</summary>
+    public static InputAction ToAction(EditableBinding b)
     {
         var detail = b.Detail.Trim();
         return b.ActionKind switch
