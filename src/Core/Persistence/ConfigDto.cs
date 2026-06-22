@@ -115,6 +115,7 @@ internal sealed class TriggerDto
 [JsonDerivedType(typeof(HttpActionDto), "http")]
 [JsonDerivedType(typeof(OscActionDto), "osc")]
 [JsonDerivedType(typeof(ObsActionDto), "obs")]
+[JsonDerivedType(typeof(MidiOutActionDto), "midiOut")]
 [JsonDerivedType(typeof(NoneActionDto), "none")]
 internal abstract class ActionDto;
 
@@ -217,6 +218,16 @@ internal sealed class ObsActionDto : ActionDto
 {
     public ObsOp Op { get; set; } = ObsOp.ToggleRecord;
     public string? Arg { get; set; }
+}
+
+internal sealed class MidiOutActionDto : ActionDto
+{
+    public string Device { get; set; } = "";
+    public MidiOutKind Kind { get; set; } = MidiOutKind.ControlChange;
+    public int Channel { get; set; } = 1;
+    public int Data1 { get; set; }
+    public int Data2 { get; set; }
+    public bool UseInputValue { get; set; }
 }
 
 internal sealed class NoneActionDto : ActionDto;

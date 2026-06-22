@@ -163,6 +163,15 @@ public class ConfigSerializerTests
             RoundTripAction(sig, new ObsAction(ObsOp.SceneSwitch, "Intro")));
         Assert.Equal(ObsOp.SceneSwitch, obs.Op);
         Assert.Equal("Intro", obs.Arg);
+
+        var midi = Assert.IsType<MidiOutAction>(
+            RoundTripAction(sig, new MidiOutAction("^loopMIDI", MidiOutKind.NoteOn, 2, 60, 100, UseInputValue: true)));
+        Assert.Equal("^loopMIDI", midi.Device);
+        Assert.Equal(MidiOutKind.NoteOn, midi.Kind);
+        Assert.Equal(2, midi.Channel);
+        Assert.Equal(60, midi.Data1);
+        Assert.Equal(100, midi.Data2);
+        Assert.True(midi.UseInputValue);
     }
 
     [Fact]

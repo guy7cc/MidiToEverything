@@ -127,7 +127,9 @@ public partial class App : Application
                 .Append(new Core.Application.Handlers.OscActionHandler(
                     sp.GetRequiredService<IOscSender>()))
                 .Append(new Core.Application.Handlers.ObsActionHandler(
-                    sp.GetRequiredService<IObsClient>()))));
+                    sp.GetRequiredService<IObsClient>()))
+                .Append(new Core.Application.Handlers.MidiOutActionHandler(
+                    sp.GetRequiredService<IMidiOutput>()))));
         services.AddSingleton(sp => new MidiEventPipeline(
             sp.GetRequiredService<IMidiSource>(),
             sp.GetRequiredService<IMappingContext>(),

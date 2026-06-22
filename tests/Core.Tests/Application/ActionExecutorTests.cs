@@ -327,4 +327,35 @@ public class ActionExecutorTests
         public List<(ObsOp Op, string? Arg)> Calls { get; } = new();
         public void Send(ObsOp op, string? arg) => Calls.Add((op, arg));
     }
+
+    [Fact]
+    public void MidiOut_SendsFixedMessageOnPress()
+    {
+        var midi = new RecordingMidiOut();
+        var executor = new ActionExecutor(new IActionHandler[] { new MidiOutActionHandler(midi) });
+
+        executor.Execute(With(new MidiOutAction("^loop", MidiOutKind.ControlChange, 1, 7, 64)),
+            new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(("^loop", MidiOutKind.ControlChange, 1, 7, 64), Assert.Single(midi.Calls));
+    }
+
+    [Fact]
+    public void MidiOut_DrivesData2FromInputValueOnChange()
+    {
+        var midi = new RecordingMidiOut();
+        var executor = new ActionExecutor(new IActionHandler[] { new MidiOutActionHandler(midi) });
+
+        executor.Execute(With(new MidiOutAction("^loop", MidiOutKind.ControlChange, 1, 7, 0, UseInputValue: true)),
+            new TriggerResult(TriggerPhase.Change, 1.0), Msg);
+
+        Assert.Equal(127, Assert.Single(midi.Calls).Data2); // magnitude 1.0 -> 127
+    }
+
+    private sealed class RecordingMidiOut : IMidiOutput
+    {
+        public List<(string Device, MidiOutKind Kind, int Channel, int Data1, int Data2)> Calls { get; } = new();
+        public void Send(string devicePattern, MidiOutKind kind, int channel, int data1, int data2)
+            => Calls.Add((devicePattern, kind, channel, data1, data2));
+    }
 }

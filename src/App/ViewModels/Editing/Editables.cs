@@ -9,7 +9,7 @@ public enum EditableActionKind
 {
     Key, MouseClick, Scroll, CursorMove, WindowControl,
     MediaKey, TypeText, Launch, SetVolume, Uia,
-    VirtualDesktop, WindowsToggle, Brightness, Http, Osc, Obs, SwitchProfile, None,
+    VirtualDesktop, WindowsToggle, Brightness, Http, Osc, Obs, MidiOut, SwitchProfile, None,
 }
 
 /// <summary>Editable view of a <see cref="Signal"/> (docs/03_ProfileSchema.md §1).</summary>
@@ -66,6 +66,9 @@ public partial class EditableBinding : ObservableObject
     /// <summary>Obs action: operation name (sceneswitch / togglerecord / ...).</summary>
     [ObservableProperty] private string _obsOpName = "togglerecord";
 
+    /// <summary>MidiOut action: message spec "kind ch data1 data2" (e.g. "cc 1 7 64").</summary>
+    [ObservableProperty] private string _midiOutSpec = "cc 1 7 64";
+
     [ObservableProperty] private string _label = "";
 
     /// <summary>A deep copy, used as the editable draft so changes only apply on commit.</summary>
@@ -84,6 +87,7 @@ public partial class EditableBinding : ObservableObject
         HttpBody = HttpBody,
         OscTarget = OscTarget,
         ObsOpName = ObsOpName,
+        MidiOutSpec = MidiOutSpec,
         Label = Label,
     };
 
@@ -103,6 +107,7 @@ public partial class EditableBinding : ObservableObject
         HttpBody = other.HttpBody;
         OscTarget = other.OscTarget;
         ObsOpName = other.ObsOpName;
+        MidiOutSpec = other.MidiOutSpec;
         Label = other.Label;
     }
 }

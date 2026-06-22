@@ -79,6 +79,10 @@ internal static class EditMapper
         {
             editable.ObsOpName = ob.Op.ToString().ToLowerInvariant();
         }
+        else if (action is MidiOutAction mo)
+        {
+            editable.MidiOutSpec = FormatMidiOut(mo);
+        }
 
         return editable;
     }
@@ -101,6 +105,7 @@ internal static class EditMapper
         HttpAction h => (EditableActionKind.Http, h.Url),
         OscAction o => (EditableActionKind.Osc, o.Address),
         ObsAction ob => (EditableActionKind.Obs, ob.Arg ?? ""),
+        MidiOutAction mo => (EditableActionKind.MidiOut, mo.Device),
         SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
         _ => (EditableActionKind.None, ""),
     };
@@ -205,6 +210,7 @@ internal static class EditMapper
             EditableActionKind.Http => new HttpAction(detail, b.HttpMethod, NullIfBlank(b.HttpBody)),
             EditableActionKind.Osc => new OscAction(b.OscTarget.Trim(), detail, b.Arguments.Trim()),
             EditableActionKind.Obs => new ObsAction(ParseObsOp(b.ObsOpName), NullIfBlank(detail)),
+            EditableActionKind.MidiOut => ParseMidiOut(detail, b.MidiOutSpec),
             EditableActionKind.SwitchProfile => ParseSwitch(detail),
             _ => NoneAction.Instance,
         };
@@ -228,6 +234,42 @@ internal static class EditMapper
 
     public static ObsOp ParseObsOp(string name) =>
         Enum.TryParse<ObsOp>(name.Trim(), ignoreCase: true, out var op) ? op : ObsOp.ToggleRecord;
+
+    /// <summary>Display a MIDI-out action as "kind ch data1 data2" (data2 = "value" when input-driven).</summary>
+    public static string FormatMidiOut(MidiOutAction m)
+    {
+        var kind = m.Kind switch
+        {
+            MidiOutKind.NoteOn => "note",
+            MidiOutKind.NoteOff => "noteoff",
+            MidiOutKind.ProgramChange => "pc",
+            _ => "cc",
+        };
+        if (m.Kind == MidiOutKind.ProgramChange)
+        {
+            return $"{kind} {m.Channel} {m.Data1}";
+        }
+
+        return $"{kind} {m.Channel} {m.Data1} {(m.UseInputValue ? "value" : m.Data2.ToString())}";
+    }
+
+    /// <summary>Parse device + "kind ch data1 [data2|value]" into a MIDI-out action.</summary>
+    public static MidiOutAction ParseMidiOut(string device, string spec)
+    {
+        var t = spec.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var kind = (t.Length > 0 ? t[0].ToLowerInvariant() : "cc") switch
+        {
+            "note" or "noteon" => MidiOutKind.NoteOn,
+            "noteoff" => MidiOutKind.NoteOff,
+            "pc" or "program" or "programchange" => MidiOutKind.ProgramChange,
+            _ => MidiOutKind.ControlChange,
+        };
+        var channel = t.Length > 1 && int.TryParse(t[1], out var ch) ? ch : 1;
+        var data1 = t.Length > 2 && int.TryParse(t[2], out var d1) ? d1 : 0;
+        var useValue = t.Length > 3 && (t[3].Equals("value", StringComparison.OrdinalIgnoreCase) || t[3] == "@");
+        var data2 = !useValue && t.Length > 3 && int.TryParse(t[3], out var d2) ? d2 : 0;
+        return new MidiOutAction(device.Trim(), kind, channel, data1, data2, useValue);
+    }
 
     public static UiaVerb ParseUiaVerb(string verb) => verb.Trim().ToLowerInvariant() switch
     {

@@ -43,6 +43,10 @@ public static class DependencyInjection
         services.AddSingleton<IOscSender>(sp =>
             new Net.OscSender(sp.GetService<ILogger<Net.OscSender>>()));
 
+        // MIDI output (DryWetMIDI) for MIDI-out actions / virtual ports.
+        services.AddSingleton<IMidiOutput>(sp =>
+            new Midi.DryWetMidiOutput(sp.GetService<ILogger<Midi.DryWetMidiOutput>>()));
+
         // Input emission (SendInput) behind an emergency-stop gate.
         services.AddSingleton<Win32InputSink>(sp =>
             new Win32InputSink(sp.GetService<ILogger<Win32InputSink>>()));

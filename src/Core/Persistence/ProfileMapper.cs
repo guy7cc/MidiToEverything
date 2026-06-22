@@ -104,6 +104,7 @@ internal static class ProfileMapper
         HttpActionDto h => new HttpAction(h.Url, h.Method, h.Body),
         OscActionDto o => new OscAction(o.Target, o.Address, o.Args),
         ObsActionDto ob => new ObsAction(ob.Op, ob.Arg),
+        MidiOutActionDto mo => new MidiOutAction(mo.Device, mo.Kind, mo.Channel, mo.Data1, mo.Data2, mo.UseInputValue),
         NoneActionDto => NoneAction.Instance,
         _ => throw new NotSupportedException($"Unknown action DTO: {a.GetType().Name}"),
     };
@@ -205,6 +206,7 @@ internal static class ProfileMapper
         HttpAction h => new HttpActionDto { Url = h.Url, Method = h.Method, Body = h.Body },
         OscAction o => new OscActionDto { Target = o.Target, Address = o.Address, Args = o.Args },
         ObsAction ob => new ObsActionDto { Op = ob.Op, Arg = ob.Arg },
+        MidiOutAction mo => new MidiOutActionDto { Device = mo.Device, Kind = mo.Kind, Channel = mo.Channel, Data1 = mo.Data1, Data2 = mo.Data2, UseInputValue = mo.UseInputValue },
         NoneAction => new NoneActionDto(),
         _ => throw new NotSupportedException($"Unknown action: {a.GetType().Name}"),
     };
