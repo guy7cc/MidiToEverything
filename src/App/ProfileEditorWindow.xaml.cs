@@ -18,6 +18,7 @@ public partial class ProfileEditorWindow : Window
         InitializeComponent();
         DataContext = viewModel;
         _viewModel.CloseRequested += OnCloseRequested;
+        _viewModel.ActionConfigRequested += OnActionConfigRequested;
         StateChanged += (_, _) => UpdateMaxRestoreGlyph();
     }
 
@@ -34,9 +35,16 @@ public partial class ProfileEditorWindow : Window
         Close();
     }
 
+    private void OnActionConfigRequested(object? sender, EventArgs e)
+    {
+        var dialog = new ActionConfigWindow { Owner = this, DataContext = _viewModel };
+        dialog.ShowDialog();
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         _viewModel.CloseRequested -= OnCloseRequested;
+        _viewModel.ActionConfigRequested -= OnActionConfigRequested;
         _viewModel.Dispose();
         base.OnClosed(e);
     }
