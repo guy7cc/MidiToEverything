@@ -26,9 +26,9 @@ public class TitlePatternSuggesterTests
     [Fact]
     public void Versioned_AppToleratesVersionDrift()
     {
-        var pattern = TitlePatternSuggester.Suggest("note - Sample Vault - Obsidian 1.12.7");
+        var pattern = TitlePatternSuggester.Suggest("readme - Sample Vault - Obsidian 1.12.7");
 
-        Assert.Matches(pattern, "他のノート - Vault - Obsidian 1.13.0"); // version changed
+        Assert.Matches(pattern, "another note - Sample Vault - Obsidian 1.13.0"); // version changed
         Assert.Matches(pattern, "x - Obsidian"); // version absent
     }
 
