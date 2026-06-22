@@ -3,17 +3,176 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:MidiToEverything.App"
+        xmlns:vm="clr-namespace:MidiToEverything.App.ViewModels"
         mc:Ignorable="d"
-        Title="MidiToEverything" Height="500" Width="820">
-    <Grid Margin="24">
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock Text="MidiToEverything"
-                       FontSize="28" FontWeight="SemiBold"
-                       HorizontalAlignment="Center" />
-            <TextBlock x:Name="StatusText"
-                       Margin="0,8,0,0" FontSize="14" Opacity="0.7"
-                       HorizontalAlignment="Center" />
-        </StackPanel>
+        Title="MidiToEverything" Height="620" Width="960"
+        Background="#1E1E22" TextElement.Foreground="#E6E6E6"
+        FontFamily="Segoe UI" d:DataContext="{d:DesignInstance vm:MainViewModel}">
+
+    <Window.Resources>
+        <!-- Visualizer indicator card -->
+        <DataTemplate x:Key="IndicatorTemplate" DataType="{x:Type vm:IndicatorViewModel}">
+            <Border Width="128" Height="92" Margin="6" CornerRadius="6" Padding="10"
+                    Background="#2A2A30" BorderBrush="#3A3A42" BorderThickness="1">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                <Setter Property="Background" Value="#2E5A3A" />
+                                <Setter Property="BorderBrush" Value="#5BD68A" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <StackPanel>
+                    <TextBlock Text="{Binding Label}" FontSize="12" Foreground="#CFCFD6"
+                               TextTrimming="CharacterEllipsis" />
+                    <ProgressBar Value="{Binding Value}" Maximum="1" Height="10" Margin="0,10,0,6"
+                                 Background="#1B1B20" Foreground="#4FA3FF" BorderThickness="0" />
+                    <TextBlock Text="{Binding ValueText}" FontSize="18" FontWeight="SemiBold"
+                               Foreground="#9FC8FF" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- Monitor log row -->
+        <DataTemplate x:Key="MonitorTemplate" DataType="{x:Type vm:MonitorEntry}">
+            <Grid Margin="0,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="92" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding Time}" Foreground="#7A7A85"
+                           FontFamily="Consolas" FontSize="12" />
+                <TextBlock Grid.Column="1" Text="{Binding Source}" Foreground="#A6A6B0"
+                           FontFamily="Consolas" FontSize="12" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="2" Text="{Binding Detail}" Foreground="{Binding Accent}"
+                           FontFamily="Consolas" FontSize="12" />
+            </Grid>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Status bar -->
+        <Border Grid.Row="0" Background="#26262C" CornerRadius="8" Padding="16,12" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="プロファイル: " Foreground="#9A9AA4" FontSize="14" />
+                        <TextBlock Text="{Binding ActiveProfile}" FontSize="14" FontWeight="SemiBold" />
+                        <Border Background="#4A3A1E" CornerRadius="4" Padding="6,1" Margin="8,0,0,0"
+                                Visibility="{Binding IsPinned, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="固定" Foreground="#F0C674" FontSize="11" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="{Binding ContextWindow}" Foreground="#8A8A94" FontSize="12" Margin="0,4,0,0"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="10" Height="10" Margin="0,0,6,0">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="#5BD68A" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding EmissionEnabled}" Value="False">
+                                        <Setter Property="Fill" Value="#E06666" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Text="{Binding EmissionLabel}" FontSize="13" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <Button Content="緊急停止 切替" Command="{Binding ToggleEmissionCommand}"
+                            Padding="10,4" Background="#3A3A42" Foreground="#E6E6E6" BorderThickness="0" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="170" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="360" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Devices -->
+            <Border Grid.Column="0" Background="#26262C" CornerRadius="8" Padding="12" Margin="0,0,12,0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="デバイス" FontSize="13" FontWeight="SemiBold"
+                               Foreground="#B8B8C2" Margin="0,0,0,8" />
+                    <TextBlock DockPanel.Dock="Top" Text="(未接続)" Foreground="#6A6A74" FontSize="12"
+                               Visibility="{Binding Devices.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding Devices}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <Ellipse Width="8" Height="8" Fill="#5BD68A" Margin="0,0,6,0" />
+                                    <TextBlock Text="{Binding}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </Border>
+
+            <!-- Visualizer -->
+            <Border Grid.Column="1" Background="#26262C" CornerRadius="8" Padding="12" Margin="0,0,12,0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="入力ビジュアライザ" FontSize="13" FontWeight="SemiBold"
+                               Foreground="#B8B8C2" Margin="0,0,0,8" />
+                    <TextBlock DockPanel.Dock="Top" Text="MIDI を操作すると、ここに各操作子が表示されます。"
+                               Foreground="#6A6A74" FontSize="12" Margin="2,0,0,0"
+                               Visibility="{Binding Indicators.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Indicators}" ItemTemplate="{StaticResource IndicatorTemplate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- Monitor -->
+            <Border Grid.Column="2" Background="#26262C" CornerRadius="8" Padding="12">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <TextBlock Text="入力モニター" FontSize="13" FontWeight="SemiBold" Foreground="#B8B8C2"
+                                   VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="{Binding MonitorPaused, Converter={StaticResource PauseLabel}}"
+                                    Command="{Binding TogglePauseCommand}" Padding="8,2" Margin="0,0,6,0"
+                                    Background="#3A3A42" Foreground="#E6E6E6" BorderThickness="0" />
+                            <Button Content="クリア" Command="{Binding ClearMonitorCommand}" Padding="8,2"
+                                    Background="#3A3A42" Foreground="#E6E6E6" BorderThickness="0" />
+                        </StackPanel>
+                    </Grid>
+                    <ListBox ItemsSource="{Binding Monitor}" ItemTemplate="{StaticResource MonitorTemplate}"
+                             Background="#1B1B20" BorderThickness="0" Foreground="#E6E6E6"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             VirtualizingPanel.IsVirtualizing="True">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Padding" Value="2,0" />
+                                <Setter Property="Background" Value="Transparent" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
