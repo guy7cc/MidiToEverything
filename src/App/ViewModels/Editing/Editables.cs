@@ -5,7 +5,11 @@ using MidiToEverything.Core.Domain;
 namespace MidiToEverything.App.ViewModels.Editing;
 
 /// <summary>The action shapes the editor exposes (a single action per binding; macros via JSON).</summary>
-public enum EditableActionKind { Key, MouseClick, Scroll, CursorMove, SwitchProfile, None }
+public enum EditableActionKind
+{
+    Key, MouseClick, Scroll, CursorMove, WindowControl,
+    MediaKey, TypeText, Launch, SetVolume, SwitchProfile, None,
+}
 
 /// <summary>Editable view of a <see cref="Signal"/> (docs/03_ProfileSchema.md §1).</summary>
 public partial class EditableSignal : ObservableObject
@@ -33,6 +37,13 @@ public partial class EditableBinding : ObservableObject
     [ObservableProperty] private TriggerMode _mode = TriggerMode.Trigger;
     [ObservableProperty] private EditableActionKind _actionKind = EditableActionKind.Key;
     [ObservableProperty] private string _detail = "";
+
+    /// <summary>Launch action: command-line arguments.</summary>
+    [ObservableProperty] private string _arguments = "";
+
+    /// <summary>Launch action: working directory.</summary>
+    [ObservableProperty] private string _workingDir = "";
+
     [ObservableProperty] private string _label = "";
 
     /// <summary>A deep copy, used as the editable draft so changes only apply on commit.</summary>
@@ -42,6 +53,8 @@ public partial class EditableBinding : ObservableObject
         Mode = Mode,
         ActionKind = ActionKind,
         Detail = Detail,
+        Arguments = Arguments,
+        WorkingDir = WorkingDir,
         Label = Label,
     };
 
@@ -52,6 +65,8 @@ public partial class EditableBinding : ObservableObject
         Mode = other.Mode;
         ActionKind = other.ActionKind;
         Detail = other.Detail;
+        Arguments = other.Arguments;
+        WorkingDir = other.WorkingDir;
         Label = other.Label;
     }
 }

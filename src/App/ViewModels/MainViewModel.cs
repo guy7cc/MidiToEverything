@@ -23,18 +23,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly IMidiSource _source;
     private readonly ProfileManager _profiles;
     private readonly GatedInputSink _gate;
+    private readonly LaunchPolicy _launchPolicy;
+    private readonly IProfileRepository _repository;
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _flushTimer;
     private readonly ConcurrentQueue<MidiMessage> _incoming = new();
 
-    public MainViewModel(IMidiSource source, ProfileManager profiles, GatedInputSink gate)
+    public MainViewModel(IMidiSource source, ProfileManager profiles, GatedInputSink gate,
+        LaunchPolicy launchPolicy, IProfileRepository repository)
     {
         _source = source;
         _profiles = profiles;
         _gate = gate;
+        _launchPolicy = launchPolicy;
+        _repository = repository;
         _dispatcher = Dispatcher.CurrentDispatcher;
 
         EmissionEnabled = gate.Enabled;
+        _allowExternalLaunch = launchPolicy.Allowed;
         _isAutoDetect = source.DetectionMode == MidiDetectionMode.AutoPolling;
         ApplyState(profiles.State);
         foreach (var device in source.Devices)
@@ -65,11 +71,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _emissionEnabled = true;
     [ObservableProperty] private bool _monitorPaused;
     [ObservableProperty] private bool _isAutoDetect = true;
+    [ObservableProperty] private bool _allowExternalLaunch;
 
     public string EmissionLabel => EmissionEnabled ? "稼働中" : "停止中 (緊急停止)";
     public string DetectModeLabel => IsAutoDetect ? "自動更新" : "手動更新";
 
     partial void OnEmissionEnabledChanged(bool value) => OnPropertyChanged(nameof(EmissionLabel));
+
+    // External-launch opt-in (Q5): toggle the runtime gate and persist the choice.
+    partial void OnAllowExternalLaunchChanged(bool value)
+    {
+        _launchPolicy.Allowed = value;
+        var config = _profiles.CurrentConfig;
+        var updated = config with { Settings = config.Settings with { AllowExternalLaunch = value } };
+        _repository.Save(updated);
+        _profiles.Reload(updated);
+    }
 
     // Device-detection mode toggle (B-1): switch between periodic polling and manual rescan.
     partial void OnIsAutoDetectChanged(bool value)

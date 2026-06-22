@@ -85,6 +85,72 @@ public sealed class Win32InputSink : IInputSink
         SendMouse(flag, 0, 0, delta);
     }
 
+    public void SendMediaKey(MediaKey key)
+    {
+        var vk = key switch
+        {
+            MediaKey.PlayPause => VK_MEDIA_PLAY_PAUSE,
+            MediaKey.Next => VK_MEDIA_NEXT_TRACK,
+            MediaKey.Previous => VK_MEDIA_PREV_TRACK,
+            MediaKey.Stop => VK_MEDIA_STOP,
+            MediaKey.Mute => VK_VOLUME_MUTE,
+            MediaKey.VolumeUp => VK_VOLUME_UP,
+            MediaKey.VolumeDown => VK_VOLUME_DOWN,
+            _ => (ushort)0,
+        };
+        if (vk == 0)
+        {
+            return;
+        }
+
+        SendVirtualKey(vk, up: false);
+        SendVirtualKey(vk, up: true);
+    }
+
+    public void TypeText(string text)
+    {
+        foreach (var ch in text)
+        {
+            if (ch == '\r')
+            {
+                continue; // CR of a CRLF pair; the LF sends Enter
+            }
+
+            if (ch == '\n')
+            {
+                SendVirtualKey(VK_RETURN, up: false);
+                SendVirtualKey(VK_RETURN, up: true);
+            }
+            else
+            {
+                SendUnicode(ch, up: false);
+                SendUnicode(ch, up: true);
+            }
+        }
+    }
+
+    private void SendVirtualKey(ushort vk, bool up)
+    {
+        var flags = up ? KEYEVENTF_KEYUP : 0u;
+        var input = new INPUT
+        {
+            type = INPUT_KEYBOARD,
+            U = { ki = new KEYBDINPUT { wVk = vk, wScan = 0, dwFlags = flags } },
+        };
+        Send(input);
+    }
+
+    private void SendUnicode(char ch, bool up)
+    {
+        var flags = KEYEVENTF_UNICODE | (up ? KEYEVENTF_KEYUP : 0u);
+        var input = new INPUT
+        {
+            type = INPUT_KEYBOARD,
+            U = { ki = new KEYBDINPUT { wVk = 0, wScan = ch, dwFlags = flags } },
+        };
+        Send(input);
+    }
+
     private void SendKey(string token, bool up)
     {
         if (!KeyCodes.TryResolve(token, out var vk, out var extended))
@@ -145,7 +211,17 @@ public sealed class Win32InputSink : IInputSink
 
     private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
     private const uint KEYEVENTF_KEYUP = 0x0002;
+    private const uint KEYEVENTF_UNICODE = 0x0004;
     private const uint KEYEVENTF_SCANCODE = 0x0008;
+
+    private const ushort VK_RETURN = 0x0D;
+    private const ushort VK_VOLUME_MUTE = 0xAD;
+    private const ushort VK_VOLUME_DOWN = 0xAE;
+    private const ushort VK_VOLUME_UP = 0xAF;
+    private const ushort VK_MEDIA_NEXT_TRACK = 0xB0;
+    private const ushort VK_MEDIA_PREV_TRACK = 0xB1;
+    private const ushort VK_MEDIA_STOP = 0xB2;
+    private const ushort VK_MEDIA_PLAY_PAUSE = 0xB3;
 
     private const uint MOUSEEVENTF_MOVE = 0x0001;
     private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;

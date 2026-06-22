@@ -17,6 +17,15 @@ public enum ScrollAxis { Vertical, Horizontal }
 /// <summary>Profile-switch targets (docs/03_ProfileSchema.md §3).</summary>
 public enum ProfileSwitchTarget { Next, Previous, Toggle, Specific }
 
+/// <summary>Operations on the foreground window (docs/05_ActionExpansion.md §5, Phase 1).</summary>
+public enum WindowOp { Minimize, Maximize, Restore, Close, ToggleTopMost }
+
+/// <summary>Media/transport keys (docs/05 §5, Phase 1).</summary>
+public enum MediaKey { PlayPause, Next, Previous, Stop, Mute, VolumeUp, VolumeDown }
+
+/// <summary>Audio endpoint a volume action targets (docs/05 §5, Phase 1).</summary>
+public enum VolumeTarget { Master, Microphone }
+
 /// <summary>Send a keyboard shortcut. <see cref="Hold"/> keeps keys down until release.</summary>
 public sealed record KeyAction(
     IReadOnlyList<string> Keys,
@@ -45,6 +54,27 @@ public sealed record ScrollAction(
 public sealed record SwitchProfileAction(
     ProfileSwitchTarget Target = ProfileSwitchTarget.Next,
     string? ProfileId = null) : InputAction;
+
+/// <summary>Apply a window operation to the foreground window (docs/05 §5, Phase 1).</summary>
+public sealed record WindowControlAction(WindowOp Op = WindowOp.Minimize) : InputAction;
+
+/// <summary>Send a media/transport key (play-pause, next, mute, ...).</summary>
+public sealed record MediaKeyAction(MediaKey Key = MediaKey.PlayPause) : InputAction;
+
+/// <summary>Type a literal string (a snippet / text expansion).</summary>
+public sealed record TypeTextAction(string Text = "") : InputAction;
+
+/// <summary>
+/// Launch a program/file/URL via the shell. Gated behind an opt-in setting (Q5);
+/// the handler no-ops when external launch is disabled.
+/// </summary>
+public sealed record LaunchAction(
+    string Target = "",
+    string? Arguments = null,
+    string? WorkingDir = null) : InputAction;
+
+/// <summary>Set an audio endpoint volume from the input value (Absolute fader → 0..100%).</summary>
+public sealed record SetVolumeAction(VolumeTarget Target = VolumeTarget.Master) : InputAction;
 
 /// <summary>
 /// Explicit "do nothing" that also blocks fallback to the base profile (FR-6.4).

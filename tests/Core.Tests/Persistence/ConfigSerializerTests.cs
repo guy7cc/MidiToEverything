@@ -97,6 +97,61 @@ public class ConfigSerializerTests
         }
     }
 
+    [Theory]
+    [InlineData(WindowOp.Minimize)]
+    [InlineData(WindowOp.Maximize)]
+    [InlineData(WindowOp.Close)]
+    [InlineData(WindowOp.ToggleTopMost)]
+    public void WindowControlAction_RoundTrips(WindowOp op)
+    {
+        var config = SingleBinding(
+            new Signal { Type = SignalKind.NoteOn, Number = 60 },
+            new WindowControlAction(op));
+
+        var json = ConfigSerializer.Serialize(config);
+        Assert.Contains("\"type\": \"windowControl\"", json);
+
+        var loaded = ConfigSerializer.Deserialize(json);
+        var action = Assert.IsType<WindowControlAction>(loaded.BaseProfile.Bindings[0].Actions[0]);
+        Assert.Equal(op, action.Op);
+    }
+
+    [Fact]
+    public void NewActions_RoundTrip()
+    {
+        var sig = new Signal { Type = SignalKind.NoteOn, Number = 60 };
+
+        Assert.IsType<MediaKeyAction>(RoundTripAction(sig, new MediaKeyAction(MediaKey.Mute)));
+        Assert.Equal("hello world", Assert.IsType<TypeTextAction>(
+            RoundTripAction(sig, new TypeTextAction("hello world"))).Text);
+
+        var launch = Assert.IsType<LaunchAction>(
+            RoundTripAction(sig, new LaunchAction("notepad.exe", "a.txt", @"C:\tmp")));
+        Assert.Equal("notepad.exe", launch.Target);
+        Assert.Equal("a.txt", launch.Arguments);
+        Assert.Equal(@"C:\tmp", launch.WorkingDir);
+
+        Assert.Equal(VolumeTarget.Microphone, Assert.IsType<SetVolumeAction>(
+            RoundTripAction(sig, new SetVolumeAction(VolumeTarget.Microphone))).Target);
+    }
+
+    [Fact]
+    public void AllowExternalLaunch_RoundTrips()
+    {
+        var config = DefaultConfig.Create();
+        config = config with { Settings = config.Settings with { AllowExternalLaunch = true } };
+
+        var loaded = ConfigSerializer.Deserialize(ConfigSerializer.Serialize(config));
+
+        Assert.True(loaded.Settings.AllowExternalLaunch);
+    }
+
+    private static InputAction RoundTripAction(Signal signal, InputAction action)
+    {
+        var loaded = ConfigSerializer.Deserialize(ConfigSerializer.Serialize(SingleBinding(signal, action)));
+        return loaded.BaseProfile.Bindings[0].Actions[0];
+    }
+
     [Fact]
     public void ContinuousTrigger_RoundTrips_RangeAndMode()
     {

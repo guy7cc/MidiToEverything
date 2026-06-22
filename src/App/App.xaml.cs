@@ -84,7 +84,21 @@ public partial class App : Application
             sp.GetRequiredService<IWindowWatcher>(),
             sp.GetService<ILogger<ProfileManager>>()));
         services.AddSingleton<IMappingContext>(sp => sp.GetRequiredService<ProfileManager>());
-        services.AddSingleton(sp => new ActionExecutor(sp.GetRequiredService<IInputSink>()));
+        // External-launch opt-in (Q5), initialized from settings; toggled at runtime by the UI.
+        services.AddSingleton(sp =>
+            new LaunchPolicy(sp.GetRequiredService<AppConfig>().Settings.AllowExternalLaunch));
+        services.AddSingleton(sp => new ActionExecutor(
+            ActionExecutor.DefaultHandlers(sp.GetRequiredService<IInputSink>())
+                .Append(new Core.Application.Handlers.WindowControlActionHandler(
+                    sp.GetRequiredService<IWindowController>()))
+                .Append(new Core.Application.Handlers.MediaKeyActionHandler(
+                    sp.GetRequiredService<IInputSink>()))
+                .Append(new Core.Application.Handlers.TypeTextActionHandler(
+                    sp.GetRequiredService<IInputSink>()))
+                .Append(new Core.Application.Handlers.LaunchActionHandler(
+                    sp.GetRequiredService<IShellLauncher>(), sp.GetRequiredService<LaunchPolicy>()))
+                .Append(new Core.Application.Handlers.SetVolumeActionHandler(
+                    sp.GetRequiredService<ISystemAudio>()))));
         services.AddSingleton(sp => new MidiEventPipeline(
             sp.GetRequiredService<IMidiSource>(),
             sp.GetRequiredService<IMappingContext>(),

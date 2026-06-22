@@ -27,6 +27,7 @@ internal static class ProfileMapper
     {
         StartWithWindows = s.StartWithWindows,
         EmergencyStopHotkey = s.EmergencyStopHotkey,
+        AllowExternalLaunch = s.AllowExternalLaunch,
         WatchedDevices = s.WatchedDevices.ToArray(),
         Monitor = new MonitorSettings { MaxLogLines = s.Monitor.MaxLogLines, UiThrottleMs = s.Monitor.UiThrottleMs },
     };
@@ -88,6 +89,11 @@ internal static class ProfileMapper
         CursorMoveActionDto c => new CursorMoveAction(c.Mode, c.Dx, c.Dy, c.UseInputValue),
         ScrollActionDto s => new ScrollAction(s.Axis, s.Amount, s.UseInputValue),
         SwitchProfileActionDto sp => ToSwitchProfile(sp.Target),
+        WindowControlActionDto w => new WindowControlAction(w.Op),
+        MediaKeyActionDto mk => new MediaKeyAction(mk.Key),
+        TypeTextActionDto tt => new TypeTextAction(tt.Text),
+        LaunchActionDto l => new LaunchAction(l.Target, l.Arguments, l.WorkingDir),
+        SetVolumeActionDto v => new SetVolumeAction(v.Target),
         NoneActionDto => NoneAction.Instance,
         _ => throw new NotSupportedException($"Unknown action DTO: {a.GetType().Name}"),
     };
@@ -109,6 +115,7 @@ internal static class ProfileMapper
         {
             StartWithWindows = config.Settings.StartWithWindows,
             EmergencyStopHotkey = config.Settings.EmergencyStopHotkey,
+            AllowExternalLaunch = config.Settings.AllowExternalLaunch,
             WatchedDevices = config.Settings.WatchedDevices.ToList(),
             Monitor = new MonitorDto
             {
@@ -173,6 +180,11 @@ internal static class ProfileMapper
         CursorMoveAction c => new CursorMoveActionDto { Mode = c.Mode, Dx = c.Dx, Dy = c.Dy, UseInputValue = c.UseInputValue },
         ScrollAction s => new ScrollActionDto { Axis = s.Axis, Amount = s.Amount, UseInputValue = s.UseInputValue },
         SwitchProfileAction sp => new SwitchProfileActionDto { Target = FromSwitchProfile(sp) },
+        WindowControlAction w => new WindowControlActionDto { Op = w.Op },
+        MediaKeyAction mk => new MediaKeyActionDto { Key = mk.Key },
+        TypeTextAction tt => new TypeTextActionDto { Text = tt.Text },
+        LaunchAction l => new LaunchActionDto { Target = l.Target, Arguments = l.Arguments, WorkingDir = l.WorkingDir },
+        SetVolumeAction v => new SetVolumeActionDto { Target = v.Target },
         NoneAction => new NoneActionDto(),
         _ => throw new NotSupportedException($"Unknown action: {a.GetType().Name}"),
     };

@@ -1,4 +1,5 @@
 using MidiToEverything.Core.Application;
+using MidiToEverything.Core.Application.Handlers;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
 using MidiToEverything.Core.Mapping;
@@ -92,5 +93,108 @@ public class ActionExecutorTests
         public int Count { get; private set; }
         public bool CanHandle(InputAction action) => action is MouseClickAction;
         public void Execute(InputAction action, TriggerResult trigger, MidiMessage message) => Count++;
+    }
+
+    [Fact]
+    public void WindowControl_AppliesOpOnPress()
+    {
+        var windows = new RecordingWindowController();
+        var executor = new ActionExecutor(new IActionHandler[] { new WindowControlActionHandler(windows) });
+
+        executor.Execute(With(new WindowControlAction(WindowOp.Maximize)),
+            new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(WindowOp.Maximize, Assert.Single(windows.Ops));
+    }
+
+    [Fact]
+    public void WindowControl_IgnoresRelease()
+    {
+        var windows = new RecordingWindowController();
+        var executor = new ActionExecutor(new IActionHandler[] { new WindowControlActionHandler(windows) });
+
+        executor.Execute(With(new WindowControlAction()),
+            new TriggerResult(TriggerPhase.Release, 0), Msg);
+
+        Assert.Empty(windows.Ops);
+    }
+
+    private sealed class RecordingWindowController : IWindowController
+    {
+        public List<WindowOp> Ops { get; } = new();
+        public void Apply(WindowOp op) => Ops.Add(op);
+    }
+
+    [Fact]
+    public void MediaKey_IsTapped()
+    {
+        var executor = new ActionExecutor(new IActionHandler[] { new MediaKeyActionHandler(_sink) });
+
+        executor.Execute(With(new MediaKeyAction(MediaKey.Next)), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(MediaKey.Next, Assert.IsType<MediaKeyCall>(Assert.Single(_sink.Calls)).Key);
+    }
+
+    [Fact]
+    public void TypeText_IsTyped()
+    {
+        var executor = new ActionExecutor(new IActionHandler[] { new TypeTextActionHandler(_sink) });
+
+        executor.Execute(With(new TypeTextAction("hi")), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal("hi", Assert.IsType<TypeTextCall>(Assert.Single(_sink.Calls)).Text);
+    }
+
+    [Fact]
+    public void Launch_NoOpsWhenPolicyDisallows()
+    {
+        var launcher = new RecordingLauncher();
+        var executor = new ActionExecutor(new IActionHandler[]
+        {
+            new LaunchActionHandler(launcher, new LaunchPolicy(allowed: false)),
+        });
+
+        executor.Execute(With(new LaunchAction("notepad.exe")), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Empty(launcher.Targets);
+    }
+
+    [Fact]
+    public void Launch_RunsWhenPolicyAllows()
+    {
+        var launcher = new RecordingLauncher();
+        var executor = new ActionExecutor(new IActionHandler[]
+        {
+            new LaunchActionHandler(launcher, new LaunchPolicy(allowed: true)),
+        });
+
+        executor.Execute(With(new LaunchAction("notepad.exe", "a.txt")), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(("notepad.exe", "a.txt"), Assert.Single(launcher.Targets));
+    }
+
+    [Fact]
+    public void SetVolume_UsesMagnitudeOnChange()
+    {
+        var audio = new RecordingAudio();
+        var executor = new ActionExecutor(new IActionHandler[] { new SetVolumeActionHandler(audio) });
+
+        executor.Execute(With(new SetVolumeAction(VolumeTarget.Master)), new TriggerResult(TriggerPhase.Change, 0.75), Msg);
+
+        var (target, level) = Assert.Single(audio.Calls);
+        Assert.Equal(VolumeTarget.Master, target);
+        Assert.Equal(0.75, level, 3);
+    }
+
+    private sealed class RecordingLauncher : IShellLauncher
+    {
+        public List<(string Target, string? Args)> Targets { get; } = new();
+        public void Launch(string target, string? arguments, string? workingDir) => Targets.Add((target, arguments));
+    }
+
+    private sealed class RecordingAudio : ISystemAudio
+    {
+        public List<(VolumeTarget Target, double Level)> Calls { get; } = new();
+        public void SetVolume(VolumeTarget target, double level) => Calls.Add((target, level));
     }
 }

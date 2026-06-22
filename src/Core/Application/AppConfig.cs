@@ -31,6 +31,9 @@ public sealed record AppSettings
 
     public string? EmergencyStopHotkey { get; init; } = "ctrl+alt+pause";
 
+    /// <summary>Opt-in for launch/command actions running external programs (docs/05 §6, Q5).</summary>
+    public bool AllowExternalLaunch { get; init; }
+
     /// <summary>Devices to watch; "*" means all.</summary>
     public IReadOnlyList<string> WatchedDevices { get; init; } = new[] { "*" };
 

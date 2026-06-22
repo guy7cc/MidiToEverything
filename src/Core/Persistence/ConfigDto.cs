@@ -21,6 +21,7 @@ internal sealed class SettingsDto
 {
     public bool StartWithWindows { get; set; }
     public string? EmergencyStopHotkey { get; set; } = "ctrl+alt+pause";
+    public bool AllowExternalLaunch { get; set; }
     public List<string> WatchedDevices { get; set; } = new() { "*" };
     public MonitorDto Monitor { get; set; } = new();
 }
@@ -99,6 +100,11 @@ internal sealed class TriggerDto
 [JsonDerivedType(typeof(CursorMoveActionDto), "cursorMove")]
 [JsonDerivedType(typeof(ScrollActionDto), "scroll")]
 [JsonDerivedType(typeof(SwitchProfileActionDto), "switchProfile")]
+[JsonDerivedType(typeof(WindowControlActionDto), "windowControl")]
+[JsonDerivedType(typeof(MediaKeyActionDto), "mediaKey")]
+[JsonDerivedType(typeof(TypeTextActionDto), "typeText")]
+[JsonDerivedType(typeof(LaunchActionDto), "launch")]
+[JsonDerivedType(typeof(SetVolumeActionDto), "setVolume")]
 [JsonDerivedType(typeof(NoneActionDto), "none")]
 internal abstract class ActionDto;
 
@@ -134,6 +140,33 @@ internal sealed class SwitchProfileActionDto : ActionDto
 {
     /// <summary>"next" | "prev" | "toggle" | a profile id (docs/03_ProfileSchema.md §3).</summary>
     public string Target { get; set; } = "next";
+}
+
+internal sealed class WindowControlActionDto : ActionDto
+{
+    public WindowOp Op { get; set; } = WindowOp.Minimize;
+}
+
+internal sealed class MediaKeyActionDto : ActionDto
+{
+    public MediaKey Key { get; set; } = MediaKey.PlayPause;
+}
+
+internal sealed class TypeTextActionDto : ActionDto
+{
+    public string Text { get; set; } = "";
+}
+
+internal sealed class LaunchActionDto : ActionDto
+{
+    public string Target { get; set; } = "";
+    public string? Arguments { get; set; }
+    public string? WorkingDir { get; set; }
+}
+
+internal sealed class SetVolumeActionDto : ActionDto
+{
+    public VolumeTarget Target { get; set; } = VolumeTarget.Master;
 }
 
 internal sealed class NoneActionDto : ActionDto;

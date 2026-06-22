@@ -11,6 +11,8 @@ public sealed record KeyUpCall(IReadOnlyList<string> Keys) : SinkCall;
 public sealed record MouseClickCall(MouseButton Button, bool Double) : SinkCall;
 public sealed record MoveCall(MoveMode Mode, double Dx, double Dy) : SinkCall;
 public sealed record ScrollCall(ScrollAxis Axis, double Amount) : SinkCall;
+public sealed record MediaKeyCall(MediaKey Key) : SinkCall;
+public sealed record TypeTextCall(string Text) : SinkCall;
 
 /// <summary>
 /// Test double for <see cref="IInputSink"/> that records calls instead of touching the OS,
@@ -33,6 +35,8 @@ public sealed class RecordingInputSink : IInputSink
     public void MouseClick(MouseButton button, bool doubleClick) => Record(new MouseClickCall(button, doubleClick));
     public void MoveCursor(MoveMode mode, double dx, double dy) => Record(new MoveCall(mode, dx, dy));
     public void Scroll(ScrollAxis axis, double amount) => Record(new ScrollCall(axis, amount));
+    public void SendMediaKey(MediaKey key) => Record(new MediaKeyCall(key));
+    public void TypeText(string text) => Record(new TypeTextCall(text));
 
     /// <summary>Waits until at least <paramref name="count"/> calls are recorded, or throws on timeout.</summary>
     public async Task WaitForCountAsync(int count, TimeSpan timeout)

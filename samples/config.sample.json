@@ -3,6 +3,7 @@
   "settings": {
     "startWithWindows": false,
     "emergencyStopHotkey": "ctrl+alt+pause",
+    "allowExternalLaunch": false,
     "watchedDevices": [
       "*"
     ],
