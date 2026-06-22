@@ -15,7 +15,9 @@ internal sealed class ConsoleRelayLogger<T> : ILogger<T>
 
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
 
-    public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Information;
+    // Only surface warnings/errors (e.g. a device held by a DAW). Device attach/detach is
+    // already shown by the ●/○ connect handlers, so Information would just double those lines.
+    public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Warning;
 
     public void Log<TState>(
         LogLevel logLevel,
