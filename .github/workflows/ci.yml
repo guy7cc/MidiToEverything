@@ -24,4 +24,4 @@ jobs:
         run: dotnet build MidiToEverything.sln --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test tests/Core.Tests/Core.Tests.csproj --configuration Release --no-build --verbosity normal
+        run: dotnet test MidiToEverything.sln --configuration Release --no-build --verbosity normal

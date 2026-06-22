@@ -24,6 +24,11 @@ C# / .NET 8 ・ WPF(MVVM) ・ Melanchall.DryWetMIDI ・ Win32 P/Invoke（SetWinE
 | 3 | [docs/03_ProfileSchema.md](docs/03_ProfileSchema.md) | プロファイル設定スキーマ（JSON 例・C# 型） |
 | 4 | [docs/04_Roadmap.md](docs/04_Roadmap.md) | タスク分解・マイルストーン・着手手順 |
 
+## 動作確認（M4: MIDI入力）
+`run-midi-monitor.bat` をダブルクリックすると、MIDI入力モニタ（コンソール）が起動します。
+接続済みデバイスの一覧、抜き差し（ホットプラグ）の検知、Note/CC/Pitch Bend などの
+受信イベントをリアルタイム表示します（要 .NET 8 SDK）。
+
 ## 既知の制約
 - Windows 専用（初期リリース）。
 - UIPI により、管理者権限で動くアプリへ送信するには本体も昇格が必要。
