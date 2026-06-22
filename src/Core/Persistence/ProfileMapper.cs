@@ -98,6 +98,8 @@ internal static class ProfileMapper
         VirtualDesktopActionDto vd => new VirtualDesktopAction(vd.Op),
         WindowsToggleActionDto wt => new WindowsToggleAction(wt.Setting),
         BrightnessActionDto => new BrightnessAction(),
+        HttpActionDto h => new HttpAction(h.Url, h.Method, h.Body),
+        OscActionDto o => new OscAction(o.Target, o.Address, o.Args),
         NoneActionDto => NoneAction.Instance,
         _ => throw new NotSupportedException($"Unknown action DTO: {a.GetType().Name}"),
     };
@@ -193,6 +195,8 @@ internal static class ProfileMapper
         VirtualDesktopAction vd => new VirtualDesktopActionDto { Op = vd.Op },
         WindowsToggleAction wt => new WindowsToggleActionDto { Setting = wt.Setting },
         BrightnessAction => new BrightnessActionDto(),
+        HttpAction h => new HttpActionDto { Url = h.Url, Method = h.Method, Body = h.Body },
+        OscAction o => new OscActionDto { Target = o.Target, Address = o.Address, Args = o.Args },
         NoneAction => new NoneActionDto(),
         _ => throw new NotSupportedException($"Unknown action: {a.GetType().Name}"),
     };

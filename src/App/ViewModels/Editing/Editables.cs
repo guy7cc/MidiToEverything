@@ -9,7 +9,7 @@ public enum EditableActionKind
 {
     Key, MouseClick, Scroll, CursorMove, WindowControl,
     MediaKey, TypeText, Launch, SetVolume, Uia,
-    VirtualDesktop, WindowsToggle, Brightness, SwitchProfile, None,
+    VirtualDesktop, WindowsToggle, Brightness, Http, Osc, SwitchProfile, None,
 }
 
 /// <summary>Editable view of a <see cref="Signal"/> (docs/03_ProfileSchema.md §1).</summary>
@@ -54,6 +54,15 @@ public partial class EditableBinding : ObservableObject
     /// <summary>Uia action: value for SetValue.</summary>
     [ObservableProperty] private string _uiaValue = "";
 
+    /// <summary>Http action: HTTP method.</summary>
+    [ObservableProperty] private string _httpMethod = "GET";
+
+    /// <summary>Http action: request body.</summary>
+    [ObservableProperty] private string _httpBody = "";
+
+    /// <summary>Osc action: target "host:port".</summary>
+    [ObservableProperty] private string _oscTarget = "";
+
     [ObservableProperty] private string _label = "";
 
     /// <summary>A deep copy, used as the editable draft so changes only apply on commit.</summary>
@@ -68,6 +77,9 @@ public partial class EditableBinding : ObservableObject
         UiaWindow = UiaWindow,
         UiaVerb = UiaVerb,
         UiaValue = UiaValue,
+        HttpMethod = HttpMethod,
+        HttpBody = HttpBody,
+        OscTarget = OscTarget,
         Label = Label,
     };
 
@@ -83,6 +95,9 @@ public partial class EditableBinding : ObservableObject
         UiaWindow = other.UiaWindow;
         UiaVerb = other.UiaVerb;
         UiaValue = other.UiaValue;
+        HttpMethod = other.HttpMethod;
+        HttpBody = other.HttpBody;
+        OscTarget = other.OscTarget;
         Label = other.Label;
     }
 }

@@ -276,4 +276,38 @@ public class ActionExecutorTests
         public List<double> Levels { get; } = new();
         public void SetBrightness(double level) => Levels.Add(level);
     }
+
+    [Fact]
+    public void Http_SendsOnPress()
+    {
+        var http = new RecordingHttp();
+        var executor = new ActionExecutor(new IActionHandler[] { new HttpActionHandler(http) });
+
+        executor.Execute(With(new HttpAction("http://x/y", "POST", "b")), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(("http://x/y", "POST", "b"), Assert.Single(http.Calls));
+    }
+
+    [Fact]
+    public void Osc_SendsOnPress()
+    {
+        var osc = new RecordingOsc();
+        var executor = new ActionExecutor(new IActionHandler[] { new OscActionHandler(osc) });
+
+        executor.Execute(With(new OscAction("127.0.0.1:9000", "/a", "1 2")), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(("127.0.0.1:9000", "/a", "1 2"), Assert.Single(osc.Calls));
+    }
+
+    private sealed class RecordingHttp : IHttpSender
+    {
+        public List<(string Url, string Method, string? Body)> Calls { get; } = new();
+        public void Send(string url, string method, string? body) => Calls.Add((url, method, body));
+    }
+
+    private sealed class RecordingOsc : IOscSender
+    {
+        public List<(string Target, string Address, string Args)> Calls { get; } = new();
+        public void Send(string target, string address, string args) => Calls.Add((target, address, args));
+    }
 }

@@ -55,6 +55,8 @@ public static class EditorHelp
         EditableActionKind.VirtualDesktop => "仮想デスクトップ切替（Win+Ctrl+矢印）。詳細に next / previous",
         EditableActionKind.WindowsToggle => "Windows設定を切替。詳細に darkmode（ダーク/ライト テーマ）",
         EditableActionKind.Brightness => "画面輝度を入力値で設定（フェーダー=Absolute推奨）。ノートPC等の内蔵ディスプレイ対応",
+        EditableActionKind.Http => "HTTPリクエスト/Webhook送信。詳細=URL、メソッド・本文は下の欄（Home Assistant / IFTTT 等）",
+        EditableActionKind.Osc => "OSCメッセージ送信(UDP)。詳細=アドレス(例 /1/fader1)、宛先 host:port と引数は下の欄",
         EditableActionKind.SwitchProfile => "プロファイル切替。詳細に next / prev / toggle / プロファイルID",
         EditableActionKind.None => "何もしない（基本プロファイルの同じ割当を無効化＝ブロック）",
         _ => "",

@@ -109,6 +109,8 @@ internal sealed class TriggerDto
 [JsonDerivedType(typeof(VirtualDesktopActionDto), "virtualDesktop")]
 [JsonDerivedType(typeof(WindowsToggleActionDto), "windowsToggle")]
 [JsonDerivedType(typeof(BrightnessActionDto), "brightness")]
+[JsonDerivedType(typeof(HttpActionDto), "http")]
+[JsonDerivedType(typeof(OscActionDto), "osc")]
 [JsonDerivedType(typeof(NoneActionDto), "none")]
 internal abstract class ActionDto;
 
@@ -192,5 +194,19 @@ internal sealed class WindowsToggleActionDto : ActionDto
 }
 
 internal sealed class BrightnessActionDto : ActionDto;
+
+internal sealed class HttpActionDto : ActionDto
+{
+    public string Url { get; set; } = "";
+    public string Method { get; set; } = "GET";
+    public string? Body { get; set; }
+}
+
+internal sealed class OscActionDto : ActionDto
+{
+    public string Target { get; set; } = "";
+    public string Address { get; set; } = "";
+    public string Args { get; set; } = "";
+}
 
 internal sealed class NoneActionDto : ActionDto;

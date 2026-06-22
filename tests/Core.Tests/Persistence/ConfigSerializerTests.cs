@@ -146,6 +146,18 @@ public class ConfigSerializerTests
         Assert.Equal(WindowsSetting.DarkMode, Assert.IsType<WindowsToggleAction>(
             RoundTripAction(sig, new WindowsToggleAction(WindowsSetting.DarkMode))).Setting);
         Assert.IsType<BrightnessAction>(RoundTripAction(sig, new BrightnessAction()));
+
+        var http = Assert.IsType<HttpAction>(
+            RoundTripAction(sig, new HttpAction("http://h/a", "POST", "{}")));
+        Assert.Equal("http://h/a", http.Url);
+        Assert.Equal("POST", http.Method);
+        Assert.Equal("{}", http.Body);
+
+        var osc = Assert.IsType<OscAction>(
+            RoundTripAction(sig, new OscAction("127.0.0.1:9000", "/fader", "0.5")));
+        Assert.Equal("127.0.0.1:9000", osc.Target);
+        Assert.Equal("/fader", osc.Address);
+        Assert.Equal("0.5", osc.Args);
     }
 
     [Fact]

@@ -112,7 +112,11 @@ public partial class App : Application
                 .Append(new Core.Application.Handlers.WindowsToggleActionHandler(
                     sp.GetRequiredService<ISystemToggle>()))
                 .Append(new Core.Application.Handlers.BrightnessActionHandler(
-                    sp.GetRequiredService<IDisplayBrightness>()))));
+                    sp.GetRequiredService<IDisplayBrightness>()))
+                .Append(new Core.Application.Handlers.HttpActionHandler(
+                    sp.GetRequiredService<IHttpSender>()))
+                .Append(new Core.Application.Handlers.OscActionHandler(
+                    sp.GetRequiredService<IOscSender>()))));
         services.AddSingleton(sp => new MidiEventPipeline(
             sp.GetRequiredService<IMidiSource>(),
             sp.GetRequiredService<IMappingContext>(),
