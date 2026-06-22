@@ -50,6 +50,22 @@ public static class EditorHelp
         EditableActionKind.None => "何もしない（基本プロファイルの同じ割当を無効化＝ブロック）",
         _ => "",
     };
+
+    /// <summary>Suggested "detail" values for an action kind (the combo dropdown; free text still allowed).</summary>
+    public static IReadOnlyList<string> DetailCandidates(EditableActionKind kind) => kind switch
+    {
+        EditableActionKind.Key => new[]
+        {
+            "ctrl+z", "ctrl+y", "ctrl+c", "ctrl+x", "ctrl+v", "ctrl+s", "ctrl+a", "ctrl+f",
+            "space", "enter", "tab", "esc", "delete", "backspace",
+            "up", "down", "left", "right", "f1", "f2", "f5",
+        },
+        EditableActionKind.MouseClick => new[] { "left", "right", "middle", "left x2", "right x2" },
+        EditableActionKind.Scroll => new[] { "vertical", "horizontal" },
+        EditableActionKind.CursorMove => new[] { "relative", "absolute" },
+        EditableActionKind.SwitchProfile => new[] { "next", "prev", "toggle" },
+        _ => Array.Empty<string>(),
+    };
 }
 
 /// <summary>Binds a <see cref="SignalKind"/> to its "when it fires" help text.</summary>
@@ -87,6 +103,16 @@ public sealed class ActionKindHelpConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value is EditableActionKind k ? EditorHelp.ActionKind(k) : "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Binds an <see cref="EditableActionKind"/> to the suggested "detail" values.</summary>
+public sealed class ActionDetailCandidatesConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is EditableActionKind k ? EditorHelp.DetailCandidates(k) : Array.Empty<string>();
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();

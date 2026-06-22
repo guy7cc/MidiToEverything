@@ -260,8 +260,11 @@
                                     <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,0"
                                               ItemsSource="{Binding DataContext.ActionKinds, RelativeSource={RelativeSource AncestorType=Window}}"
                                               SelectedItem="{Binding ActionKind}" />
-                                    <TextBox Grid.Row="1" Grid.Column="2"
-                                             Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}" />
+                                    <ComboBox Grid.Row="1" Grid.Column="2" IsEditable="True"
+                                              IsTextSearchEnabled="False" StaysOpenOnEdit="True"
+                                              ToolTip="アクションに応じた候補から選択するか、自由に入力できます"
+                                              ItemsSource="{Binding ActionKind, Converter={StaticResource ActionDetailCandidates}}"
+                                              Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}" />
                                 </Grid>
 
                                 <!-- Live help: explains the selected type / trigger / action + field guidance -->

@@ -16,6 +16,7 @@
             <local:SignalKindItemConverter x:Key="SignalKindItem" />
             <local:TriggerModeHelpConverter x:Key="TriggerModeHelp" />
             <local:ActionKindHelpConverter x:Key="ActionKindHelp" />
+            <local:ActionDetailCandidatesConverter x:Key="ActionDetailCandidates" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
