@@ -12,6 +12,7 @@ using MidiToEverything.Core.Application;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Infrastructure;
 using MidiToEverything.Infrastructure.Input;
+using MidiToEverything.Infrastructure.Startup;
 using Serilog;
 using Application = System.Windows.Application;
 
@@ -27,6 +28,7 @@ public partial class App : Application
     private IHost? _host;
     private EngineCoordinator? _engine;
     private NotifyIcon? _tray;
+    private ToolStripMenuItem? _startupItem;
     private MainWindow? _window;
     private bool _exiting;
 
@@ -62,6 +64,7 @@ public partial class App : Application
         _engine.Start();
 
         SetupTray();
+        SyncAutoStart();
         _window.Show();
     }
 
@@ -111,6 +114,13 @@ public partial class App : Application
         menu.Items.Add("表示", null, (_, _) => ShowWindow());
         menu.Items.Add("緊急停止 切替", null, (_, _) =>
             _host!.Services.GetRequiredService<GatedInputSink>().Toggle());
+
+        _startupItem = new ToolStripMenuItem("Windows起動時に実行", null, (_, _) => ToggleAutoStart())
+        {
+            CheckOnClick = false,
+        };
+        menu.Items.Add(_startupItem);
+
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("終了", null, (_, _) => ExitApp());
         _tray.ContextMenuStrip = menu;
@@ -126,6 +136,55 @@ public partial class App : Application
                 _tray.Text = text.Length > 63 ? text[..63] : text;
             }
         });
+    }
+
+    // Apply the persisted "start with Windows" setting to the registry on launch (FR-7.6).
+    private void SyncAutoStart()
+    {
+        var enabled = _host!.Services.GetRequiredService<ProfileManager>().CurrentConfig.Settings.StartWithWindows;
+        TrySetAutoStart(enabled);
+        if (_startupItem is not null)
+        {
+            _startupItem.Checked = enabled;
+        }
+    }
+
+    private void ToggleAutoStart()
+    {
+        var profiles = _host!.Services.GetRequiredService<ProfileManager>();
+        var repository = _host.Services.GetRequiredService<IProfileRepository>();
+        var config = profiles.CurrentConfig;
+        var enabled = !config.Settings.StartWithWindows;
+
+        TrySetAutoStart(enabled);
+
+        var updated = config with { Settings = config.Settings with { StartWithWindows = enabled } };
+        try
+        {
+            repository.Save(updated);
+        }
+        catch (Exception ex)
+        {
+            _host.Services.GetRequiredService<ILogger<App>>().LogWarning(ex, "Failed to persist auto-start setting.");
+        }
+
+        profiles.Reload(updated);
+        if (_startupItem is not null)
+        {
+            _startupItem.Checked = enabled;
+        }
+    }
+
+    private void TrySetAutoStart(bool enabled)
+    {
+        try
+        {
+            WindowsStartup.SetEnabled(enabled, Environment.ProcessPath ?? string.Empty);
+        }
+        catch (Exception ex)
+        {
+            _host!.Services.GetRequiredService<ILogger<App>>().LogWarning(ex, "Failed to update Windows startup entry.");
+        }
     }
 
     private void ShowWindow()
