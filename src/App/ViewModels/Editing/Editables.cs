@@ -14,6 +14,16 @@ public partial class EditableSignal : ObservableObject
     [ObservableProperty] private string _channel = Signal.AnyChannel;
     [ObservableProperty] private SignalKind _type = SignalKind.NoteOn;
     [ObservableProperty] private string _numberText = "";
+
+    public EditableSignal Clone() => new() { Device = Device, Channel = Channel, Type = Type, NumberText = NumberText };
+
+    public void CopyFrom(EditableSignal other)
+    {
+        Device = other.Device;
+        Channel = other.Channel;
+        Type = other.Type;
+        NumberText = other.NumberText;
+    }
 }
 
 /// <summary>Editable view of a <see cref="Binding"/> with a flattened single-action form.</summary>
@@ -24,6 +34,26 @@ public partial class EditableBinding : ObservableObject
     [ObservableProperty] private EditableActionKind _actionKind = EditableActionKind.Key;
     [ObservableProperty] private string _detail = "";
     [ObservableProperty] private string _label = "";
+
+    /// <summary>A deep copy, used as the editable draft so changes only apply on commit.</summary>
+    public EditableBinding Clone() => new()
+    {
+        Signal = Signal.Clone(),
+        Mode = Mode,
+        ActionKind = ActionKind,
+        Detail = Detail,
+        Label = Label,
+    };
+
+    /// <summary>Copy values from another binding into this one (commit a draft into the list item).</summary>
+    public void CopyValuesFrom(EditableBinding other)
+    {
+        Signal.CopyFrom(other.Signal);
+        Mode = other.Mode;
+        ActionKind = other.ActionKind;
+        Detail = other.Detail;
+        Label = other.Label;
+    }
 }
 
 /// <summary>Editable view of a <see cref="Profile"/>. The base profile has no match rule.</summary>
