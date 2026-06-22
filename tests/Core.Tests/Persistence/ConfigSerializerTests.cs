@@ -133,6 +133,13 @@ public class ConfigSerializerTests
 
         Assert.Equal(VolumeTarget.Microphone, Assert.IsType<SetVolumeAction>(
             RoundTripAction(sig, new SetVolumeAction(VolumeTarget.Microphone))).Target);
+
+        var uia = Assert.IsType<UiaAction>(
+            RoundTripAction(sig, new UiaAction("^notepad", "OK", UiaVerb.SetValue, "hi")));
+        Assert.Equal("^notepad", uia.WindowPattern);
+        Assert.Equal("OK", uia.ElementName);
+        Assert.Equal(UiaVerb.SetValue, uia.Verb);
+        Assert.Equal("hi", uia.Value);
     }
 
     [Fact]

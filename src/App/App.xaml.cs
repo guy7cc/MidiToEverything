@@ -84,6 +84,12 @@ public partial class App : Application
             sp.GetRequiredService<IWindowWatcher>(),
             sp.GetService<ILogger<ProfileManager>>()));
         services.AddSingleton<IMappingContext>(sp => sp.GetRequiredService<ProfileManager>());
+        // UI Automation driver + element picker (Phase 2; WPF-coupled, so implemented in App).
+        services.AddSingleton<IUiaDriver>(sp =>
+            new Automation.UiaDriver(sp.GetService<ILogger<Automation.UiaDriver>>()));
+        services.AddSingleton<IUiaElementPicker>(sp =>
+            new Automation.UiaElementPicker(sp.GetService<ILogger<Automation.UiaElementPicker>>()));
+
         // External-launch opt-in (Q5), initialized from settings; toggled at runtime by the UI.
         services.AddSingleton(sp =>
             new LaunchPolicy(sp.GetRequiredService<AppConfig>().Settings.AllowExternalLaunch));
@@ -98,7 +104,9 @@ public partial class App : Application
                 .Append(new Core.Application.Handlers.LaunchActionHandler(
                     sp.GetRequiredService<IShellLauncher>(), sp.GetRequiredService<LaunchPolicy>()))
                 .Append(new Core.Application.Handlers.SetVolumeActionHandler(
-                    sp.GetRequiredService<ISystemAudio>()))));
+                    sp.GetRequiredService<ISystemAudio>()))
+                .Append(new Core.Application.Handlers.UiaActionHandler(
+                    sp.GetRequiredService<IUiaDriver>()))));
         services.AddSingleton(sp => new MidiEventPipeline(
             sp.GetRequiredService<IMidiSource>(),
             sp.GetRequiredService<IMappingContext>(),

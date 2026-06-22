@@ -80,6 +80,25 @@ public sealed class LaunchActionHandler : FireOnPressHandler
     }
 }
 
+/// <summary>Actuates a control in another window via UI Automation (Phase 2).</summary>
+public sealed class UiaActionHandler : FireOnPressHandler
+{
+    private readonly IUiaDriver _driver;
+
+    public UiaActionHandler(IUiaDriver driver) => _driver = driver;
+
+    public override bool CanHandle(InputAction action) => action is UiaAction;
+
+    protected override void Fire(InputAction action)
+    {
+        var u = (UiaAction)action;
+        if (!string.IsNullOrWhiteSpace(u.ElementName))
+        {
+            _driver.Actuate(u.WindowPattern, u.ElementName, u.Verb, u.Value);
+        }
+    }
+}
+
 /// <summary>Sets an audio endpoint volume from the continuous input value (Absolute fader).</summary>
 public sealed class SetVolumeActionHandler : IActionHandler
 {

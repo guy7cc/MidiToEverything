@@ -103,6 +103,43 @@
                 </Grid>
             </StackPanel>
         </DataTemplate>
+
+        <!-- Uia: element name (+ picker) + target window + verb + value -->
+        <DataTemplate x:Key="UiaDetailTemplate">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="要素名（Name または AutomationId）">
+                        <TextBox.Foreground>
+                            <MultiBinding Converter="{StaticResource DetailValidBrush}">
+                                <Binding Path="Detail" />
+                                <Binding Path="ActionKind" />
+                            </MultiBinding>
+                        </TextBox.Foreground>
+                    </TextBox>
+                    <Button Grid.Column="1" Content="要素を取得" Margin="6,0,0,0"
+                            ToolTip="押した後3秒以内に対象のUI要素へカーソルを合わせると取り込みます"
+                            Command="{Binding DataContext.PickUiaElementCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                </Grid>
+                <TextBox Margin="0,4,0,0" Text="{Binding UiaWindow, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="対象ウィンドウの正規表現（process\ntitle に一致）。例: ^notepad" />
+                <Grid Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox Grid.Column="0" Width="150" Margin="0,0,6,0"
+                              ItemsSource="{Binding DataContext.UiaVerbs, RelativeSource={RelativeSource AncestorType=Window}}"
+                              SelectedItem="{Binding UiaVerb}" ToolTip="動作: invoke / toggle / setvalue" />
+                    <TextBox Grid.Column="1" Text="{Binding UiaValue, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="setvalue のとき入力する値" />
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -358,6 +395,9 @@
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Launch">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource LaunchDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="Uia">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource UiaDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="None">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource NoneDetailTemplate}" />

@@ -8,7 +8,7 @@ namespace MidiToEverything.App.ViewModels.Editing;
 public enum EditableActionKind
 {
     Key, MouseClick, Scroll, CursorMove, WindowControl,
-    MediaKey, TypeText, Launch, SetVolume, SwitchProfile, None,
+    MediaKey, TypeText, Launch, SetVolume, Uia, SwitchProfile, None,
 }
 
 /// <summary>Editable view of a <see cref="Signal"/> (docs/03_ProfileSchema.md §1).</summary>
@@ -44,6 +44,15 @@ public partial class EditableBinding : ObservableObject
     /// <summary>Launch action: working directory.</summary>
     [ObservableProperty] private string _workingDir = "";
 
+    /// <summary>Uia action: target-window regex ("process\ntitle").</summary>
+    [ObservableProperty] private string _uiaWindow = "";
+
+    /// <summary>Uia action: verb (invoke / toggle / setvalue).</summary>
+    [ObservableProperty] private string _uiaVerb = "invoke";
+
+    /// <summary>Uia action: value for SetValue.</summary>
+    [ObservableProperty] private string _uiaValue = "";
+
     [ObservableProperty] private string _label = "";
 
     /// <summary>A deep copy, used as the editable draft so changes only apply on commit.</summary>
@@ -55,6 +64,9 @@ public partial class EditableBinding : ObservableObject
         Detail = Detail,
         Arguments = Arguments,
         WorkingDir = WorkingDir,
+        UiaWindow = UiaWindow,
+        UiaVerb = UiaVerb,
+        UiaValue = UiaValue,
         Label = Label,
     };
 
@@ -67,6 +79,9 @@ public partial class EditableBinding : ObservableObject
         Detail = other.Detail;
         Arguments = other.Arguments;
         WorkingDir = other.WorkingDir;
+        UiaWindow = other.UiaWindow;
+        UiaVerb = other.UiaVerb;
+        UiaValue = other.UiaValue;
         Label = other.Label;
     }
 }

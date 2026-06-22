@@ -67,6 +67,7 @@ public static class SignalValidation
             EditableActionKind.TypeText => d.Length > 0,
             EditableActionKind.Launch => d.Length > 0,
             EditableActionKind.SetVolume => lower is "master" or "microphone",
+            EditableActionKind.Uia => d.Length > 0, // element name required
             EditableActionKind.SwitchProfile => d.Length > 0,
             EditableActionKind.None => true,
             _ => true,
