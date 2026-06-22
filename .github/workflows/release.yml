@@ -50,6 +50,8 @@ jobs:
           Copy-Item publish/MidiToEverything.exe "dist/$name/"
           Copy-Item README.md "dist/$name/"
           Copy-Item samples/config.sample.json "dist/$name/"
+          # Per-language UI translation files (shipped next to the exe).
+          Copy-Item publish/Resources "dist/$name/Resources" -Recurse
           Compress-Archive -Path "dist/$name/*" -DestinationPath "dist/$name.zip"
 
       - name: Build installer (Inno Setup)

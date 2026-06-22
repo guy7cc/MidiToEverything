@@ -1,0 +1,28 @@
+{
+  "language.name": "English",
+
+  "common.emergencyToggle": "Emergency stop",
+
+  "main.profileLabel": "Profile: ",
+  "main.pinned": "Pinned",
+  "main.status.running": "Running",
+  "main.status.stopped": "Stopped (emergency)",
+  "main.allowLaunch": "Allow external launch",
+  "main.allowLaunch.tip": "Enable launch actions (apps/files/URLs). Off by default for safety.",
+  "main.editProfiles": "Edit profiles",
+  "main.devices": "Devices",
+  "main.detect.auto": "Auto-detect",
+  "main.detect.manual": "Manual",
+  "main.detect.tip": "Auto: poll for devices periodically  /  Manual: detect only on \"Refresh now\"",
+  "main.refreshNow": "Refresh now",
+  "main.notConnected": "(none)",
+  "main.obs.title": "OBS connection (obs-websocket)",
+  "main.obs.host.tip": "Host",
+  "main.obs.port.tip": "Port (default 4455)",
+  "main.obs.pass.tip": "OBS WebSocket password (leave blank if not set)",
+  "main.monitor": "Input monitor",
+  "main.pause": "Pause",
+  "main.resume": "Resume",
+  "main.clear": "Clear",
+  "main.language": "Language"
+}
