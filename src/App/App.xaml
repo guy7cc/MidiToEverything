@@ -12,6 +12,10 @@
             <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
             <local:ZeroToVisibilityConverter x:Key="ZeroToVisibility" />
             <local:PauseLabelConverter x:Key="PauseLabel" />
+            <local:SignalKindHelpConverter x:Key="SignalKindHelp" />
+            <local:SignalKindItemConverter x:Key="SignalKindItem" />
+            <local:TriggerModeHelpConverter x:Key="TriggerModeHelp" />
+            <local:ActionKindHelpConverter x:Key="ActionKindHelp" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
