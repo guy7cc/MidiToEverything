@@ -42,7 +42,7 @@ jobs:
           -p:Version=${{ steps.ver.outputs.version }}
           --output publish
 
-      - name: Package artifact
+      - name: Package portable zip
         shell: pwsh
         run: |
           $name = "MidiToEverything-${{ github.ref_name }}-win-x64"
@@ -52,14 +52,25 @@ jobs:
           Copy-Item samples/config.sample.json "dist/$name/"
           Compress-Archive -Path "dist/$name/*" -DestinationPath "dist/$name.zip"
 
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" `
+                  "/DSourceExe=${{ github.workspace }}\publish\MidiToEverything.exe" `
+                  "installer\MidiToEverything.iss"
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
+
       - name: Create GitHub Release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          asset="dist/MidiToEverything-${GITHUB_REF_NAME}-win-x64.zip"
+          zip="dist/MidiToEverything-${GITHUB_REF_NAME}-win-x64.zip"
+          setup="installer/MidiToEverything-Setup-${{ steps.ver.outputs.version }}.exe"
           prerelease=""
           case "${GITHUB_REF_NAME}" in *-*) prerelease="--prerelease";; esac
-          gh release create "${GITHUB_REF_NAME}" "$asset" \
+          gh release create "${GITHUB_REF_NAME}" "$zip" "$setup" \
             --title "MidiToEverything ${GITHUB_REF_NAME}" \
             --generate-notes $prerelease
