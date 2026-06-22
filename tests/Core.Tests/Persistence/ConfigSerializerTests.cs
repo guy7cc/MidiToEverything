@@ -158,6 +158,24 @@ public class ConfigSerializerTests
         Assert.Equal("127.0.0.1:9000", osc.Target);
         Assert.Equal("/fader", osc.Address);
         Assert.Equal("0.5", osc.Args);
+
+        var obs = Assert.IsType<ObsAction>(
+            RoundTripAction(sig, new ObsAction(ObsOp.SceneSwitch, "Intro")));
+        Assert.Equal(ObsOp.SceneSwitch, obs.Op);
+        Assert.Equal("Intro", obs.Arg);
+    }
+
+    [Fact]
+    public void ObsConnectionSettings_RoundTrip()
+    {
+        var config = DefaultConfig.Create();
+        config = config with { Settings = config.Settings with { ObsHost = "10.0.0.2", ObsPort = 4456, ObsPassword = "pw" } };
+
+        var loaded = ConfigSerializer.Deserialize(ConfigSerializer.Serialize(config));
+
+        Assert.Equal("10.0.0.2", loaded.Settings.ObsHost);
+        Assert.Equal(4456, loaded.Settings.ObsPort);
+        Assert.Equal("pw", loaded.Settings.ObsPassword);
     }
 
     [Fact]

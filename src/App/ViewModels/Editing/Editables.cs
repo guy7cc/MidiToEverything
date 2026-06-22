@@ -9,7 +9,7 @@ public enum EditableActionKind
 {
     Key, MouseClick, Scroll, CursorMove, WindowControl,
     MediaKey, TypeText, Launch, SetVolume, Uia,
-    VirtualDesktop, WindowsToggle, Brightness, Http, Osc, SwitchProfile, None,
+    VirtualDesktop, WindowsToggle, Brightness, Http, Osc, Obs, SwitchProfile, None,
 }
 
 /// <summary>Editable view of a <see cref="Signal"/> (docs/03_ProfileSchema.md §1).</summary>
@@ -63,6 +63,9 @@ public partial class EditableBinding : ObservableObject
     /// <summary>Osc action: target "host:port".</summary>
     [ObservableProperty] private string _oscTarget = "";
 
+    /// <summary>Obs action: operation name (sceneswitch / togglerecord / ...).</summary>
+    [ObservableProperty] private string _obsOpName = "togglerecord";
+
     [ObservableProperty] private string _label = "";
 
     /// <summary>A deep copy, used as the editable draft so changes only apply on commit.</summary>
@@ -80,6 +83,7 @@ public partial class EditableBinding : ObservableObject
         HttpMethod = HttpMethod,
         HttpBody = HttpBody,
         OscTarget = OscTarget,
+        ObsOpName = ObsOpName,
         Label = Label,
     };
 
@@ -98,6 +102,7 @@ public partial class EditableBinding : ObservableObject
         HttpMethod = other.HttpMethod;
         HttpBody = other.HttpBody;
         OscTarget = other.OscTarget;
+        ObsOpName = other.ObsOpName;
         Label = other.Label;
     }
 }

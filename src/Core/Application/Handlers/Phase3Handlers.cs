@@ -22,6 +22,22 @@ public sealed class HttpActionHandler : FireOnPressHandler
     }
 }
 
+/// <summary>Controls OBS Studio via obs-websocket.</summary>
+public sealed class ObsActionHandler : FireOnPressHandler
+{
+    private readonly IObsClient _obs;
+
+    public ObsActionHandler(IObsClient obs) => _obs = obs;
+
+    public override bool CanHandle(InputAction action) => action is ObsAction;
+
+    protected override void Fire(InputAction action)
+    {
+        var o = (ObsAction)action;
+        _obs.Send(o.Op, o.Arg);
+    }
+}
+
 /// <summary>Sends an OSC message over UDP.</summary>
 public sealed class OscActionHandler : FireOnPressHandler
 {

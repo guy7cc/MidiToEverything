@@ -28,6 +28,9 @@ internal static class ProfileMapper
         StartWithWindows = s.StartWithWindows,
         EmergencyStopHotkey = s.EmergencyStopHotkey,
         AllowExternalLaunch = s.AllowExternalLaunch,
+        ObsHost = s.ObsHost,
+        ObsPort = s.ObsPort,
+        ObsPassword = s.ObsPassword,
         WatchedDevices = s.WatchedDevices.ToArray(),
         Monitor = new MonitorSettings { MaxLogLines = s.Monitor.MaxLogLines, UiThrottleMs = s.Monitor.UiThrottleMs },
     };
@@ -100,6 +103,7 @@ internal static class ProfileMapper
         BrightnessActionDto => new BrightnessAction(),
         HttpActionDto h => new HttpAction(h.Url, h.Method, h.Body),
         OscActionDto o => new OscAction(o.Target, o.Address, o.Args),
+        ObsActionDto ob => new ObsAction(ob.Op, ob.Arg),
         NoneActionDto => NoneAction.Instance,
         _ => throw new NotSupportedException($"Unknown action DTO: {a.GetType().Name}"),
     };
@@ -122,6 +126,9 @@ internal static class ProfileMapper
             StartWithWindows = config.Settings.StartWithWindows,
             EmergencyStopHotkey = config.Settings.EmergencyStopHotkey,
             AllowExternalLaunch = config.Settings.AllowExternalLaunch,
+            ObsHost = config.Settings.ObsHost,
+            ObsPort = config.Settings.ObsPort,
+            ObsPassword = config.Settings.ObsPassword,
             WatchedDevices = config.Settings.WatchedDevices.ToList(),
             Monitor = new MonitorDto
             {
@@ -197,6 +204,7 @@ internal static class ProfileMapper
         BrightnessAction => new BrightnessActionDto(),
         HttpAction h => new HttpActionDto { Url = h.Url, Method = h.Method, Body = h.Body },
         OscAction o => new OscActionDto { Target = o.Target, Address = o.Address, Args = o.Args },
+        ObsAction ob => new ObsActionDto { Op = ob.Op, Arg = ob.Arg },
         NoneAction => new NoneActionDto(),
         _ => throw new NotSupportedException($"Unknown action: {a.GetType().Name}"),
     };

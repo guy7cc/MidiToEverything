@@ -61,6 +61,12 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     public string[] UiaVerbs { get; } = { "invoke", "toggle", "setvalue" };
     public string[] HttpMethods { get; } = { "GET", "POST", "PUT", "DELETE", "PATCH" };
 
+    public string[] ObsOps { get; } =
+    {
+        "sceneswitch", "togglerecord", "togglestream", "togglerecordpause", "togglemute",
+        "startrecord", "stoprecord", "startstream", "stopstream",
+    };
+
     [ObservableProperty] private EditableProfile? _selectedProfile;
     [ObservableProperty] private EditableBinding? _selectedBinding;
 

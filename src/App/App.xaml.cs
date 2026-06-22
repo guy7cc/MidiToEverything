@@ -93,6 +93,15 @@ public partial class App : Application
         // External-launch opt-in (Q5), initialized from settings; toggled at runtime by the UI.
         services.AddSingleton(sp =>
             new LaunchPolicy(sp.GetRequiredService<AppConfig>().Settings.AllowExternalLaunch));
+
+        // OBS client reads the live connection settings (host/port/password) from the running config.
+        services.AddSingleton<IObsClient>(sp => new Infrastructure.Obs.ObsWebSocketClient(
+            () =>
+            {
+                var s = sp.GetRequiredService<ProfileManager>().CurrentConfig.Settings;
+                return new ObsConnection(s.ObsHost, s.ObsPort, s.ObsPassword);
+            },
+            sp.GetService<ILogger<Infrastructure.Obs.ObsWebSocketClient>>()));
         services.AddSingleton(sp => new ActionExecutor(
             ActionExecutor.DefaultHandlers(sp.GetRequiredService<IInputSink>())
                 .Append(new Core.Application.Handlers.WindowControlActionHandler(
@@ -116,7 +125,9 @@ public partial class App : Application
                 .Append(new Core.Application.Handlers.HttpActionHandler(
                     sp.GetRequiredService<IHttpSender>()))
                 .Append(new Core.Application.Handlers.OscActionHandler(
-                    sp.GetRequiredService<IOscSender>()))));
+                    sp.GetRequiredService<IOscSender>()))
+                .Append(new Core.Application.Handlers.ObsActionHandler(
+                    sp.GetRequiredService<IObsClient>()))));
         services.AddSingleton(sp => new MidiEventPipeline(
             sp.GetRequiredService<IMidiSource>(),
             sp.GetRequiredService<IMappingContext>(),

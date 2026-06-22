@@ -310,4 +310,21 @@ public class ActionExecutorTests
         public List<(string Target, string Address, string Args)> Calls { get; } = new();
         public void Send(string target, string address, string args) => Calls.Add((target, address, args));
     }
+
+    [Fact]
+    public void Obs_SendsOpOnPress()
+    {
+        var obs = new RecordingObs();
+        var executor = new ActionExecutor(new IActionHandler[] { new ObsActionHandler(obs) });
+
+        executor.Execute(With(new ObsAction(ObsOp.SceneSwitch, "Scene 1")), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal((ObsOp.SceneSwitch, "Scene 1"), Assert.Single(obs.Calls));
+    }
+
+    private sealed class RecordingObs : IObsClient
+    {
+        public List<(ObsOp Op, string? Arg)> Calls { get; } = new();
+        public void Send(ObsOp op, string? arg) => Calls.Add((op, arg));
+    }
 }

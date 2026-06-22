@@ -111,6 +111,19 @@ public sealed record HttpAction(string Url = "", string Method = "GET", string? 
 /// <summary>Send an OSC message over UDP (docs/05 §5, Phase 3). Target is "host:port".</summary>
 public sealed record OscAction(string Target = "", string Address = "", string Args = "") : InputAction;
 
+/// <summary>OBS WebSocket operations (docs/05 §5, Phase 3).</summary>
+public enum ObsOp
+{
+    SceneSwitch, ToggleRecord, ToggleStream, ToggleRecordPause, ToggleMute,
+    StartRecord, StopRecord, StartStream, StopStream,
+}
+
+/// <summary>
+/// Control OBS Studio via obs-websocket v5 (docs/05 §5, Phase 3). <see cref="Arg"/> is the scene
+/// name (SceneSwitch) or input name (ToggleMute); unused by the others.
+/// </summary>
+public sealed record ObsAction(ObsOp Op = ObsOp.ToggleRecord, string? Arg = null) : InputAction;
+
 /// <summary>
 /// Explicit "do nothing" that also blocks fallback to the base profile (FR-6.4).
 /// Its presence as the sole action marks a binding as a block.
