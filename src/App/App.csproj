@@ -12,7 +12,7 @@
          Suppress the WinForms-specific "configure DPI via API" warning. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
 
-    <!-- Distribution: single self-contained .exe (used by publish.bat / dotnet publish). These
+    <!-- Distribution: single self-contained .exe (dotnet publish / the release workflow). These
          only take effect when publishing single-file; normal build/run/test are unaffected. -->
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
