@@ -106,7 +106,13 @@ public partial class App : Application
                 .Append(new Core.Application.Handlers.SetVolumeActionHandler(
                     sp.GetRequiredService<ISystemAudio>()))
                 .Append(new Core.Application.Handlers.UiaActionHandler(
-                    sp.GetRequiredService<IUiaDriver>()))));
+                    sp.GetRequiredService<IUiaDriver>()))
+                .Append(new Core.Application.Handlers.VirtualDesktopActionHandler(
+                    sp.GetRequiredService<IInputSink>()))
+                .Append(new Core.Application.Handlers.WindowsToggleActionHandler(
+                    sp.GetRequiredService<ISystemToggle>()))
+                .Append(new Core.Application.Handlers.BrightnessActionHandler(
+                    sp.GetRequiredService<IDisplayBrightness>()))));
         services.AddSingleton(sp => new MidiEventPipeline(
             sp.GetRequiredService<IMidiSource>(),
             sp.GetRequiredService<IMappingContext>(),

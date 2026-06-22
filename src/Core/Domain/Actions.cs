@@ -29,6 +29,12 @@ public enum VolumeTarget { Master, Microphone }
 /// <summary>How a UI Automation element is actuated (docs/05 §5, Phase 2).</summary>
 public enum UiaVerb { Invoke, Toggle, SetValue }
 
+/// <summary>Virtual-desktop switch direction (docs/05 §5, Phase 2).</summary>
+public enum DesktopOp { Next, Previous }
+
+/// <summary>A toggleable Windows setting (docs/05 §5, Phase 2).</summary>
+public enum WindowsSetting { DarkMode }
+
 /// <summary>Send a keyboard shortcut. <see cref="Hold"/> keeps keys down until release.</summary>
 public sealed record KeyAction(
     IReadOnlyList<string> Keys,
@@ -89,6 +95,15 @@ public sealed record UiaAction(
     string ElementName = "",
     UiaVerb Verb = UiaVerb.Invoke,
     string? Value = null) : InputAction;
+
+/// <summary>Switch virtual desktop (next/previous) via Win+Ctrl+Arrow (docs/05 §5, Phase 2).</summary>
+public sealed record VirtualDesktopAction(DesktopOp Op = DesktopOp.Next) : InputAction;
+
+/// <summary>Toggle a Windows setting, e.g. dark/light app theme (docs/05 §5, Phase 2).</summary>
+public sealed record WindowsToggleAction(WindowsSetting Setting = WindowsSetting.DarkMode) : InputAction;
+
+/// <summary>Set display brightness from the input value (Absolute fader → 0..100%, Phase 2).</summary>
+public sealed record BrightnessAction : InputAction;
 
 /// <summary>
 /// Explicit "do nothing" that also blocks fallback to the base profile (FR-6.4).

@@ -31,6 +31,12 @@ public static class DependencyInjection
         services.AddSingleton<ISystemAudio>(sp =>
             new Audio.Win32SystemAudio(sp.GetService<ILogger<Audio.Win32SystemAudio>>()));
 
+        // Windows setting toggles + display brightness (Phase 2 actions).
+        services.AddSingleton<ISystemToggle>(sp =>
+            new Settings.Win32SystemToggle(sp.GetService<ILogger<Settings.Win32SystemToggle>>()));
+        services.AddSingleton<IDisplayBrightness>(sp =>
+            new Display.WmiDisplayBrightness(sp.GetService<ILogger<Display.WmiDisplayBrightness>>()));
+
         // Input emission (SendInput) behind an emergency-stop gate.
         services.AddSingleton<Win32InputSink>(sp =>
             new Win32InputSink(sp.GetService<ILogger<Win32InputSink>>()));

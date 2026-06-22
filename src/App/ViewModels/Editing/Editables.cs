@@ -8,7 +8,8 @@ namespace MidiToEverything.App.ViewModels.Editing;
 public enum EditableActionKind
 {
     Key, MouseClick, Scroll, CursorMove, WindowControl,
-    MediaKey, TypeText, Launch, SetVolume, Uia, SwitchProfile, None,
+    MediaKey, TypeText, Launch, SetVolume, Uia,
+    VirtualDesktop, WindowsToggle, Brightness, SwitchProfile, None,
 }
 
 /// <summary>Editable view of a <see cref="Signal"/> (docs/03_ProfileSchema.md §1).</summary>

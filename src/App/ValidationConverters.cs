@@ -68,6 +68,9 @@ public static class SignalValidation
             EditableActionKind.Launch => d.Length > 0,
             EditableActionKind.SetVolume => lower is "master" or "microphone",
             EditableActionKind.Uia => d.Length > 0, // element name required
+            EditableActionKind.VirtualDesktop => lower is "next" or "previous",
+            EditableActionKind.WindowsToggle => lower is "darkmode",
+            EditableActionKind.Brightness => true, // value-driven, no detail
             EditableActionKind.SwitchProfile => d.Length > 0,
             EditableActionKind.None => true,
             _ => true,

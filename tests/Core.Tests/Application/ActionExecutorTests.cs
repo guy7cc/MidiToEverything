@@ -230,4 +230,50 @@ public class ActionExecutorTests
         public void Actuate(string windowPattern, string elementName, UiaVerb verb, string? value)
             => Calls.Add((windowPattern, elementName, verb, value));
     }
+
+    [Theory]
+    [InlineData(DesktopOp.Next, "right")]
+    [InlineData(DesktopOp.Previous, "left")]
+    public void VirtualDesktop_SendsWinCtrlArrow(DesktopOp op, string arrow)
+    {
+        var executor = new ActionExecutor(new IActionHandler[] { new VirtualDesktopActionHandler(_sink) });
+
+        executor.Execute(With(new VirtualDesktopAction(op)), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(new[] { "win", "ctrl", arrow }, Assert.IsType<KeyTapCall>(Assert.Single(_sink.Calls)).Keys);
+    }
+
+    [Fact]
+    public void WindowsToggle_TogglesSetting()
+    {
+        var toggle = new RecordingToggle();
+        var executor = new ActionExecutor(new IActionHandler[] { new WindowsToggleActionHandler(toggle) });
+
+        executor.Execute(With(new WindowsToggleAction(WindowsSetting.DarkMode)), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(WindowsSetting.DarkMode, Assert.Single(toggle.Settings));
+    }
+
+    [Fact]
+    public void Brightness_UsesMagnitudeOnChange()
+    {
+        var display = new RecordingBrightness();
+        var executor = new ActionExecutor(new IActionHandler[] { new BrightnessActionHandler(display) });
+
+        executor.Execute(With(new BrightnessAction()), new TriggerResult(TriggerPhase.Change, 0.4), Msg);
+
+        Assert.Equal(0.4, Assert.Single(display.Levels), 3);
+    }
+
+    private sealed class RecordingToggle : ISystemToggle
+    {
+        public List<WindowsSetting> Settings { get; } = new();
+        public void Toggle(WindowsSetting setting) => Settings.Add(setting);
+    }
+
+    private sealed class RecordingBrightness : IDisplayBrightness
+    {
+        public List<double> Levels { get; } = new();
+        public void SetBrightness(double level) => Levels.Add(level);
+    }
 }

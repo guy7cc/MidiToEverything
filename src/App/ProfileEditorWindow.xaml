@@ -70,6 +70,12 @@
                        VerticalAlignment="Center" Margin="2,6,0,0" />
         </DataTemplate>
 
+        <DataTemplate x:Key="BrightnessDetailTemplate">
+            <TextBlock Text="入力値で画面輝度を設定（フェーダー＝トリガー Absolute 推奨）。内蔵ディスプレイ対応"
+                       Foreground="{StaticResource TextFaintBrush}" TextWrapping="Wrap"
+                       VerticalAlignment="Center" Margin="2,6,0,0" />
+        </DataTemplate>
+
         <!-- TypeText: a free-text snippet (newlines allowed) -->
         <DataTemplate x:Key="TypeTextDetailTemplate">
             <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
@@ -398,6 +404,9 @@
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Uia">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource UiaDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="Brightness">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource BrightnessDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="None">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource NoneDetailTemplate}" />
