@@ -25,6 +25,26 @@ public class SignalMatchTests
     }
 
     [Fact]
+    public void Device_IsMatchedAsRegex()
+    {
+        var signal = new Signal { Device = @"MPK\d+", Type = SignalKind.NoteOn, Number = 36 };
+
+        Assert.True(signal.Matches(NoteOn(36, "MPK249")));
+        Assert.True(signal.Matches(NoteOn(36, "my MPK261 keys"))); // unanchored search
+        Assert.False(signal.Matches(NoteOn(36, "MPK mini")));      // no digits
+    }
+
+    [Fact]
+    public void Device_InvalidRegex_NeverMatches_AndDoesNotThrow()
+    {
+        var signal = new Signal { Device = "(", Type = SignalKind.NoteOn, Number = 36 };
+
+        var ex = Record.Exception(() => signal.Matches(NoteOn(36, "anything")));
+        Assert.Null(ex);
+        Assert.False(signal.Matches(NoteOn(36, "anything")));
+    }
+
+    [Fact]
     public void SpecificChannel_MustMatch()
     {
         var signal = new Signal { Channel = "2", Type = SignalKind.NoteOn, Number = 36 };

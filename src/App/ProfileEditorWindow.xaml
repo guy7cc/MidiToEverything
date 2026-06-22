@@ -234,10 +234,16 @@
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
                                     <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,0"
+                                             ToolTip="番号: 0〜127、または空欄で任意"
+                                             Foreground="{Binding Signal.NumberText, Converter={StaticResource NumberValidBrush}}"
                                              Text="{Binding Signal.NumberText, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBox Grid.Row="1" Grid.Column="2" Margin="0,0,8,0"
+                                             ToolTip="ch: 1〜16、または any"
+                                             Foreground="{Binding Signal.Channel, Converter={StaticResource ChannelValidBrush}}"
                                              Text="{Binding Signal.Channel, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBox Grid.Row="1" Grid.Column="3"
+                                             ToolTip="デバイス: 正規表現で判別（* で任意）。例: ^MPK"
+                                             Foreground="{Binding Signal.Device, Converter={StaticResource DeviceValidBrush}}"
                                              Text="{Binding Signal.Device, UpdateSourceTrigger=PropertyChanged}" />
                                 </Grid>
 
@@ -262,9 +268,16 @@
                                               SelectedItem="{Binding ActionKind}" />
                                     <ComboBox Grid.Row="1" Grid.Column="2" IsEditable="True"
                                               IsTextSearchEnabled="False" StaysOpenOnEdit="True"
-                                              ToolTip="アクションに応じた候補から選択するか、自由に入力できます"
+                                              ToolTip="アクションに応じた候補から選択するか、自由に入力できます（無効な値は赤字）"
                                               ItemsSource="{Binding ActionKind, Converter={StaticResource ActionDetailCandidates}}"
-                                              Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}" />
+                                              Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}">
+                                        <ComboBox.Foreground>
+                                            <MultiBinding Converter="{StaticResource DetailValidBrush}">
+                                                <Binding Path="Detail" />
+                                                <Binding Path="ActionKind" />
+                                            </MultiBinding>
+                                        </ComboBox.Foreground>
+                                    </ComboBox>
                                 </Grid>
 
                                 <!-- Live help: explains the selected type / trigger / action + field guidance -->
