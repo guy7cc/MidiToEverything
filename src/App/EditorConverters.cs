@@ -52,6 +52,9 @@ public static class EditorHelp
         EditableActionKind.Launch => "アプリ/ファイル/URL を起動。詳細=対象、引数・作業ディレクトリは下の欄。要・外部起動の許可",
         EditableActionKind.SetVolume => "音量を入力値で設定（フェーダー=Absolute推奨）。詳細に master / microphone",
         EditableActionKind.Uia => "別ウィンドウのUI要素を操作。要素名＋対象ウィンドウ＋動作(invoke/toggle/setvalue)。「要素を取得」でカーソル下の要素を取込",
+        EditableActionKind.VirtualDesktop => "仮想デスクトップ切替（Win+Ctrl+矢印）。詳細に next / previous",
+        EditableActionKind.WindowsToggle => "Windows設定を切替。詳細に darkmode（ダーク/ライト テーマ）",
+        EditableActionKind.Brightness => "画面輝度を入力値で設定（フェーダー=Absolute推奨）。ノートPC等の内蔵ディスプレイ対応",
         EditableActionKind.SwitchProfile => "プロファイル切替。詳細に next / prev / toggle / プロファイルID",
         EditableActionKind.None => "何もしない（基本プロファイルの同じ割当を無効化＝ブロック）",
         _ => "",
@@ -72,6 +75,8 @@ public static class EditorHelp
         EditableActionKind.WindowControl => new[] { "minimize", "maximize", "restore", "close", "topmost" },
         EditableActionKind.MediaKey => new[] { "playpause", "next", "previous", "stop", "mute", "volumeup", "volumedown" },
         EditableActionKind.SetVolume => new[] { "master", "microphone" },
+        EditableActionKind.VirtualDesktop => new[] { "next", "previous" },
+        EditableActionKind.WindowsToggle => new[] { "darkmode" },
         EditableActionKind.SwitchProfile => new[] { "next", "prev", "toggle" },
         _ => Array.Empty<string>(),
     };

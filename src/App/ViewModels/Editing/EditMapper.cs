@@ -81,6 +81,9 @@ internal static class EditMapper
         LaunchAction l => (EditableActionKind.Launch, l.Target),
         SetVolumeAction v => (EditableActionKind.SetVolume, v.Target.ToString().ToLowerInvariant()),
         UiaAction u => (EditableActionKind.Uia, u.ElementName),
+        VirtualDesktopAction vd => (EditableActionKind.VirtualDesktop, vd.Op == DesktopOp.Previous ? "previous" : "next"),
+        WindowsToggleAction wt => (EditableActionKind.WindowsToggle, wt.Setting.ToString().ToLowerInvariant()),
+        BrightnessAction => (EditableActionKind.Brightness, ""),
         SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
         _ => (EditableActionKind.None, ""),
     };
@@ -178,6 +181,10 @@ internal static class EditMapper
             EditableActionKind.Launch => new LaunchAction(detail, NullIfBlank(b.Arguments), NullIfBlank(b.WorkingDir)),
             EditableActionKind.SetVolume => new SetVolumeAction(ParseVolumeTarget(detail)),
             EditableActionKind.Uia => new UiaAction(b.UiaWindow.Trim(), detail, ParseUiaVerb(b.UiaVerb), NullIfBlank(b.UiaValue)),
+            EditableActionKind.VirtualDesktop => new VirtualDesktopAction(
+                detail.Trim().ToLowerInvariant() is "previous" or "prev" ? DesktopOp.Previous : DesktopOp.Next),
+            EditableActionKind.WindowsToggle => new WindowsToggleAction(WindowsSetting.DarkMode),
+            EditableActionKind.Brightness => new BrightnessAction(),
             EditableActionKind.SwitchProfile => ParseSwitch(detail),
             _ => NoneAction.Instance,
         };

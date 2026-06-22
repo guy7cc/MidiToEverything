@@ -95,6 +95,9 @@ internal static class ProfileMapper
         LaunchActionDto l => new LaunchAction(l.Target, l.Arguments, l.WorkingDir),
         SetVolumeActionDto v => new SetVolumeAction(v.Target),
         UiaActionDto u => new UiaAction(u.WindowPattern, u.ElementName, u.Verb, u.Value),
+        VirtualDesktopActionDto vd => new VirtualDesktopAction(vd.Op),
+        WindowsToggleActionDto wt => new WindowsToggleAction(wt.Setting),
+        BrightnessActionDto => new BrightnessAction(),
         NoneActionDto => NoneAction.Instance,
         _ => throw new NotSupportedException($"Unknown action DTO: {a.GetType().Name}"),
     };
@@ -187,6 +190,9 @@ internal static class ProfileMapper
         LaunchAction l => new LaunchActionDto { Target = l.Target, Arguments = l.Arguments, WorkingDir = l.WorkingDir },
         SetVolumeAction v => new SetVolumeActionDto { Target = v.Target },
         UiaAction u => new UiaActionDto { WindowPattern = u.WindowPattern, ElementName = u.ElementName, Verb = u.Verb, Value = u.Value },
+        VirtualDesktopAction vd => new VirtualDesktopActionDto { Op = vd.Op },
+        WindowsToggleAction wt => new WindowsToggleActionDto { Setting = wt.Setting },
+        BrightnessAction => new BrightnessActionDto(),
         NoneAction => new NoneActionDto(),
         _ => throw new NotSupportedException($"Unknown action: {a.GetType().Name}"),
     };

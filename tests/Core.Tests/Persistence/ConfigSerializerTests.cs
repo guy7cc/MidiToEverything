@@ -140,6 +140,12 @@ public class ConfigSerializerTests
         Assert.Equal("OK", uia.ElementName);
         Assert.Equal(UiaVerb.SetValue, uia.Verb);
         Assert.Equal("hi", uia.Value);
+
+        Assert.Equal(DesktopOp.Previous, Assert.IsType<VirtualDesktopAction>(
+            RoundTripAction(sig, new VirtualDesktopAction(DesktopOp.Previous))).Op);
+        Assert.Equal(WindowsSetting.DarkMode, Assert.IsType<WindowsToggleAction>(
+            RoundTripAction(sig, new WindowsToggleAction(WindowsSetting.DarkMode))).Setting);
+        Assert.IsType<BrightnessAction>(RoundTripAction(sig, new BrightnessAction()));
     }
 
     [Fact]

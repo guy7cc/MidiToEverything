@@ -106,6 +106,9 @@ internal sealed class TriggerDto
 [JsonDerivedType(typeof(LaunchActionDto), "launch")]
 [JsonDerivedType(typeof(SetVolumeActionDto), "setVolume")]
 [JsonDerivedType(typeof(UiaActionDto), "uia")]
+[JsonDerivedType(typeof(VirtualDesktopActionDto), "virtualDesktop")]
+[JsonDerivedType(typeof(WindowsToggleActionDto), "windowsToggle")]
+[JsonDerivedType(typeof(BrightnessActionDto), "brightness")]
 [JsonDerivedType(typeof(NoneActionDto), "none")]
 internal abstract class ActionDto;
 
@@ -177,5 +180,17 @@ internal sealed class UiaActionDto : ActionDto
     public UiaVerb Verb { get; set; } = UiaVerb.Invoke;
     public string? Value { get; set; }
 }
+
+internal sealed class VirtualDesktopActionDto : ActionDto
+{
+    public DesktopOp Op { get; set; } = DesktopOp.Next;
+}
+
+internal sealed class WindowsToggleActionDto : ActionDto
+{
+    public WindowsSetting Setting { get; set; } = WindowsSetting.DarkMode;
+}
+
+internal sealed class BrightnessActionDto : ActionDto;
 
 internal sealed class NoneActionDto : ActionDto;

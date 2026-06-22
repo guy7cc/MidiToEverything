@@ -206,6 +206,12 @@ MIDIメッセージ → MidiEventPipeline → (Profile解決/Trigger評価)
   システム音量（value-driven, Core Audio）を新基盤上に実装。
   - 補足: SetVolume はフェーダー連動のため **トリガー=Absolute** で使う（ヘルプに明記）。
     Launch は **「外部起動を許可」ON** が必要（既定 OFF）。
-- **M-C 以降**: Phase 2（UIA 要素操作・仮想デスクトップ・Windows トグル）→ Phase 3 → Phase 4。
-
-> 次は M-C（Phase 2）。UIA 要素操作には対象ウィンドウ/要素のピッカー UI が要る。
+- **M-C Phase 2** ✅ 完了:
+  - UIA 要素操作（特定ウィンドウの特定ボタンを Invoke/Toggle/SetValue）＋ 要素ピッカー。
+  - 仮想デスクトップ切替（Win+Ctrl+矢印）。
+  - Windows 設定トグル（ダーク/ライト テーマ。レジストリ＋WM_SETTINGCHANGE）。
+  - 画面輝度（value-driven, WMI。内蔵ディスプレイ対応）。
+  - 補足: 夜間モード/集中モードは安定 API が無いため未実装（`ms-settings:` を Launch で開く運用を推奨）。
+    外部モニタ輝度（DDC/CI）も未対応。
+- **次は Phase 3**: OBS（obs-websocket）/ メディア(SMTC) / HTTP・Webhook / OSC / MIDI 出力。
+- **Phase 4**: LED フィードバック（双方向）/ マクロ・状態 / プラグイン SDK。
