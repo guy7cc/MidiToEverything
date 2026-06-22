@@ -57,9 +57,9 @@ internal static class EditMapper
     private static (EditableActionKind Kind, string Detail) DescribeAction(InputAction action) => action switch
     {
         KeyAction k => (EditableActionKind.Key, string.Join("+", k.Keys)),
-        MouseClickAction m => (EditableActionKind.MouseClick, m.Double ? $"{m.Button} x2" : m.Button.ToString()),
-        ScrollAction s => (EditableActionKind.Scroll, s.Axis.ToString()),
-        CursorMoveAction c => (EditableActionKind.CursorMove, c.Mode.ToString()),
+        MouseClickAction m => (EditableActionKind.MouseClick, (m.Double ? $"{m.Button} x2" : m.Button.ToString()).ToLowerInvariant()),
+        ScrollAction s => (EditableActionKind.Scroll, s.Axis.ToString().ToLowerInvariant()),
+        CursorMoveAction c => (EditableActionKind.CursorMove, c.Mode.ToString().ToLowerInvariant()),
         SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
         _ => (EditableActionKind.None, ""),
     };
