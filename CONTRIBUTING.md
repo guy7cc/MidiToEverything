@@ -103,5 +103,23 @@ dotnet test  tests/Core.Tests/Core.Tests.csproj -c Release
 
 ## 5. バージョニング
 
-- [Semantic Versioning](https://semver.org/) に従い、`Directory.Build.props` の `<Version>` で集中管理する。
+- [Semantic Versioning](https://semver.org/) に従う。`Directory.Build.props` の `<Version>` はローカル/CI 既定値（タグなしビルド用）。
+- 公開リリースのバージョンは **Git タグ**が決定する（タグ `v1.2.3` → 製品バージョン `1.2.3`）。
 - マイルストーン完了時にマイナー（`0.x.0`）を上げることを目安とする（`1.0.0` 到達まではすべてプレリリース扱い）。
+
+## 6. リリース（GitHub Releases）
+
+タグを push すると `.github/workflows/release.yml` が自動で **self-contained 単一 exe をビルド→テスト→
+zip 化→GitHub Release を作成**する（リリースノートは自動生成、`MidiToEverything-<tag>-win-x64.zip` を添付）。
+
+手順:
+```sh
+# main がグリーンであることを確認してから
+git switch main && git pull
+git tag v1.0.0            # SemVer。プレリリースは v1.0.0-rc1 のように "-" 付き → Release も prerelease 扱い
+git push origin v1.0.0    # ← これだけでリリースが走る
+```
+- タグ名は `v` プレフィックス必須（ワークフローの起動条件 `tags: ['v*']`）。
+- リリース成果物 zip には `MidiToEverything.exe`・`README.md`・`samples/config.sample.json` を同梱。
+- 初回のみ、リポジトリ設定で Actions に「Read and write permissions」が必要（`gh release create` 用）。
+  ワークフロー側でも `permissions: contents: write` を宣言済み。
