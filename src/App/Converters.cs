@@ -14,6 +14,16 @@ public sealed class BoolToVisibilityConverter : IValueConverter
         => value is Visibility.Visible;
 }
 
+/// <summary>true → Collapsed, false → Visible (hide a section when a flag is set).</summary>
+public sealed class InverseBoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is true ? Visibility.Collapsed : Visibility.Visible;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is not Visibility.Visible;
+}
+
 /// <summary>Count == 0 → Visible (show an empty-state placeholder), otherwise Collapsed.</summary>
 public sealed class ZeroToVisibilityConverter : IValueConverter
 {

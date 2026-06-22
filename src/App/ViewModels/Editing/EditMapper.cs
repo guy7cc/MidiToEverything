@@ -1,0 +1,174 @@
+using MidiToEverything.Core.Application;
+using MidiToEverything.Core.Domain;
+using Binding = MidiToEverything.Core.Domain.Binding;
+
+namespace MidiToEverything.App.ViewModels.Editing;
+
+/// <summary>Converts between the editor's editable view models and the domain config.</summary>
+internal static class EditMapper
+{
+    // ── Domain → Editable ─────────────────────────────────────────────────────
+
+    public static List<EditableProfile> ToEditable(AppConfig config)
+    {
+        var result = new List<EditableProfile> { ToEditable(config.BaseProfile, isBase: true) };
+        result.AddRange(config.Profiles.Select(p => ToEditable(p, isBase: false)));
+        return result;
+    }
+
+    private static EditableProfile ToEditable(Profile profile, bool isBase)
+    {
+        var editable = new EditableProfile
+        {
+            Id = profile.Id,
+            Name = profile.Name,
+            IsBase = isBase,
+            ProcessNames = profile.Match is null ? "" : string.Join(", ", profile.Match.ProcessNames),
+            TitlePattern = profile.Match?.TitlePattern ?? "",
+            Priority = profile.Match?.Priority ?? 0,
+        };
+
+        foreach (var binding in profile.Bindings)
+        {
+            editable.Bindings.Add(ToEditable(binding));
+        }
+
+        return editable;
+    }
+
+    private static EditableBinding ToEditable(Binding binding)
+    {
+        var (kind, detail) = DescribeAction(binding.Actions.Count > 0 ? binding.Actions[0] : NoneAction.Instance);
+        return new EditableBinding
+        {
+            Signal = new EditableSignal
+            {
+                Device = binding.Signal.Device,
+                Channel = binding.Signal.Channel,
+                Type = binding.Signal.Type,
+                NumberText = binding.Signal.Number?.ToString() ?? "",
+            },
+            Mode = binding.Trigger.Mode,
+            ActionKind = kind,
+            Detail = detail,
+            Label = binding.Label ?? "",
+        };
+    }
+
+    private static (EditableActionKind Kind, string Detail) DescribeAction(InputAction action) => action switch
+    {
+        KeyAction k => (EditableActionKind.Key, string.Join("+", k.Keys)),
+        MouseClickAction m => (EditableActionKind.MouseClick, m.Double ? $"{m.Button} x2" : m.Button.ToString()),
+        ScrollAction s => (EditableActionKind.Scroll, s.Axis.ToString()),
+        CursorMoveAction c => (EditableActionKind.CursorMove, c.Mode.ToString()),
+        SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
+        _ => (EditableActionKind.None, ""),
+    };
+
+    private static string SwitchDetail(SwitchProfileAction sp) => sp.Target switch
+    {
+        ProfileSwitchTarget.Next => "next",
+        ProfileSwitchTarget.Previous => "prev",
+        ProfileSwitchTarget.Toggle => "toggle",
+        _ => sp.ProfileId ?? "",
+    };
+
+    // ── Editable → Domain ─────────────────────────────────────────────────────
+
+    public static AppConfig ToConfig(IReadOnlyList<EditableProfile> profiles, AppConfig template)
+    {
+        var basePart = profiles.FirstOrDefault(p => p.IsBase) ?? profiles[0];
+        var others = profiles.Where(p => !p.IsBase);
+
+        return template with
+        {
+            BaseProfile = ToDomain(basePart),
+            Profiles = others.Select(ToDomain).ToArray(),
+        };
+    }
+
+    private static Profile ToDomain(EditableProfile p)
+    {
+        MatchRule? match = null;
+        if (!p.IsBase)
+        {
+            var names = p.ProcessNames
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            match = new MatchRule
+            {
+                ProcessNames = names,
+                TitlePattern = string.IsNullOrWhiteSpace(p.TitlePattern) ? null : p.TitlePattern.Trim(),
+                Priority = p.Priority,
+            };
+        }
+
+        return new Profile
+        {
+            Id = string.IsNullOrWhiteSpace(p.Id) ? Guid.NewGuid().ToString("N")[..8] : p.Id.Trim(),
+            Name = string.IsNullOrWhiteSpace(p.Name) ? p.Id : p.Name.Trim(),
+            Match = match,
+            Bindings = p.Bindings.Select(ToDomain).ToArray(),
+        };
+    }
+
+    private static Binding ToDomain(EditableBinding b)
+    {
+        int? number = int.TryParse(b.Signal.NumberText.Trim(), out var n) ? n : null;
+        var signal = new Signal
+        {
+            Device = string.IsNullOrWhiteSpace(b.Signal.Device) ? Signal.AnyDevice : b.Signal.Device.Trim(),
+            Channel = string.IsNullOrWhiteSpace(b.Signal.Channel) ? Signal.AnyChannel : b.Signal.Channel.Trim(),
+            Type = b.Signal.Type,
+            Number = b.Signal.Type == SignalKind.PitchBend ? null : number,
+        };
+
+        return new Binding
+        {
+            Signal = signal,
+            Trigger = new Trigger { Mode = b.Mode },
+            Actions = new[] { ToAction(b) },
+            Label = string.IsNullOrWhiteSpace(b.Label) ? null : b.Label.Trim(),
+        };
+    }
+
+    private static InputAction ToAction(EditableBinding b)
+    {
+        var detail = b.Detail.Trim();
+        return b.ActionKind switch
+        {
+            EditableActionKind.Key => new KeyAction(SplitKeys(detail), Hold: b.Mode == TriggerMode.Hold),
+            EditableActionKind.MouseClick => ParseMouse(detail),
+            EditableActionKind.Scroll => new ScrollAction(ParseAxis(detail), UseInputValue: true),
+            EditableActionKind.CursorMove => new CursorMoveAction(ParseMove(detail), UseInputValue: true),
+            EditableActionKind.SwitchProfile => ParseSwitch(detail),
+            _ => NoneAction.Instance,
+        };
+    }
+
+    private static string[] SplitKeys(string detail) => detail
+        .Split(new[] { '+', ',', ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private static MouseClickAction ParseMouse(string detail)
+    {
+        var doubleClick = detail.Contains("x2", StringComparison.OrdinalIgnoreCase) ||
+                          detail.Contains("double", StringComparison.OrdinalIgnoreCase);
+        var button = detail.Contains("right", StringComparison.OrdinalIgnoreCase) ? MouseButton.Right
+            : detail.Contains("middle", StringComparison.OrdinalIgnoreCase) ? MouseButton.Middle
+            : MouseButton.Left;
+        return new MouseClickAction(button, doubleClick);
+    }
+
+    private static ScrollAxis ParseAxis(string detail) =>
+        detail.StartsWith("h", StringComparison.OrdinalIgnoreCase) ? ScrollAxis.Horizontal : ScrollAxis.Vertical;
+
+    private static MoveMode ParseMove(string detail) =>
+        detail.StartsWith("a", StringComparison.OrdinalIgnoreCase) ? MoveMode.Absolute : MoveMode.Relative;
+
+    private static SwitchProfileAction ParseSwitch(string detail) => detail.ToLowerInvariant() switch
+    {
+        "next" or "" => new SwitchProfileAction(ProfileSwitchTarget.Next),
+        "prev" or "previous" => new SwitchProfileAction(ProfileSwitchTarget.Previous),
+        "toggle" => new SwitchProfileAction(ProfileSwitchTarget.Toggle),
+        _ => new SwitchProfileAction(ProfileSwitchTarget.Specific, detail),
+    };
+}

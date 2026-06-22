@@ -30,22 +30,54 @@ public sealed record ActiveProfileState(
 /// </summary>
 public sealed class ProfileManager : IMappingContext, IDisposable
 {
-    private readonly Profile _base;
-    private readonly IReadOnlyList<Profile> _profiles;
     private readonly IWindowWatcher _watcher;
     private readonly ILogger<ProfileManager> _logger;
     private readonly object _gate = new();
 
+    private AppConfig _config;
+    private Profile _base;
+    private IReadOnlyList<Profile> _profiles;
     private Profile? _context;
     private string? _pinnedId;
     private WindowContext _window = WindowContext.Unknown;
 
     public ProfileManager(AppConfig config, IWindowWatcher watcher, ILogger<ProfileManager>? logger = null)
     {
+        _config = config;
         _base = config.BaseProfile;
         _profiles = config.Profiles;
         _watcher = watcher;
         _logger = logger ?? NullLogger<ProfileManager>.Instance;
+    }
+
+    /// <summary>The configuration currently driving the engine.</summary>
+    public AppConfig CurrentConfig
+    {
+        get { lock (_gate) { return _config; } }
+    }
+
+    /// <summary>
+    /// Swap in an edited configuration and re-evaluate the active profile, so changes from the
+    /// editor take effect immediately without a restart (FR-7.2). A pin pointing at a profile
+    /// that no longer exists is cleared.
+    /// </summary>
+    public void Reload(AppConfig config)
+    {
+        lock (_gate)
+        {
+            _config = config;
+            _base = config.BaseProfile;
+            _profiles = config.Profiles;
+            if (_pinnedId is not null && Find(_pinnedId) is null)
+            {
+                _pinnedId = null;
+            }
+
+            _context = Match(_window);
+        }
+
+        _logger.LogInformation("Configuration reloaded ({Count} profiles).", config.Profiles.Count);
+        RaiseChanged();
     }
 
     /// <summary>Raised whenever the effective profile, pin state, or foreground window changes (FR-5.6).</summary>

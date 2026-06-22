@@ -92,6 +92,10 @@ public partial class App : Application
         // UI.
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<MainWindow>();
+        services.AddTransient<ViewModels.Editing.ProfileEditorViewModel>();
+        services.AddTransient<ProfileEditorWindow>();
+        services.AddSingleton<Func<ProfileEditorWindow>>(sp =>
+            () => sp.GetRequiredService<ProfileEditorWindow>());
     }
 
     private void SetupTray()
