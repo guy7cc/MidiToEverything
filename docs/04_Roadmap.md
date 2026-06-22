@@ -176,3 +176,29 @@ M0 ─▶ M1 ─▶ M2 ─▶ M3 ─┬─▶ M4(MIDI実機) ─┐
 > 「`Core` プロジェクトに [03_ProfileSchema.md](03_ProfileSchema.md) §7 の Domain 型を実装し、[02_Architecture.md](02_Architecture.md) §3.2 の `MappingResolver` と `TriggerEvaluator` を作成。[03_ProfileSchema.md](03_ProfileSchema.md) §6 の競合解決表を xUnit テストとして実装し、全て緑にして。OS/MIDI/UI には一切触れないこと（ポートは未定義のままで良い）。」
 
 これが M1。緑になったら M2（JSON 永続化）→ M3（ポート＋フェイク貫通）と進める。
+
+---
+
+## 将来拡張・バックログ
+
+実装順は未定。マイルストーン進行の合間、または該当 UI 着手時（M7/M8）に取り込む。
+
+### B-1. MIDI デバイス検出モードの切り替え（自動ポーリング ⇔ 手動認識）
+- **背景**: 現状 `DryWetMidiSource` は `DevicesWatcher` が物理 USB で発火しないため、1 秒間隔の
+  `InputDevice.GetAll()` ポーリングでホットプラグを検知している（[02_Architecture.md](02_Architecture.md) §3.3）。
+  常時ポーリングは軽微とはいえ無駄なので、モードを選べるようにする。
+- **設計案**:
+  - `MidiDetectionMode { AutoPolling, Manual }` を導入。検出のプリミティブは既存の
+    リコンサイル処理を公開した `Rescan()`（= 現在の `Reconcile()`）。
+  - **AutoPolling**: タイマー間隔を設定可能に（既定を 1s→2s 程度へ緩和も検討）。
+    `DevicesWatcher` が効く環境では即応し、タイマーはフォールバック。
+  - **Manual**: タイマー無し。`Rescan()` の発火契機を用意する:
+    - UI の「デバイス再スキャン」ボタン（M7/M8）
+    - アプリのフォアグラウンド復帰時に 1 回スキャン（M6 の窓監視と連動）
+    - 特定 MIDI 入力に「再スキャン」アクションを割当（任意）
+  - **設定スキーマ**（[03_ProfileSchema.md](03_ProfileSchema.md) §5 `settings` に追加予定、未実装）:
+    ```jsonc
+    "midi": { "detectionMode": "autoPolling", "pollIntervalMs": 2000 }
+    ```
+  - 後方互換: 既定は AutoPolling。`DryWetMidiSource` のコンストラクタは既に `pollInterval` を
+    受け取るため、モード分岐とタイマー有無の制御を足すだけで移行できる。
