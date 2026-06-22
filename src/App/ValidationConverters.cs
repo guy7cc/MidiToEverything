@@ -77,6 +77,7 @@ public static class SignalValidation
             EditableActionKind.MidiOut => d.Length > 0, // output device required
             EditableActionKind.Macro => d.Length > 0,   // at least one chord
             EditableActionKind.Toggle => d.Length > 0,  // chord A required
+            EditableActionKind.Plugin => d.Length > 0,  // plugin id required
             EditableActionKind.SwitchProfile => d.Length > 0,
             EditableActionKind.None => true,
             _ => true,

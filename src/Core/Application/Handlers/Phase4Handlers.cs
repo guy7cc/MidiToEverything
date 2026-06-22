@@ -4,6 +4,35 @@ using MidiToEverything.Core.Mapping;
 
 namespace MidiToEverything.Core.Application.Handlers;
 
+/// <summary>Routes a plugin action to the loaded plugin with the matching id.</summary>
+public sealed class PluginActionHandler : FireOnPressHandler
+{
+    private readonly PluginRegistry _registry;
+
+    public PluginActionHandler(PluginRegistry registry) => _registry = registry;
+
+    public override bool CanHandle(InputAction action) => action is PluginAction;
+
+    protected override void Fire(InputAction action)
+    {
+        var p = (PluginAction)action;
+        var plugin = _registry.Get(p.PluginId);
+        if (plugin is null)
+        {
+            return; // no plugin with this id loaded
+        }
+
+        try
+        {
+            plugin.Execute(p.Command, p.Arg);
+        }
+        catch
+        {
+            // a misbehaving plugin must not take down the input pipeline
+        }
+    }
+}
+
 /// <summary>Runs a sequence of key chords with an optional delay between steps.</summary>
 public sealed class MacroActionHandler : FireOnPressHandler
 {

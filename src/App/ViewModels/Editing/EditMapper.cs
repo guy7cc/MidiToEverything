@@ -92,6 +92,11 @@ internal static class EditMapper
             editable.Arguments = string.Join("+", tg.KeysB);
             editable.ToggleLed = tg.LedDevice is null ? "" : $"{tg.LedDevice} {tg.LedNote} {tg.LedChannel}";
         }
+        else if (action is PluginAction pl)
+        {
+            editable.Arguments = pl.Command;
+            editable.PluginArg = pl.Arg ?? "";
+        }
 
         return editable;
     }
@@ -117,6 +122,7 @@ internal static class EditMapper
         MidiOutAction mo => (EditableActionKind.MidiOut, mo.Device),
         MacroAction mac => (EditableActionKind.Macro, string.Join("\n", mac.Steps.Select(s => string.Join("+", s)))),
         ToggleAction tg => (EditableActionKind.Toggle, string.Join("+", tg.KeysA)),
+        PluginAction pl => (EditableActionKind.Plugin, pl.PluginId),
         SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
         _ => (EditableActionKind.None, ""),
     };
@@ -224,6 +230,7 @@ internal static class EditMapper
             EditableActionKind.MidiOut => ParseMidiOut(detail, b.MidiOutSpec),
             EditableActionKind.Macro => ParseMacro(b.Detail, b.MacroDelay),
             EditableActionKind.Toggle => ParseToggle(detail, b.Arguments, b.ToggleLed),
+            EditableActionKind.Plugin => new PluginAction(detail, b.Arguments.Trim(), NullIfBlank(b.PluginArg)),
             EditableActionKind.SwitchProfile => ParseSwitch(detail),
             _ => NoneAction.Instance,
         };

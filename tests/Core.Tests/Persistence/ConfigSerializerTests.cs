@@ -186,6 +186,12 @@ public class ConfigSerializerTests
         Assert.Equal("loopMIDI", toggle.LedDevice);
         Assert.Equal(2, toggle.LedChannel);
         Assert.Equal(36, toggle.LedNote);
+
+        var plugin = Assert.IsType<PluginAction>(
+            RoundTripAction(sig, new PluginAction("my-plugin", "do", "arg1")));
+        Assert.Equal("my-plugin", plugin.PluginId);
+        Assert.Equal("do", plugin.Command);
+        Assert.Equal("arg1", plugin.Arg);
     }
 
     [Fact]

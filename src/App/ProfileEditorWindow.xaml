@@ -103,6 +103,26 @@
             </StackPanel>
         </DataTemplate>
 
+        <!-- Plugin: plugin id + command + argument -->
+        <DataTemplate x:Key="PluginDetailTemplate">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Margin="0,0,4,0"
+                             Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="プラグインID（plugins フォルダの拡張が公開するID）" />
+                    <TextBox Grid.Column="1" Margin="4,0,0,0"
+                             Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="コマンド名（プラグインが解釈）" />
+                </Grid>
+                <TextBox Margin="0,4,0,0" Text="{Binding PluginArg, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="引数（任意）" />
+            </StackPanel>
+        </DataTemplate>
+
         <!-- Macro: newline-separated key chords + step delay -->
         <DataTemplate x:Key="MacroDetailTemplate">
             <StackPanel>
@@ -540,6 +560,9 @@
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Toggle">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource ToggleDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="Plugin">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource PluginDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="None">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource NoneDetailTemplate}" />

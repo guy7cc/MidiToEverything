@@ -158,6 +158,9 @@ public sealed record ToggleAction(
     int LedChannel = 1,
     int LedNote = 0) : InputAction;
 
+/// <summary>Route an action to a loaded plugin by id (docs/05 §5, Phase 4 — plugin SDK).</summary>
+public sealed record PluginAction(string PluginId = "", string Command = "", string? Arg = null) : InputAction;
+
 /// <summary>
 /// Explicit "do nothing" that also blocks fallback to the base profile (FR-6.4).
 /// Its presence as the sole action marks a binding as a block.
