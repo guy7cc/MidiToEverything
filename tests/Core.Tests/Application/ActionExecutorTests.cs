@@ -390,4 +390,35 @@ public class ActionExecutorTests
             c => Assert.Equal(127, c.Data2), // first press: state A, LED lit
             c => Assert.Equal(0, c.Data2));  // second press: state B, LED off
     }
+
+    [Fact]
+    public void Plugin_RoutesToRegisteredPluginById()
+    {
+        var registry = new PluginRegistry();
+        var plugin = new RecordingPlugin();
+        registry.Register(plugin);
+        var executor = new ActionExecutor(new IActionHandler[] { new PluginActionHandler(registry) });
+
+        executor.Execute(With(new PluginAction("rec", "go", "x")), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(("go", "x"), Assert.Single(plugin.Calls));
+    }
+
+    [Fact]
+    public void Plugin_UnknownId_DoesNotThrow()
+    {
+        var executor = new ActionExecutor(new IActionHandler[] { new PluginActionHandler(new PluginRegistry()) });
+
+        var ex = Record.Exception(() =>
+            executor.Execute(With(new PluginAction("missing")), new TriggerResult(TriggerPhase.Press, 0), Msg));
+
+        Assert.Null(ex);
+    }
+
+    private sealed class RecordingPlugin : IActionPlugin
+    {
+        public string Id => "rec";
+        public List<(string Command, string? Arg)> Calls { get; } = new();
+        public void Execute(string command, string? arg) => Calls.Add((command, arg));
+    }
 }

@@ -94,6 +94,21 @@ public partial class App : Application
         services.AddSingleton(sp =>
             new LaunchPolicy(sp.GetRequiredService<AppConfig>().Settings.AllowExternalLaunch));
 
+        // Action plugins (Phase 4): load from the app's "plugins" folder at startup.
+        services.AddSingleton(sp =>
+        {
+            var registry = new PluginRegistry();
+            var loader = new Infrastructure.Plugins.PluginLoader(
+                sp.GetService<ILogger<Infrastructure.Plugins.PluginLoader>>());
+            var dir = System.IO.Path.Combine(AppContext.BaseDirectory, "plugins");
+            foreach (var plugin in loader.LoadFromDirectory(dir))
+            {
+                registry.Register(plugin);
+            }
+
+            return registry;
+        });
+
         // OBS client reads the live connection settings (host/port/password) from the running config.
         services.AddSingleton<IObsClient>(sp => new Infrastructure.Obs.ObsWebSocketClient(
             () =>
@@ -133,7 +148,9 @@ public partial class App : Application
                 .Append(new Core.Application.Handlers.MacroActionHandler(
                     sp.GetRequiredService<IInputSink>()))
                 .Append(new Core.Application.Handlers.ToggleActionHandler(
-                    sp.GetRequiredService<IInputSink>(), sp.GetRequiredService<IMidiOutput>()))));
+                    sp.GetRequiredService<IInputSink>(), sp.GetRequiredService<IMidiOutput>()))
+                .Append(new Core.Application.Handlers.PluginActionHandler(
+                    sp.GetRequiredService<PluginRegistry>()))));
         services.AddSingleton(sp => new MidiEventPipeline(
             sp.GetRequiredService<IMidiSource>(),
             sp.GetRequiredService<IMappingContext>(),

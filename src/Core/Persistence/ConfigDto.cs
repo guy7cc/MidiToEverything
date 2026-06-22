@@ -118,6 +118,7 @@ internal sealed class TriggerDto
 [JsonDerivedType(typeof(MidiOutActionDto), "midiOut")]
 [JsonDerivedType(typeof(MacroActionDto), "macro")]
 [JsonDerivedType(typeof(ToggleActionDto), "toggle")]
+[JsonDerivedType(typeof(PluginActionDto), "plugin")]
 [JsonDerivedType(typeof(NoneActionDto), "none")]
 internal abstract class ActionDto;
 
@@ -245,6 +246,13 @@ internal sealed class ToggleActionDto : ActionDto
     public string? LedDevice { get; set; }
     public int LedChannel { get; set; } = 1;
     public int LedNote { get; set; }
+}
+
+internal sealed class PluginActionDto : ActionDto
+{
+    public string PluginId { get; set; } = "";
+    public string Command { get; set; } = "";
+    public string? Arg { get; set; }
 }
 
 internal sealed class NoneActionDto : ActionDto;

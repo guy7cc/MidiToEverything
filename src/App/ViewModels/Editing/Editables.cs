@@ -10,7 +10,7 @@ public enum EditableActionKind
     Key, MouseClick, Scroll, CursorMove, WindowControl,
     MediaKey, TypeText, Launch, SetVolume, Uia,
     VirtualDesktop, WindowsToggle, Brightness, Http, Osc, Obs, MidiOut,
-    Macro, Toggle, SwitchProfile, None,
+    Macro, Toggle, Plugin, SwitchProfile, None,
 }
 
 /// <summary>Editable view of a <see cref="Signal"/> (docs/03_ProfileSchema.md §1).</summary>
@@ -76,6 +76,9 @@ public partial class EditableBinding : ObservableObject
     /// <summary>Toggle action: LED feedback spec "device note [ch]" (optional).</summary>
     [ObservableProperty] private string _toggleLed = "";
 
+    /// <summary>Plugin action: argument passed to the plugin command.</summary>
+    [ObservableProperty] private string _pluginArg = "";
+
     [ObservableProperty] private string _label = "";
 
     /// <summary>A deep copy, used as the editable draft so changes only apply on commit.</summary>
@@ -97,6 +100,7 @@ public partial class EditableBinding : ObservableObject
         MidiOutSpec = MidiOutSpec,
         MacroDelay = MacroDelay,
         ToggleLed = ToggleLed,
+        PluginArg = PluginArg,
         Label = Label,
     };
 
@@ -119,6 +123,7 @@ public partial class EditableBinding : ObservableObject
         MidiOutSpec = other.MidiOutSpec;
         MacroDelay = other.MacroDelay;
         ToggleLed = other.ToggleLed;
+        PluginArg = other.PluginArg;
         Label = other.Label;
     }
 }

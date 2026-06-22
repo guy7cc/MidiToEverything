@@ -228,4 +228,30 @@ MIDIメッセージ → MidiEventPipeline → (Profile解決/Trigger評価)
     MIDI出力で反映（toggle に統合）。状態はプロセス内保持。
   - 補足: マクロ/トグルはキーチョード対象（任意アクションのネストは将来）。LEDフィードバックの
     プロファイル/緊急停止状態の常時反映は将来（コントローラ別LEDマップが必要）。
-  - プラグイン SDK ⏳。
+  - プラグイン SDK ✅ — `plugins/` フォルダの DLL から `IActionPlugin` を読み込み、`PluginAction`
+    （プラグインID＋コマンド＋引数）でルーティング。分離 AssemblyLoadContext で読み込み、共有契約
+    (Core)はホスト側を解決。永続化・既存アクションは無改変（§10）。
+
+## 10. プラグイン SDK（作り方）
+
+第三者が独自アクションを DLL で追加できる（docs §3.2 のハンドラ拡張をユーザ向けに開放）。
+
+1. `MidiToEverything.Core` を参照する .NET 8 クラスライブラリを作成。
+2. `IActionPlugin` を実装（public・引数なしコンストラクタ）:
+   ```csharp
+   using MidiToEverything.Core.Application.Ports;
+
+   public sealed class HelloPlugin : IActionPlugin
+   {
+       public string Id => "hello";
+       public void Execute(string command, string? arg)
+       {
+           // command/arg はバインディングのエディタで指定した値
+       }
+   }
+   ```
+3. ビルドした DLL を実行ファイル横の `plugins/` フォルダに置く（起動時に読み込み）。
+4. プロファイル編集でアクション=`Plugin`、詳細にプラグインID（例 `hello`）、コマンド・引数を指定。
+
+注意: プラグインはホストプロセス内で動作する（サンドボックス無し）。信頼できる DLL のみ配置すること。
+プラグイン例外はホスト側で握りつぶし、入力パイプラインは継続する。
