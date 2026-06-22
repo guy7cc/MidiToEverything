@@ -22,7 +22,6 @@ C# / .NET 8 ・ WPF(MVVM, CommunityToolkit.Mvvm) ・ Melanchall.DryWetMIDI ・ W
 - `src/Core` — ドメイン・マッピング解決・永続化（OS/UI 非依存、テスト対象）
 - `src/Infrastructure` — MIDI(DryWetMIDI)・Win32 アダプタ（窓監視・入力送信・自動起動）
 - `src/App` — WPF アプリ（常駐・モニター・ビジュアライザ・エディタ）
-- `tools/` — 動作確認用コンソールツール
 - `tests/` — Core.Tests / Infrastructure.Tests（xUnit）
 
 ## ビルドと実行（要 .NET 8 SDK）
@@ -41,11 +40,6 @@ dotnet publish src/App/App.csproj -c Release -r win-x64 --self-contained true -p
 
 公開リリースは **GitHub Releases** に自動添付される（バージョンタグの push で CI が生成）。
 リリース手順は [CONTRIBUTING.md](CONTRIBUTING.md) §6。
-
-## 動作確認用ツール（要 .NET 8 SDK）
-- **`run-midi-monitor.bat`** — MIDI入力モニタ。デバイス一覧・抜き差し検知・Note/CC/Pitch Bend をリアルタイム表示。
-- **`run-key-test.bat`** — 実機 MIDI を弾くと最前面ウィンドウに実際にキーが入力される（各ノート→英字1文字）。
-- **`run-window-watch.bat`** — 前面ウィンドウ（メモ帳/ブラウザ/エクスプローラー）に応じてプロファイルが自動切替。
 
 ## 設定ファイル
 `%APPDATA%\MidiToEverything\config.json`（初回起動時に既定生成）。スキーマは [docs/03_ProfileSchema.md](docs/03_ProfileSchema.md)、サンプルは [samples/config.sample.json](samples/config.sample.json)。
