@@ -56,6 +56,9 @@ public partial class App : Application
         var logger = _host.Services.GetRequiredService<ILogger<App>>();
         logger.LogInformation("{Name} {Version} starting.", AppInfo.Name, AppInfo.Version);
 
+        // Apply the persisted UI language before any window is created.
+        Localization.Loc.Instance.SetLanguage(_host.Services.GetRequiredService<AppConfig>().Settings.Language);
+
         _window = _host.Services.GetRequiredService<MainWindow>();
         _window.Closing += OnWindowClosing;
 
@@ -199,18 +202,18 @@ public partial class App : Application
         };
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add("表示", null, (_, _) => ShowWindow());
-        menu.Items.Add("緊急停止 切替", null, (_, _) =>
+        menu.Items.Add(Localization.Loc.T("tray.show"), null, (_, _) => ShowWindow());
+        menu.Items.Add(Localization.Loc.T("common.emergencyToggle"), null, (_, _) =>
             _host!.Services.GetRequiredService<GatedInputSink>().Toggle());
 
-        _startupItem = new ToolStripMenuItem("Windows起動時に実行", null, (_, _) => ToggleAutoStart())
+        _startupItem = new ToolStripMenuItem(Localization.Loc.T("tray.startup"), null, (_, _) => ToggleAutoStart())
         {
             CheckOnClick = false,
         };
         menu.Items.Add(_startupItem);
 
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add("終了", null, (_, _) => ExitApp());
+        menu.Items.Add(Localization.Loc.T("tray.exit"), null, (_, _) => ExitApp());
         _tray.ContextMenuStrip = menu;
         _tray.DoubleClick += (_, _) => ShowWindow();
 

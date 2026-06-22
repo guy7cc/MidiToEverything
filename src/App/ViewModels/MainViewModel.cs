@@ -3,12 +3,16 @@ using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MidiToEverything.App.Localization;
 using MidiToEverything.Core.Application;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
 using MidiToEverything.Infrastructure.Input;
 
 namespace MidiToEverything.App.ViewModels;
+
+/// <summary>A selectable UI language (code + native display name).</summary>
+public sealed record LanguageOption(string Code, string Display);
 
 /// <summary>
 /// Main-window view model (docs/02_Architecture.md §3.6). Subscribes to the engine and
@@ -45,6 +49,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _obsHost = settings.ObsHost;
         _obsPort = settings.ObsPort;
         _obsPassword = settings.ObsPassword;
+        _selectedLanguage = Array.Find(Languages, l => l.Code == Loc.Instance.Language) ?? Languages[0];
+        Loc.Instance.LanguageChanged += OnLanguageChanged;
         _isAutoDetect = source.DetectionMode == MidiDetectionMode.AutoPolling;
         ApplyState(profiles.State);
         foreach (var device in source.Devices)
@@ -80,10 +86,39 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private int _obsPort = 4455;
     [ObservableProperty] private string _obsPassword = "";
 
-    public string EmissionLabel => EmissionEnabled ? "稼働中" : "停止中 (緊急停止)";
-    public string DetectModeLabel => IsAutoDetect ? "自動更新" : "手動更新";
+    public string EmissionLabel => Loc.T(EmissionEnabled ? "main.status.running" : "main.status.stopped");
+    public string DetectModeLabel => Loc.T(IsAutoDetect ? "main.detect.auto" : "main.detect.manual");
+
+    /// <summary>Available UI languages (native names; not themselves translated).</summary>
+    public LanguageOption[] Languages { get; } =
+    {
+        new("ja", "日本語"),
+        new("en", "English"),
+    };
+
+    [ObservableProperty] private LanguageOption _selectedLanguage;
+
+    partial void OnSelectedLanguageChanged(LanguageOption value)
+    {
+        if (value is null || value.Code == Loc.Instance.Language)
+        {
+            return;
+        }
+
+        Loc.Instance.SetLanguage(value.Code);
+        var config = _profiles.CurrentConfig;
+        var updated = config with { Settings = config.Settings with { Language = value.Code } };
+        _repository.Save(updated);
+        _profiles.Reload(updated);
+    }
 
     partial void OnEmissionEnabledChanged(bool value) => OnPropertyChanged(nameof(EmissionLabel));
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        OnPropertyChanged(nameof(EmissionLabel));
+        OnPropertyChanged(nameof(DetectModeLabel));
+    }
 
     // External-launch opt-in (Q5): toggle the runtime gate and persist the choice.
     partial void OnAllowExternalLaunchChanged(bool value)
@@ -190,5 +225,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _source.DeviceDisconnected -= OnDeviceDisconnected;
         _profiles.Changed -= OnProfileChanged;
         _gate.EnabledChanged -= OnEmissionChanged;
+        Loc.Instance.LanguageChanged -= OnLanguageChanged;
     }
 }

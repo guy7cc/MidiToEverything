@@ -22,6 +22,7 @@ internal sealed class SettingsDto
     public bool StartWithWindows { get; set; }
     public string? EmergencyStopHotkey { get; set; } = "ctrl+alt+pause";
     public bool AllowExternalLaunch { get; set; }
+    public string Language { get; set; } = "ja";
     public string ObsHost { get; set; } = "localhost";
     public int ObsPort { get; set; } = 4455;
     public string ObsPassword { get; set; } = "";
