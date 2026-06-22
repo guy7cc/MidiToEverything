@@ -55,6 +55,8 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _matchStatus = "";
     [ObservableProperty] private bool _matchStatusIsError;
     [ObservableProperty] private string _lastSignalText = "(まだ受信していません)";
+    [ObservableProperty] private string _learnStatus = "";
+    [ObservableProperty] private bool _learnStatusIsError;
 
     // Selecting a running process fills the input box with its exe (the user may still edit it).
     partial void OnSelectedRunningProcessChanged(RunningProcess? value)
@@ -179,14 +181,46 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>Capture the last received MIDI signal into the selected binding (FR-2.3).</summary>
+    /// <summary>
+    /// Capture the last received MIDI signal into the selected binding (FR-2.3). If no binding is
+    /// selected, a new one is created in the current profile so "learn" always does something.
+    /// Reports clearly when it can't proceed (no signal received yet, or no profile selected).
+    /// </summary>
     [RelayCommand]
     private void Learn()
     {
-        if (SelectedBinding is not null && _lastMessage is { } message)
+        if (_lastMessage is not { } message)
         {
-            ApplyLearn(SelectedBinding, message);
+            SetLearnStatus("まだ MIDI 信号を受信していません。デバイスを操作してから押してください。", isError: true);
+            return;
         }
+
+        var target = SelectedBinding;
+        var created = false;
+        if (target is null)
+        {
+            if (SelectedProfile is null)
+            {
+                SetLearnStatus("先にプロファイルを選択してください。", isError: true);
+                return;
+            }
+
+            target = new EditableBinding();
+            SelectedProfile.Bindings.Add(target);
+            SelectedBinding = target;
+            created = true;
+        }
+
+        ApplyLearn(target, message);
+
+        var desc = $"{target.Signal.Type} 番号{message.Number?.ToString() ?? "-"} ch{message.Channel}";
+        SetLearnStatus(created ? $"新規バインディングに取り込みました（{desc}）。" : $"取り込みました（{desc}）。", isError: false);
+    }
+
+    private void SetLearnStatus(string message, bool isError)
+    {
+        LearnStatus = message;
+        LearnStatusIsError = isError;
     }
 
     private static void ApplyLearn(EditableBinding binding, MidiMessage message)

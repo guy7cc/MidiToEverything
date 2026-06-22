@@ -180,11 +180,25 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="シグナル" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                    <Button Grid.Column="1" Content="ラーン (最後の入力を取込)"
+                                    <Button Grid.Column="1" Content="最後の入力を取込"
+                                            ToolTip="直近に受信した MIDI 信号を、このバインディングの種別/番号/ch/デバイスに取り込みます（未選択なら新規作成）"
                                             Command="{Binding DataContext.LearnCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                                 </Grid>
                                 <TextBlock Text="{Binding DataContext.LastSignalText, RelativeSource={RelativeSource AncestorType=Window}}"
-                                           Foreground="#FF7A9AC8" FontSize="11" Margin="0,0,0,6" />
+                                           Foreground="#FF7A9AC8" FontSize="11" Margin="0,2,0,0" />
+                                <TextBlock Text="{Binding DataContext.LearnStatus, RelativeSource={RelativeSource AncestorType=Window}}"
+                                           FontSize="11" Margin="0,2,0,6" TextWrapping="Wrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#FF7FBF7F" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding DataContext.LearnStatusIsError, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                                    <Setter Property="Foreground" Value="#FFE58A8A" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
