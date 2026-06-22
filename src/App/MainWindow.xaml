@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:vm="clr-namespace:MidiToEverything.App.ViewModels"
+        xmlns:loc="clr-namespace:MidiToEverything.App.Localization"
         mc:Ignorable="d"
         Title="MidiToEverything" Height="600" Width="940" MinWidth="640" MinHeight="420"
         WindowStyle="None" ResizeMode="CanResize"
@@ -60,11 +61,11 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="プロファイル: " Foreground="{StaticResource TextDimBrush}" FontSize="14" />
+                        <TextBlock Text="{loc:Tr main.profileLabel}" Foreground="{StaticResource TextDimBrush}" FontSize="14" />
                         <TextBlock Text="{Binding ActiveProfile}" FontSize="14" FontWeight="SemiBold" />
                         <Border Background="#FF4A3A1E" CornerRadius="4" Padding="6,1" Margin="8,0,0,0"
                                 Visibility="{Binding IsPinned, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="固定" Foreground="{StaticResource WarnBrush}" FontSize="11" />
+                            <TextBlock Text="{loc:Tr main.pinned}" Foreground="{StaticResource WarnBrush}" FontSize="11" />
                         </Border>
                     </StackPanel>
                     <TextBlock Text="{Binding ContextWindow}" Foreground="{StaticResource TextFaintBrush}"
@@ -84,11 +85,11 @@
                         </Ellipse.Style>
                     </Ellipse>
                     <TextBlock Text="{Binding EmissionLabel}" FontSize="13" VerticalAlignment="Center" Margin="0,0,12,0" />
-                    <CheckBox Content="外部起動を許可" IsChecked="{Binding AllowExternalLaunch}"
+                    <CheckBox Content="{loc:Tr main.allowLaunch}" IsChecked="{Binding AllowExternalLaunch}"
                               VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" Margin="0,0,12,0"
-                              ToolTip="起動アクション（アプリ/ファイル/URL）を有効化。安全のため既定は無効" />
-                    <Button Content="緊急停止 切替" Command="{Binding ToggleEmissionCommand}" Margin="0,0,8,0" />
-                    <Button Content="プロファイル編集" Click="OpenEditor_Click" Style="{StaticResource AccentButton}" />
+                              ToolTip="{loc:Tr main.allowLaunch.tip}" />
+                    <Button Content="{loc:Tr common.emergencyToggle}" Command="{Binding ToggleEmissionCommand}" Margin="0,0,8,0" />
+                    <Button Content="{loc:Tr main.editProfiles}" Click="OpenEditor_Click" Style="{StaticResource AccentButton}" />
                 </StackPanel>
             </Grid>
         </Border>
@@ -103,31 +104,31 @@
             <!-- Devices + detection mode (B-1) -->
             <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,12,0">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="デバイス" FontWeight="SemiBold"
+                    <TextBlock DockPanel.Dock="Top" Text="{loc:Tr main.devices}" FontWeight="SemiBold"
                                Foreground="{StaticResource TextDimBrush}" Margin="0,0,0,10" />
                     <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
                         <ToggleButton IsChecked="{Binding IsAutoDetect}" Content="{Binding DetectModeLabel}"
                                       HorizontalAlignment="Stretch"
-                                      ToolTip="自動更新: 定期的にデバイスを検出 ／ 手動更新: 「今すぐ更新」を押した時だけ検出" />
-                        <Button Content="今すぐ更新" Command="{Binding RescanDevicesCommand}"
+                                      ToolTip="{loc:Tr main.detect.tip}" />
+                        <Button Content="{loc:Tr main.refreshNow}" Command="{Binding RescanDevicesCommand}"
                                 Margin="0,6,0,0" HorizontalAlignment="Stretch" />
                     </StackPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="(未接続)" Foreground="{StaticResource TextFaintBrush}" FontSize="12"
+                    <TextBlock DockPanel.Dock="Top" Text="{loc:Tr main.notConnected}" Foreground="{StaticResource TextFaintBrush}" FontSize="12"
                                Visibility="{Binding Devices.Count, Converter={StaticResource ZeroToVisibility}}" />
                     <!-- OBS connection (obs-websocket) for OBS actions -->
                     <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-                        <TextBlock Text="OBS接続 (obs-websocket)" Foreground="{StaticResource TextDimBrush}"
+                        <TextBlock Text="{loc:Tr main.obs.title}" Foreground="{StaticResource TextDimBrush}"
                                    FontSize="12" Margin="0,0,0,4" />
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="58" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" Margin="0,0,4,0" Text="{Binding ObsHost}" ToolTip="ホスト" />
-                            <TextBox Grid.Column="1" Text="{Binding ObsPort}" ToolTip="ポート (既定 4455)" />
+                            <TextBox Grid.Column="0" Margin="0,0,4,0" Text="{Binding ObsHost}" ToolTip="{loc:Tr main.obs.host.tip}" />
+                            <TextBox Grid.Column="1" Text="{Binding ObsPort}" ToolTip="{loc:Tr main.obs.port.tip}" />
                         </Grid>
                         <TextBox Margin="0,4,0,0" Text="{Binding ObsPassword}"
-                                 ToolTip="OBSのWebSocket設定のパスワード（未設定なら空欄）" />
+                                 ToolTip="{loc:Tr main.obs.pass.tip}" />
                     </StackPanel>
                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <ItemsControl ItemsSource="{Binding Devices}">
@@ -149,12 +150,31 @@
             <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="12">
                 <DockPanel>
                     <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
-                        <TextBlock Text="入力モニター" FontWeight="SemiBold" Foreground="{StaticResource TextDimBrush}"
+                        <TextBlock Text="{loc:Tr main.monitor}" FontWeight="SemiBold" Foreground="{StaticResource TextDimBrush}"
                                    VerticalAlignment="Center" />
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="{Binding MonitorPaused, Converter={StaticResource PauseLabel}}"
-                                    Command="{Binding TogglePauseCommand}" Margin="0,0,6,0" />
-                            <Button Content="クリア" Command="{Binding ClearMonitorCommand}" />
+                            <ComboBox ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}"
+                                      Width="100" Margin="0,0,10,0"
+                                      VerticalAlignment="Center" ToolTip="{loc:Tr main.language}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Display}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Button Command="{Binding TogglePauseCommand}" Margin="0,0,6,0">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                        <Setter Property="Content" Value="{loc:Tr main.pause}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding MonitorPaused}" Value="True">
+                                                <Setter Property="Content" Value="{loc:Tr main.resume}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="{loc:Tr main.clear}" Command="{Binding ClearMonitorCommand}" />
                         </StackPanel>
                     </Grid>
                     <ListBox ItemsSource="{Binding Monitor}" ItemTemplate="{StaticResource MonitorTemplate}"

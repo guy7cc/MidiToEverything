@@ -4,6 +4,7 @@
     "startWithWindows": false,
     "emergencyStopHotkey": "ctrl+alt+pause",
     "allowExternalLaunch": false,
+    "language": "ja",
     "obsHost": "localhost",
     "obsPort": 4455,
     "obsPassword": "",
