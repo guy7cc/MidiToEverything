@@ -4,6 +4,9 @@
     "startWithWindows": false,
     "emergencyStopHotkey": "ctrl+alt+pause",
     "allowExternalLaunch": false,
+    "obsHost": "localhost",
+    "obsPort": 4455,
+    "obsPassword": "",
     "watchedDevices": [
       "*"
     ],

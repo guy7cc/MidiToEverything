@@ -57,6 +57,7 @@ public static class EditorHelp
         EditableActionKind.Brightness => "画面輝度を入力値で設定（フェーダー=Absolute推奨）。ノートPC等の内蔵ディスプレイ対応",
         EditableActionKind.Http => "HTTPリクエスト/Webhook送信。詳細=URL、メソッド・本文は下の欄（Home Assistant / IFTTT 等）",
         EditableActionKind.Osc => "OSCメッセージ送信(UDP)。詳細=アドレス(例 /1/fader1)、宛先 host:port と引数は下の欄",
+        EditableActionKind.Obs => "OBSを制御(obs-websocket)。操作を選択。sceneswitch=シーン名 / togglemute=入力名 を詳細に。接続はメイン画面のOBS設定",
         EditableActionKind.SwitchProfile => "プロファイル切替。詳細に next / prev / toggle / プロファイルID",
         EditableActionKind.None => "何もしない（基本プロファイルの同じ割当を無効化＝ブロック）",
         _ => "",

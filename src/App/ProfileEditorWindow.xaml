@@ -103,6 +103,21 @@
             </StackPanel>
         </DataTemplate>
 
+        <!-- Obs: operation + argument (scene/input name) -->
+        <DataTemplate x:Key="ObsDetailTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ComboBox Grid.Column="0" Width="190" Margin="0,0,6,0"
+                          ItemsSource="{Binding DataContext.ObsOps, RelativeSource={RelativeSource AncestorType=Window}}"
+                          SelectedItem="{Binding ObsOpName}" ToolTip="OBS操作" />
+                <TextBox Grid.Column="1" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="sceneswitch=シーン名 / togglemute=入力名（他の操作では不要）" />
+            </Grid>
+        </DataTemplate>
+
         <!-- Osc: address + target host:port + args -->
         <DataTemplate x:Key="OscDetailTemplate">
             <StackPanel>
@@ -467,6 +482,9 @@
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="Osc">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource OscDetailTemplate}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionKind}" Value="Obs">
+                                                        <Setter Property="ContentTemplate" Value="{StaticResource ObsDetailTemplate}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ActionKind}" Value="None">
                                                         <Setter Property="ContentTemplate" Value="{StaticResource NoneDetailTemplate}" />

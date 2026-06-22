@@ -75,6 +75,10 @@ internal static class EditMapper
             editable.OscTarget = o.Target;
             editable.Arguments = o.Args;
         }
+        else if (action is ObsAction ob)
+        {
+            editable.ObsOpName = ob.Op.ToString().ToLowerInvariant();
+        }
 
         return editable;
     }
@@ -96,6 +100,7 @@ internal static class EditMapper
         BrightnessAction => (EditableActionKind.Brightness, ""),
         HttpAction h => (EditableActionKind.Http, h.Url),
         OscAction o => (EditableActionKind.Osc, o.Address),
+        ObsAction ob => (EditableActionKind.Obs, ob.Arg ?? ""),
         SwitchProfileAction sp => (EditableActionKind.SwitchProfile, SwitchDetail(sp)),
         _ => (EditableActionKind.None, ""),
     };
@@ -199,6 +204,7 @@ internal static class EditMapper
             EditableActionKind.Brightness => new BrightnessAction(),
             EditableActionKind.Http => new HttpAction(detail, b.HttpMethod, NullIfBlank(b.HttpBody)),
             EditableActionKind.Osc => new OscAction(b.OscTarget.Trim(), detail, b.Arguments.Trim()),
+            EditableActionKind.Obs => new ObsAction(ParseObsOp(b.ObsOpName), NullIfBlank(detail)),
             EditableActionKind.SwitchProfile => ParseSwitch(detail),
             _ => NoneAction.Instance,
         };
@@ -219,6 +225,9 @@ internal static class EditMapper
 
     public static VolumeTarget ParseVolumeTarget(string detail) =>
         detail.Trim().ToLowerInvariant() is "microphone" or "mic" ? VolumeTarget.Microphone : VolumeTarget.Master;
+
+    public static ObsOp ParseObsOp(string name) =>
+        Enum.TryParse<ObsOp>(name.Trim(), ignoreCase: true, out var op) ? op : ObsOp.ToggleRecord;
 
     public static UiaVerb ParseUiaVerb(string verb) => verb.Trim().ToLowerInvariant() switch
     {

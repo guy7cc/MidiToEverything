@@ -73,6 +73,7 @@ public static class SignalValidation
             EditableActionKind.Brightness => true, // value-driven, no detail
             EditableActionKind.Http => d.Length > 0,  // URL required
             EditableActionKind.Osc => d.StartsWith('/'), // OSC address starts with '/'
+            EditableActionKind.Obs => true, // arg optional (depends on the op)
             EditableActionKind.SwitchProfile => d.Length > 0,
             EditableActionKind.None => true,
             _ => true,

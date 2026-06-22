@@ -22,6 +22,9 @@ internal sealed class SettingsDto
     public bool StartWithWindows { get; set; }
     public string? EmergencyStopHotkey { get; set; } = "ctrl+alt+pause";
     public bool AllowExternalLaunch { get; set; }
+    public string ObsHost { get; set; } = "localhost";
+    public int ObsPort { get; set; } = 4455;
+    public string ObsPassword { get; set; } = "";
     public List<string> WatchedDevices { get; set; } = new() { "*" };
     public MonitorDto Monitor { get; set; } = new();
 }
@@ -111,6 +114,7 @@ internal sealed class TriggerDto
 [JsonDerivedType(typeof(BrightnessActionDto), "brightness")]
 [JsonDerivedType(typeof(HttpActionDto), "http")]
 [JsonDerivedType(typeof(OscActionDto), "osc")]
+[JsonDerivedType(typeof(ObsActionDto), "obs")]
 [JsonDerivedType(typeof(NoneActionDto), "none")]
 internal abstract class ActionDto;
 
@@ -207,6 +211,12 @@ internal sealed class OscActionDto : ActionDto
     public string Target { get; set; } = "";
     public string Address { get; set; } = "";
     public string Args { get; set; } = "";
+}
+
+internal sealed class ObsActionDto : ActionDto
+{
+    public ObsOp Op { get; set; } = ObsOp.ToggleRecord;
+    public string? Arg { get; set; }
 }
 
 internal sealed class NoneActionDto : ActionDto;

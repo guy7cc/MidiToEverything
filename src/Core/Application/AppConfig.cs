@@ -34,6 +34,11 @@ public sealed record AppSettings
     /// <summary>Opt-in for launch/command actions running external programs (docs/05 §6, Q5).</summary>
     public bool AllowExternalLaunch { get; init; }
 
+    /// <summary>obs-websocket connection for OBS actions (docs/05 §5, Phase 3).</summary>
+    public string ObsHost { get; init; } = "localhost";
+    public int ObsPort { get; init; } = 4455;
+    public string ObsPassword { get; init; } = "";
+
     /// <summary>Devices to watch; "*" means all.</summary>
     public IReadOnlyList<string> WatchedDevices { get; init; } = new[] { "*" };
 

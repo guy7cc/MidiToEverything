@@ -41,6 +41,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         EmissionEnabled = gate.Enabled;
         _allowExternalLaunch = launchPolicy.Allowed;
+        var settings = profiles.CurrentConfig.Settings;
+        _obsHost = settings.ObsHost;
+        _obsPort = settings.ObsPort;
+        _obsPassword = settings.ObsPassword;
         _isAutoDetect = source.DetectionMode == MidiDetectionMode.AutoPolling;
         ApplyState(profiles.State);
         foreach (var device in source.Devices)
@@ -72,6 +76,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _monitorPaused;
     [ObservableProperty] private bool _isAutoDetect = true;
     [ObservableProperty] private bool _allowExternalLaunch;
+    [ObservableProperty] private string _obsHost = "localhost";
+    [ObservableProperty] private int _obsPort = 4455;
+    [ObservableProperty] private string _obsPassword = "";
 
     public string EmissionLabel => EmissionEnabled ? "稼働中" : "停止中 (緊急停止)";
     public string DetectModeLabel => IsAutoDetect ? "自動更新" : "手動更新";
@@ -84,6 +91,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _launchPolicy.Allowed = value;
         var config = _profiles.CurrentConfig;
         var updated = config with { Settings = config.Settings with { AllowExternalLaunch = value } };
+        _repository.Save(updated);
+        _profiles.Reload(updated);
+    }
+
+    // OBS connection settings: persist on edit; the OBS client reads them on next connect.
+    partial void OnObsHostChanged(string value) => SaveObsSettings();
+    partial void OnObsPortChanged(int value) => SaveObsSettings();
+    partial void OnObsPasswordChanged(string value) => SaveObsSettings();
+
+    private void SaveObsSettings()
+    {
+        var config = _profiles.CurrentConfig;
+        var updated = config with
+        {
+            Settings = config.Settings with { ObsHost = ObsHost, ObsPort = ObsPort, ObsPassword = ObsPassword },
+        };
         _repository.Save(updated);
         _profiles.Reload(updated);
     }
