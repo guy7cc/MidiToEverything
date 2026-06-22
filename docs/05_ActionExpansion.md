@@ -200,10 +200,12 @@ MIDIメッセージ → MidiEventPipeline → (Profile解決/Trigger評価)
 
 ## 9. 実装マイルストーン
 
-- **M-A 基盤刷新**: §3.1–3.5。`ActionExecutor` をハンドラ registry 化、既存6アクションを
-  `IActionHandler` 化＋エディタを per-kind DataTemplate へ全面移行。後方互換・テスト緑を維持。
-- **M-B Phase 1**: 起動 / システム音量 / ウィンドウ管理 / メディアキー / 定型文 を新基盤上に実装
-  （起動・コマンドは Q5 のオプトイン下）。
+- **M-A 基盤刷新** ✅ 完了: `ActionExecutor` をハンドラ registry 化（`IActionHandler`）、
+  既存6アクションを per-kind DataTemplate へ全面移行。後方互換・テスト緑を維持。
+- **M-B Phase 1** ✅ 完了: ウィンドウ管理 / メディアキー / 定型文 / 起動（Q5 オプトイン）/
+  システム音量（value-driven, Core Audio）を新基盤上に実装。
+  - 補足: SetVolume はフェーダー連動のため **トリガー=Absolute** で使う（ヘルプに明記）。
+    Launch は **「外部起動を許可」ON** が必要（既定 OFF）。
 - **M-C 以降**: Phase 2（UIA 要素操作・仮想デスクトップ・Windows トグル）→ Phase 3 → Phase 4。
 
-> M-A から着手する。
+> 次は M-C（Phase 2）。UIA 要素操作には対象ウィンドウ/要素のピッカー UI が要る。
