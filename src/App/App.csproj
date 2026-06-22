@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>app.ico</ApplicationIcon>
     <!-- WPF reads DPI awareness from the manifest; WinForms is used only for the tray icon.
          Suppress the WinForms-specific "configure DPI via API" warning. -->
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
@@ -27,6 +28,11 @@
     <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- App icon, available as a pack-URI resource for window + tray icons. -->
+    <Resource Include="app.ico" />
   </ItemGroup>
 
   <ItemGroup>

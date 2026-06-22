@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="MidiToEverything" Height="600" Width="940" MinWidth="640" MinHeight="420"
         WindowStyle="None" ResizeMode="CanResize"
-        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}" Icon="pack://application:,,,/app.ico"
         FontFamily="Segoe UI" d:DataContext="{d:DesignInstance vm:MainViewModel}">
 
     <shell:WindowChrome.WindowChrome>
