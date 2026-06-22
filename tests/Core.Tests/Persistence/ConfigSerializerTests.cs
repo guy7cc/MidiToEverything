@@ -1,0 +1,147 @@
+using MidiToEverything.Core.Application;
+using MidiToEverything.Core.Domain;
+using MidiToEverything.Core.Mapping;
+using MidiToEverything.Core.Persistence;
+
+namespace MidiToEverything.Core.Tests.Persistence;
+
+public class ConfigSerializerTests
+{
+    private static MidiMessage NoteOn(int number, string device = "akai", int channel = 1)
+        => new(device, channel, MidiMessageType.NoteOn, number, 100);
+
+    private static AppConfig SingleBinding(Signal signal, params InputAction[] actions) => new()
+    {
+        BaseProfile = new Profile
+        {
+            Id = "base",
+            Name = "base",
+            Bindings = new[] { new Binding { Signal = signal, Actions = actions } },
+        },
+    };
+
+    [Fact]
+    public void DefaultConfig_RoundTrips_PreservingResolutionBehavior()
+    {
+        var loaded = ConfigSerializer.Deserialize(ConfigSerializer.Serialize(DefaultConfig.Create()));
+
+        var resolver = new MappingResolver();
+        var csp = loaded.Profiles.Single(p => p.Id == "clip-studio");
+        var obs = loaded.Profiles.Single(p => p.Id == "obs");
+
+        // base undo with no context
+        Assert.Equal("base",
+            resolver.Resolve(NoteOn(36), new ProfileLayers(loaded.BaseProfile)).SourceProfileId);
+        // CSP blocks Note37 (NoneAction survived the round-trip)
+        Assert.Equal(ResolutionOutcome.Blocked,
+            resolver.Resolve(NoteOn(37), new ProfileLayers(loaded.BaseProfile, Context: csp)).Outcome);
+        // OBS overrides Note36
+        var obsHit = resolver.Resolve(NoteOn(36), new ProfileLayers(loaded.BaseProfile, Context: obs));
+        Assert.Equal("obs", obsHit.SourceProfileId);
+        Assert.Equal(new[] { "ctrl", "shift", "1" }, Assert.IsType<KeyAction>(obsHit.Binding!.Actions[0]).Keys);
+    }
+
+    [Fact]
+    public void Serialization_IsIdempotent()
+    {
+        var first = ConfigSerializer.Serialize(DefaultConfig.Create());
+        var second = ConfigSerializer.Serialize(ConfigSerializer.Deserialize(first));
+
+        Assert.Equal(first, second);
+    }
+
+    [Fact]
+    public void NumericChannel_SerializesAsNumber_AndRoundTrips()
+    {
+        var config = SingleBinding(
+            new Signal { Channel = "2", Type = SignalKind.NoteOn, Number = 36 },
+            new KeyAction(new[] { "a" }));
+
+        var json = ConfigSerializer.Serialize(config);
+        Assert.Contains("\"channel\": 2", json);
+
+        var loaded = ConfigSerializer.Deserialize(json);
+        Assert.Equal("2", loaded.BaseProfile.Bindings[0].Signal.Channel);
+    }
+
+    [Fact]
+    public void AnyChannel_SerializesAsString()
+    {
+        var config = SingleBinding(
+            new Signal { Channel = Signal.AnyChannel, Type = SignalKind.NoteOn, Number = 36 },
+            new KeyAction(new[] { "a" }));
+
+        Assert.Contains("\"channel\": \"any\"", ConfigSerializer.Serialize(config));
+    }
+
+    [Theory]
+    [InlineData(ProfileSwitchTarget.Next, null, "next")]
+    [InlineData(ProfileSwitchTarget.Previous, null, "prev")]
+    [InlineData(ProfileSwitchTarget.Toggle, null, "toggle")]
+    [InlineData(ProfileSwitchTarget.Specific, "obs", "obs")]
+    public void SwitchProfileTarget_RoundTrips(ProfileSwitchTarget target, string? id, string expectedJsonTarget)
+    {
+        var config = SingleBinding(
+            new Signal { Type = SignalKind.NoteOn, Number = 51 },
+            new SwitchProfileAction(target, id));
+
+        var json = ConfigSerializer.Serialize(config);
+        Assert.Contains($"\"target\": \"{expectedJsonTarget}\"", json);
+
+        var loaded = ConfigSerializer.Deserialize(json);
+        var action = Assert.IsType<SwitchProfileAction>(loaded.BaseProfile.Bindings[0].Actions[0]);
+        Assert.Equal(target, action.Target);
+        if (target == ProfileSwitchTarget.Specific)
+        {
+            Assert.Equal(id, action.ProfileId);
+        }
+    }
+
+    [Fact]
+    public void ContinuousTrigger_RoundTrips_RangeAndMode()
+    {
+        var config = SingleBinding(
+            new Signal { Type = SignalKind.Cc, Number = 74 },
+            new ScrollAction());
+        config = config with
+        {
+            BaseProfile = config.BaseProfile with
+            {
+                Bindings = new[]
+                {
+                    config.BaseProfile.Bindings[0] with
+                    {
+                        Trigger = new Trigger { Mode = TriggerMode.Absolute, RangeMin = 10, RangeMax = 120, Scale = 2.5 },
+                    },
+                },
+            },
+        };
+
+        var trigger = ConfigSerializer.Deserialize(ConfigSerializer.Serialize(config))
+            .BaseProfile.Bindings[0].Trigger;
+
+        Assert.Equal(TriggerMode.Absolute, trigger.Mode);
+        Assert.Equal(10, trigger.RangeMin);
+        Assert.Equal(120, trigger.RangeMax);
+        Assert.Equal(2.5, trigger.Scale, 3);
+    }
+
+    [Fact]
+    public void NewerSchemaVersion_Throws()
+    {
+        var json = "{ \"version\": 999, \"baseProfile\": { \"id\": \"base\", \"name\": \"b\" } }";
+
+        Assert.Throws<NotSupportedException>(() => ConfigSerializer.Deserialize(json));
+    }
+
+    [Fact]
+    public void EnumValues_SerializeAsCamelCaseStrings()
+    {
+        var json = ConfigSerializer.Serialize(DefaultConfig.Create());
+
+        Assert.Contains("\"type\": \"noteOn\"", json);
+        Assert.Contains("\"type\": \"cc\"", json);
+        Assert.Contains("\"type\": \"key\"", json);     // action discriminator
+        Assert.Contains("\"type\": \"none\"", json);    // block action
+    }
+}
