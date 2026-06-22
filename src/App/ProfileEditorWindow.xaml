@@ -76,6 +76,22 @@
                         <Grid Margin="0,4,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ComboBox Grid.Column="0"
+                                      ItemsSource="{Binding DataContext.RunningProcesses, RelativeSource={RelativeSource AncestorType=Window}}"
+                                      SelectedItem="{Binding DataContext.SelectedRunningProcess, RelativeSource={RelativeSource AncestorType=Window}}"
+                                      DisplayMemberPath="Display"
+                                      ToolTip="起動中のウィンドウを持つプロセスから選べます" />
+                            <Button Grid.Column="1" Content="候補を追加" Margin="6,0,0,0"
+                                    Command="{Binding DataContext.AddProcessCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                            <Button Grid.Column="2" Content="更新" Margin="6,0,0,0"
+                                    Command="{Binding DataContext.RefreshProcessesCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        </Grid>
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="120" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">

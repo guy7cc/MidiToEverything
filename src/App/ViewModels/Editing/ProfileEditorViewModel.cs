@@ -36,9 +36,13 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
 
         SelectedProfile = Profiles.FirstOrDefault();
         _source.MessageReceived += OnMessageReceived;
+        LoadProcesses();
     }
 
     public ObservableCollection<EditableProfile> Profiles { get; } = new();
+
+    /// <summary>Running windowed processes offered as target-process candidates.</summary>
+    public ObservableCollection<RunningProcess> RunningProcesses { get; } = new();
 
     public Array SignalKinds { get; } = Enum.GetValues<SignalKind>();
     public Array TriggerModes { get; } = Enum.GetValues<TriggerMode>();
@@ -46,6 +50,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] private EditableProfile? _selectedProfile;
     [ObservableProperty] private EditableBinding? _selectedBinding;
+    [ObservableProperty] private RunningProcess? _selectedRunningProcess;
     [ObservableProperty] private string _lastSignalText = "(まだ受信していません)";
 
     /// <summary>Raised with true on Save, false on Cancel, so the window can close.</summary>
@@ -65,6 +70,40 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         var profile = new EditableProfile { Id = "", Name = "新しいプロファイル", ProcessNames = "" };
         Profiles.Add(profile);
         SelectedProfile = profile;
+    }
+
+    private void LoadProcesses()
+    {
+        RunningProcesses.Clear();
+        foreach (var process in RunningProcessScanner.Scan())
+        {
+            RunningProcesses.Add(process);
+        }
+    }
+
+    [RelayCommand]
+    private void RefreshProcesses() => LoadProcesses();
+
+    /// <summary>Append the selected running process to the profile's target list (no duplicates).</summary>
+    [RelayCommand]
+    private void AddProcess()
+    {
+        if (SelectedProfile is null || SelectedRunningProcess is null)
+        {
+            return;
+        }
+
+        var existing = SelectedProfile.ProcessNames
+            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
+        if (existing.Any(name => string.Equals(name, SelectedRunningProcess.Exe, StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
+        existing.Add(SelectedRunningProcess.Exe);
+        SelectedProfile.ProcessNames = string.Join(", ", existing);
     }
 
     [RelayCommand]
