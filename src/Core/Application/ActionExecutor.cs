@@ -1,3 +1,4 @@
+using MidiToEverything.Core.Application.Handlers;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
 using MidiToEverything.Core.Mapping;
@@ -5,15 +6,31 @@ using MidiToEverything.Core.Mapping;
 namespace MidiToEverything.Core.Application;
 
 /// <summary>
-/// Translates a resolved <see cref="Binding"/> plus its <see cref="TriggerResult"/> into
-/// concrete <see cref="IInputSink"/> calls (docs/02_Architecture.md §3). Profile-switch
-/// actions are surfaced as an event for ProfileManager rather than sent to the OS.
+/// Dispatches a resolved <see cref="Binding"/>'s actions to the registered
+/// <see cref="IActionHandler"/>s (docs/05_ActionExpansion.md §3.2). Profile-switch actions
+/// are surfaced as an event for ProfileManager rather than handled here; <see cref="NoneAction"/>
+/// is an explicit no-op. New action categories are added by registering a handler — this
+/// class stays closed to modification.
 /// </summary>
 public sealed class ActionExecutor
 {
-    private readonly IInputSink _sink;
+    private readonly IReadOnlyList<IActionHandler> _handlers;
 
-    public ActionExecutor(IInputSink sink) => _sink = sink;
+    public ActionExecutor(IEnumerable<IActionHandler> handlers) => _handlers = handlers.ToArray();
+
+    /// <summary>Convenience ctor wiring the built-in OS input handlers (keyboard/mouse/cursor/scroll).</summary>
+    public ActionExecutor(IInputSink sink) : this(DefaultHandlers(sink))
+    {
+    }
+
+    /// <summary>The built-in keyboard/mouse/cursor/scroll handlers over an <see cref="IInputSink"/>.</summary>
+    public static IReadOnlyList<IActionHandler> DefaultHandlers(IInputSink sink) => new IActionHandler[]
+    {
+        new KeyActionHandler(sink),
+        new MouseClickActionHandler(sink),
+        new CursorMoveActionHandler(sink),
+        new ScrollActionHandler(sink),
+    };
 
     /// <summary>Raised when a binding requests a profile switch (FR-5.4); handled by ProfileManager.</summary>
     public event EventHandler<SwitchProfileAction>? ProfileSwitchRequested;
@@ -30,65 +47,25 @@ public sealed class ActionExecutor
     {
         switch (action)
         {
-            case KeyAction key:
-                ExecuteKey(key, trigger);
-                break;
-
-            case MouseClickAction click:
-                _sink.MouseClick(click.Button, click.Double);
-                break;
-
-            case CursorMoveAction move:
-                ExecuteMove(move, trigger);
-                break;
-
-            case ScrollAction scroll:
-                var amount = scroll.UseInputValue ? trigger.Magnitude : scroll.Amount;
-                _sink.Scroll(scroll.Axis, amount);
-                break;
-
             case SwitchProfileAction switchProfile:
                 ProfileSwitchRequested?.Invoke(this, switchProfile);
-                break;
+                return;
 
             case NoneAction:
-                // Reached only if a non-block binding contains a None; treat as no-op.
-                break;
+                // Explicit "do nothing"; the block-vs-fallback decision lives in the resolver.
+                return;
         }
-    }
 
-    private void ExecuteKey(KeyAction key, TriggerResult trigger)
-    {
-        if (key.Hold)
+        foreach (var handler in _handlers)
         {
-            // Hold maps NoteOn->down, NoteOff->up via the trigger phase.
-            switch (trigger.Phase)
+            if (handler.CanHandle(action))
             {
-                case TriggerPhase.Press:
-                    _sink.KeyDown(key.Keys);
-                    break;
-                case TriggerPhase.Release:
-                    _sink.KeyUp(key.Keys);
-                    break;
+                handler.Execute(action, trigger, message);
+                return;
             }
         }
-        else if (trigger.Phase is TriggerPhase.Press or TriggerPhase.Change)
-        {
-            _sink.KeyTap(key.Keys);
-        }
-    }
 
-    private void ExecuteMove(CursorMoveAction move, TriggerResult trigger)
-    {
-        if (move.UseInputValue)
-        {
-            // Value-driven moves apply the magnitude to the horizontal axis by default.
-            // Per-axis mapping is refined alongside the editor UI (M8).
-            _sink.MoveCursor(move.Mode, trigger.Magnitude, 0);
-        }
-        else
-        {
-            _sink.MoveCursor(move.Mode, move.Dx, move.Dy);
-        }
+        // No handler registered for this action (e.g. a forward-compat type the build
+        // does not know): ignore. Unknown persisted actions are warned about at load time.
     }
 }

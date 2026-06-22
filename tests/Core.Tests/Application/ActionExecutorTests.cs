@@ -1,4 +1,5 @@
 using MidiToEverything.Core.Application;
+using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
 using MidiToEverything.Core.Mapping;
 using MidiToEverything.Core.Tests.Fakes;
@@ -61,5 +62,35 @@ public class ActionExecutorTests
         Assert.Collection(_sink.Calls,
             c => Assert.Equal(new[] { "ctrl", "c" }, Assert.IsType<KeyTapCall>(c).Keys),
             c => Assert.Equal(new[] { "ctrl", "v" }, Assert.IsType<KeyTapCall>(c).Keys));
+    }
+
+    [Fact]
+    public void ActionWithNoRegisteredHandler_IsIgnored()
+    {
+        var executor = new ActionExecutor(Array.Empty<IActionHandler>());
+
+        var ex = Record.Exception(() => executor.Execute(
+            With(new MouseClickAction()), new TriggerResult(TriggerPhase.Press, 0), Msg));
+
+        Assert.Null(ex);
+        Assert.Empty(_sink.Calls);
+    }
+
+    [Fact]
+    public void Dispatch_PicksTheHandlerThatCanHandle()
+    {
+        var probe = new ProbeHandler();
+        var executor = new ActionExecutor(new IActionHandler[] { probe });
+
+        executor.Execute(With(new MouseClickAction()), new TriggerResult(TriggerPhase.Press, 0), Msg);
+
+        Assert.Equal(1, probe.Count);
+    }
+
+    private sealed class ProbeHandler : IActionHandler
+    {
+        public int Count { get; private set; }
+        public bool CanHandle(InputAction action) => action is MouseClickAction;
+        public void Execute(InputAction action, TriggerResult trigger, MidiMessage message) => Count++;
     }
 }
