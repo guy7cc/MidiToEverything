@@ -132,6 +132,9 @@
   "tray.show": "ウィンドウを表示",
   "tray.startup": "スタートアップ起動",
   "tray.exit": "終了",
+  "crash.title": "予期しないエラー",
+  "crash.restarted": "前回の起動が予期しないエラーで終了したため、自動的に再起動しました。\n\n{0}\n\nログ: {1}",
+  "crash.loop": "エラーが短時間に繰り返し発生したため、自動再起動を停止しました。ログをご確認ください。\n\n{0}\n\nログ: {1}",
   "main.editProfiles": "プロファイル編集",
   "main.devices": "デバイス",
   "main.detect.auto": "自動更新",
@@ -255,7 +258,7 @@
 
   "help.action.Key": "キーボード入力。詳細に「ctrl+z」のようにキーを指定。テンキー（numpad1・add・subtract）も可。^ ~ などキー名に無い1文字はそのまま文字として送信（修飾キーとの組合せは不可）。カンマキーは comma、+ は plus と書く",
   "help.action.MouseClick": "マウスクリック。詳細に left / right / middle（x2 でダブルクリック）",
-  "help.action.Scroll": "ホイールスクロール。詳細に vertical / horizontal",
+  "help.action.Scroll": "ホイールスクロール。ボタンで一定量なら down / up / left / right（「down 3」で3ノッチ）。ノブ連動なら vertical / horizontal",
   "help.action.CursorMove": "カーソル移動。詳細に relative（相対）/ absolute（絶対）",
   "help.action.WindowControl": "最前面ウィンドウを操作。詳細に minimize / maximize / restore / close / topmost",
   "help.action.MediaKey": "メディアキー。詳細に playpause / next / previous / stop / mute / volumeup / volumedown",

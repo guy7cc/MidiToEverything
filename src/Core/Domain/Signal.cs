@@ -58,6 +58,31 @@ public sealed record Signal
     }
 
     /// <summary>
+    /// True when <paramref name="message"/> is the Note Off that releases this NoteOn signal
+    /// (same device/channel/number). A Hold trigger uses this so the held key is released when the
+    /// device sends an explicit Note Off rather than NoteOn velocity 0 (docs/03_ProfileSchema.md §2).
+    /// </summary>
+    public bool MatchesNoteRelease(MidiMessage message)
+    {
+        if (Type != SignalKind.NoteOn || message.Type != MidiMessageType.NoteOff)
+        {
+            return false;
+        }
+
+        if (!DeviceMatches(message.Device))
+        {
+            return false;
+        }
+
+        if (Channel != AnyChannel && (!int.TryParse(Channel, out var ch) || ch != message.Channel))
+        {
+            return false;
+        }
+
+        return Number is null || Number == message.Number;
+    }
+
+    /// <summary>
     /// Specificity score used to disambiguate when several bindings in the same profile
     /// match one message: the most concrete (fewest wildcards) wins.
     /// </summary>

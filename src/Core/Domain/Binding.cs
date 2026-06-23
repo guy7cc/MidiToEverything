@@ -21,4 +21,14 @@ public sealed record Binding
     /// A blocking binding suppresses fallback to lower layers (FR-6.4).
     /// </summary>
     public bool IsBlock => Actions.Count == 1 && Actions[0] is NoneAction;
+
+    /// <summary>
+    /// True when <paramref name="message"/> should drive this binding: a normal signal match, or —
+    /// for a <see cref="TriggerMode.Hold"/> trigger on a NoteOn signal — the matching Note Off, so a
+    /// held key is released on note-off even when the device sends an explicit Note Off (not NoteOn
+    /// velocity 0). Without this a Hold "press-and-hold" binding would never see the release.
+    /// </summary>
+    public bool Matches(MidiMessage message)
+        => Signal.Matches(message)
+           || (Trigger.Mode == TriggerMode.Hold && Signal.MatchesNoteRelease(message));
 }
