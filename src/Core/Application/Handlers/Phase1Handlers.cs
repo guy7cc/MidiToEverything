@@ -11,7 +11,7 @@ public abstract class FireOnPressHandler : IActionHandler
 
     public void Execute(InputAction action, TriggerResult trigger, MidiMessage message)
     {
-        if (trigger.Phase is TriggerPhase.Press or TriggerPhase.Change)
+        if (trigger.Phase is TriggerPhase.Press || trigger.IsChange)
         {
             Fire(action);
         }

@@ -23,6 +23,8 @@ public sealed class MidiEventPipeline : IAsyncDisposable
     private readonly ActionExecutor _executor;
     private readonly ILogger<MidiEventPipeline> _logger;
     private readonly Channel<Envelope> _channel;
+    private readonly EdgeGate _edgeGate = new();
+    private readonly DeltaTracker _deltaTracker = new();
 
     private CancellationTokenSource? _cts;
     private Task? _worker;
@@ -128,13 +130,22 @@ public sealed class MidiEventPipeline : IAsyncDisposable
             return;
         }
 
-        var trigger = TriggerEvaluator.Evaluate(resolution.Binding!.Trigger, message);
-        if (!trigger.ShouldFire)
+        var binding = resolution.Binding!;
+
+        // Relative + AbsoluteDelta needs the previous value, so it's evaluated by the stateful
+        // DeltaTracker rather than the pure evaluator.
+        var trigger = binding.Trigger is { Mode: TriggerMode.Relative, RelativeFormat: RelativeFormat.AbsoluteDelta }
+            ? _deltaTracker.Evaluate(binding.Trigger, message)
+            : TriggerEvaluator.Evaluate(binding.Trigger, message);
+
+        // EdgeGate collapses repeated in-zone fires to a single rising edge when Trigger.Edge
+        // is set; otherwise it just mirrors ShouldFire. Runs on the single worker thread.
+        if (!_edgeGate.ShouldEmit(binding.Trigger, message, trigger))
         {
             return;
         }
 
-        _executor.Execute(resolution.Binding, trigger, message);
+        _executor.Execute(binding, trigger, message);
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {

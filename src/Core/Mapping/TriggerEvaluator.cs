@@ -14,8 +14,14 @@ public enum TriggerPhase
     /// <summary>Release of a held press (key up).</summary>
     Release,
 
-    /// <summary>Continuous change carrying a magnitude (absolute/relative).</summary>
+    /// <summary>Continuous change carrying a magnitude (absolute).</summary>
     Change,
+
+    /// <summary>A relative (endless encoder) tick in the positive direction; magnitude &gt; 0.</summary>
+    Increase,
+
+    /// <summary>A relative (endless encoder) tick in the negative direction; magnitude &lt; 0.</summary>
+    Decrease,
 }
 
 /// <summary>
@@ -23,12 +29,22 @@ public enum TriggerPhase
 /// </summary>
 /// <param name="Phase">What kind of emission (if any) should happen.</param>
 /// <param name="Magnitude">
-/// Signed amount for Change phases (post scale/invert): a normalized 0..1 for Absolute,
-/// or a signed delta for Relative. 0 for Press/Release/None.
+/// Signed amount for value phases (post scale/invert): a normalized 0..1 for Absolute
+/// (<see cref="TriggerPhase.Change"/>), or a signed delta for Relative
+/// (<see cref="TriggerPhase.Increase"/>/<see cref="TriggerPhase.Decrease"/>). 0 for
+/// Press/Release/None.
 /// </param>
 public readonly record struct TriggerResult(TriggerPhase Phase, double Magnitude)
 {
     public bool ShouldFire => Phase != TriggerPhase.None;
+
+    /// <summary>
+    /// True for any value-carrying phase — absolute <see cref="TriggerPhase.Change"/> or a
+    /// relative <see cref="TriggerPhase.Increase"/>/<see cref="TriggerPhase.Decrease"/> tick.
+    /// Handlers that consume the magnitude (or fire once per change) use this rather than
+    /// testing <see cref="TriggerPhase.Change"/> alone, so endless-encoder input drives them too.
+    /// </summary>
+    public bool IsChange => Phase is TriggerPhase.Change or TriggerPhase.Increase or TriggerPhase.Decrease;
 
     public static readonly TriggerResult None = new(TriggerPhase.None, 0);
 }
@@ -83,6 +99,13 @@ public static class TriggerEvaluator
             return TriggerResult.None;
         }
 
+        // Gate mode fires only while the raw value sits inside the window; Clamp (default) keeps
+        // the legacy behavior where out-of-range values snap to an edge and still fire.
+        if (t.OutOfRange == OutOfRangeBehavior.Gate && (m.Value < min || m.Value > max))
+        {
+            return TriggerResult.None;
+        }
+
         var clamped = Math.Clamp(m.Value, min, max);
 
         // Dead zone trims both ends of the usable span.
@@ -106,19 +129,46 @@ public static class TriggerEvaluator
 
     private static TriggerResult EvaluateRelative(Trigger t, MidiMessage m)
     {
-        var delta = DecodeRelative(t.RelativeFormat, m.Value);
-        if (Math.Abs(delta) <= t.Deadzone)
+        // AbsoluteDelta is stateful (needs the previous value) and is handled by the pipeline's
+        // DeltaTracker, not here. The encoder encodings are stateless and decoded directly.
+        return t.RelativeFormat == RelativeFormat.AbsoluteDelta
+            ? TriggerResult.None
+            : RelativeResult(t, DecodeRelative(t.RelativeFormat, m.Value));
+    }
+
+    /// <summary>
+    /// Shared relative post-processing: apply dead zone / scale / invert to a raw signed delta,
+    /// then emit per <see cref="Trigger.RelativeOutput"/> — a signed Increase/Decrease amount, or a
+    /// one-shot Press on the chosen direction. Used by both the stateless encoder formats and the
+    /// stateful <see cref="DeltaTracker"/> (AbsoluteDelta).
+    /// </summary>
+    public static TriggerResult RelativeResult(Trigger t, int rawDelta)
+    {
+        if (Math.Abs(rawDelta) <= t.Deadzone)
         {
             return TriggerResult.None;
         }
 
-        double magnitude = delta * t.Scale;
+        double magnitude = rawDelta * t.Scale;
         if (t.Invert)
         {
             magnitude = -magnitude;
         }
 
-        return new TriggerResult(TriggerPhase.Change, magnitude);
+        var increasing = magnitude > 0;
+        var decreasing = magnitude < 0;
+        if (!increasing && !decreasing)
+        {
+            return TriggerResult.None; // exactly zero after scale (e.g. scale 0)
+        }
+
+        return t.RelativeOutput switch
+        {
+            RelativeOutput.FireOnIncrease => increasing ? new TriggerResult(TriggerPhase.Press, 0) : TriggerResult.None,
+            RelativeOutput.FireOnDecrease => decreasing ? new TriggerResult(TriggerPhase.Press, 0) : TriggerResult.None,
+            // Amount: signed magnitude carried as an Increase/Decrease tick.
+            _ => new TriggerResult(increasing ? TriggerPhase.Increase : TriggerPhase.Decrease, magnitude),
+        };
     }
 
     /// <summary>Decode a 7-bit value into a signed delta per the encoder format.</summary>

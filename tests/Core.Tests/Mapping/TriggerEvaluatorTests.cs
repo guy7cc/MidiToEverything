@@ -74,6 +74,45 @@ public class TriggerEvaluatorTests
         Assert.Equal(2.0, r.Magnitude, 3);
     }
 
+    [Theory]
+    [InlineData(59, false)] // just below the window
+    [InlineData(60, true)]  // lower edge → 0.0
+    [InlineData(65, true)]  // inside → 0.5
+    [InlineData(70, true)]  // upper edge → 1.0
+    [InlineData(71, false)] // just above the window
+    public void Absolute_Gate_FiresOnlyInsideWindow(int value, bool fires)
+    {
+        var t = new Trigger
+        {
+            Mode = TriggerMode.Absolute,
+            RangeMin = 60,
+            RangeMax = 70,
+            OutOfRange = OutOfRangeBehavior.Gate,
+        };
+
+        var r = TriggerEvaluator.Evaluate(t, Cc(value));
+
+        Assert.Equal(fires, r.ShouldFire);
+        if (fires)
+        {
+            Assert.Equal(TriggerPhase.Change, r.Phase);
+            Assert.InRange(r.Magnitude, 0.0, 1.0);
+        }
+    }
+
+    [Theory]
+    [InlineData(0, 0.0)]   // below window clamps to the edge and still fires
+    [InlineData(127, 1.0)] // above window clamps to the edge and still fires
+    public void Absolute_Clamp_IsDefault_AndFiresOutsideWindow(int value, double expected)
+    {
+        var t = new Trigger { Mode = TriggerMode.Absolute, RangeMin = 60, RangeMax = 70 };
+
+        var r = TriggerEvaluator.Evaluate(t, Cc(value));
+
+        Assert.True(r.ShouldFire);
+        Assert.Equal(expected, r.Magnitude, 3);
+    }
+
     // ── Relative mode ─────────────────────────────────────────────────────────
 
     [Theory]
@@ -107,5 +146,56 @@ public class TriggerEvaluatorTests
         var r = TriggerEvaluator.Evaluate(t, Cc(2)); // +2 × 3 = 6
 
         Assert.Equal(6.0, r.Magnitude, 3);
+    }
+
+    [Theory]
+    [InlineData(2, TriggerPhase.Increase)]   // +2
+    [InlineData(126, TriggerPhase.Decrease)] // 126 - 128 = -2
+    public void Relative_SplitsIntoIncreaseAndDecrease(int value, TriggerPhase expected)
+    {
+        var t = new Trigger { Mode = TriggerMode.Relative };
+
+        var r = TriggerEvaluator.Evaluate(t, Cc(value));
+
+        Assert.Equal(expected, r.Phase);
+        Assert.True(r.IsChange); // both directions are value-carrying changes
+    }
+
+    [Fact]
+    public void Relative_Invert_FlipsDirection()
+    {
+        var t = new Trigger { Mode = TriggerMode.Relative, Invert = true };
+
+        var r = TriggerEvaluator.Evaluate(t, Cc(2)); // +2 inverted → decrease
+
+        Assert.Equal(TriggerPhase.Decrease, r.Phase);
+        Assert.Equal(-2.0, r.Magnitude, 3);
+    }
+
+    [Theory]
+    [InlineData(2, RelativeOutput.FireOnIncrease, true)]    // +2 increase → fires
+    [InlineData(126, RelativeOutput.FireOnIncrease, false)] // -2 → no fire
+    [InlineData(126, RelativeOutput.FireOnDecrease, true)]  // -2 decrease → fires
+    [InlineData(2, RelativeOutput.FireOnDecrease, false)]   // +2 → no fire
+    public void Relative_FireOutput_FiresOnChosenDirectionOnly(int value, RelativeOutput output, bool fires)
+    {
+        var t = new Trigger { Mode = TriggerMode.Relative, RelativeOutput = output };
+
+        var r = TriggerEvaluator.Evaluate(t, Cc(value));
+
+        Assert.Equal(fires, r.ShouldFire);
+        if (fires)
+        {
+            Assert.Equal(TriggerPhase.Press, r.Phase); // fires like a button (no amount)
+        }
+    }
+
+    [Fact]
+    public void Relative_AbsoluteDelta_NotHandledByPureEvaluator()
+    {
+        // AbsoluteDelta is stateful and routed to DeltaTracker; the pure evaluator emits nothing.
+        var t = new Trigger { Mode = TriggerMode.Relative, RelativeFormat = RelativeFormat.AbsoluteDelta };
+
+        Assert.False(TriggerEvaluator.Evaluate(t, Cc(2)).ShouldFire);
     }
 }

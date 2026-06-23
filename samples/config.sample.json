@@ -41,7 +41,11 @@
           "deadzone": 0,
           "invert": false,
           "scale": 1,
-          "relativeFormat": "twosComplement"
+          "relativeFormat": "twosComplement",
+          "relativeOutput": "amount",
+          "outOfRange": "clamp",
+          "edge": false,
+          "wrap": false
         },
         "actions": [
           {
@@ -74,7 +78,11 @@
           "deadzone": 0,
           "invert": false,
           "scale": 1,
-          "relativeFormat": "twosComplement"
+          "relativeFormat": "twosComplement",
+          "relativeOutput": "amount",
+          "outOfRange": "clamp",
+          "edge": false,
+          "wrap": false
         },
         "actions": [
           {
@@ -107,7 +115,11 @@
           "deadzone": 0,
           "invert": false,
           "scale": 1,
-          "relativeFormat": "twosComplement"
+          "relativeFormat": "twosComplement",
+          "relativeOutput": "amount",
+          "outOfRange": "clamp",
+          "edge": false,
+          "wrap": false
         },
         "actions": [
           {
@@ -147,7 +159,11 @@
             "deadzone": 0,
             "invert": false,
             "scale": 1,
-            "relativeFormat": "twosComplement"
+            "relativeFormat": "twosComplement",
+            "relativeOutput": "amount",
+            "outOfRange": "clamp",
+            "edge": false,
+            "wrap": false
           },
           "actions": [
             {
@@ -177,7 +193,11 @@
             "deadzone": 0,
             "invert": false,
             "scale": 1,
-            "relativeFormat": "twosComplement"
+            "relativeFormat": "twosComplement",
+            "relativeOutput": "amount",
+            "outOfRange": "clamp",
+            "edge": false,
+            "wrap": false
           },
           "actions": [
             {
@@ -208,7 +228,11 @@
             "deadzone": 0,
             "invert": false,
             "scale": 1,
-            "relativeFormat": "twosComplement"
+            "relativeFormat": "twosComplement",
+            "relativeOutput": "amount",
+            "outOfRange": "clamp",
+            "edge": false,
+            "wrap": false
           },
           "actions": [
             {
@@ -240,7 +264,11 @@
             "deadzone": 0,
             "invert": false,
             "scale": 1,
-            "relativeFormat": "twosComplement"
+            "relativeFormat": "twosComplement",
+            "relativeOutput": "amount",
+            "outOfRange": "clamp",
+            "edge": false,
+            "wrap": false
           },
           "actions": [
             {
@@ -278,7 +306,11 @@
             "deadzone": 0,
             "invert": false,
             "scale": 1,
-            "relativeFormat": "twosComplement"
+            "relativeFormat": "twosComplement",
+            "relativeOutput": "amount",
+            "outOfRange": "clamp",
+            "edge": false,
+            "wrap": false
           },
           "actions": [
             {

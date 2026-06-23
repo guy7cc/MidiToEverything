@@ -96,6 +96,18 @@ internal sealed class TriggerDto
     public bool Invert { get; set; }
     public double Scale { get; set; } = 1.0;
     public RelativeFormat RelativeFormat { get; set; } = RelativeFormat.TwosComplement;
+
+    /// <summary>Relative output: <c>amount</c> (default) / <c>fireOnIncrease</c> / <c>fireOnDecrease</c>.</summary>
+    public RelativeOutput RelativeOutput { get; set; } = RelativeOutput.Amount;
+
+    /// <summary>Absolute out-of-range behavior: <c>clamp</c> (default) or <c>gate</c>.</summary>
+    public OutOfRangeBehavior OutOfRange { get; set; } = OutOfRangeBehavior.Clamp;
+
+    /// <summary>Rising-edge mode for value-gated triggers (fire once on entry).</summary>
+    public bool Edge { get; set; }
+
+    /// <summary>Wrap-around handling for Relative + AbsoluteDelta (endless absolute knobs).</summary>
+    public bool Wrap { get; set; }
 }
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]

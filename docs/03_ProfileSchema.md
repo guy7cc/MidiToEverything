@@ -26,13 +26,21 @@
 
 | フィールド | 型 | 既定 | 説明 |
 |------|----|----|----|
-| `mode` | enum | `trigger` | `trigger`(しきい値で発火) / `hold`(On〜Off で押し続け) / `absolute`(値→連続量) / `relative`(増減=エンコーダ) |
+| `mode` | enum | `trigger` | `trigger`(しきい値で発火) / `hold`(On〜Off で押し続け) / `absolute`(値→連続量) / `relative`(増減として扱う) |
 | `threshold` | int | 1 | `trigger`/`hold` の発火しきい値（velocity/value がこれ以上で ON） |
-| `range` | [int,int] | [0,127] | `absolute` の入力値域 |
+| `range` | [int,int] | [0,127] | `absolute` の入力値域（=有効ウィンドウ。0..1 へ正規化される） |
+| `outOfRange` | enum | `clamp` | `absolute` でウィンドウ外の値の扱い。`clamp`=端に丸めて発火し続ける（従来）／`gate`=**ウィンドウ内に入った時だけ発火**、外は発火しない |
 | `deadzone` | int | 0 | 中央/境界の不感帯 |
 | `invert` | bool | false | 値の反転 |
 | `scale` | number | 1.0 | 感度（出力量の倍率） |
-| `relativeFormat` | enum | `twosComplement` | 相対エンコーダの符号方式（`twosComplement`/`signedBit`/`binaryOffset`）|
+| `relativeFormat` | enum | `twosComplement` | `relative` の増減の読み取り方。エンコーダ符号方式（`twosComplement`/`signedBit`/`binaryOffset`）または `absoluteDelta`（絶対値の前回との差分を増減として扱う＝絶対値デバイスを相対化）|
+| `relativeOutput` | enum | `amount` | `relative` の増減の使い方。`amount`(アクション量として送る) / `fireOnIncrease`(増えたら発火) / `fireOnDecrease`(減ったら発火)。fire 系は発火トリガーになる |
+| `edge` | bool | false | `trigger`/`absolute`(gate) のエッジ発火。**ゾーンに入った瞬間に1回だけ**発火し、出てから再度入るまで再発火しない。CC/フェーダをボタンのように使う場合に有効（`hold`/`relative` では無視） |
+| `wrap` | bool | false | `relative` + `absoluteDelta` 専用。値が一周する無限ノブ（…126,127,0,1…）で `127→0` を `+1` と解釈。境界のあるフェーダでは off（大きなスイープを誤検出しないため）|
+
+> `gate` の例: フェーダが特定ゾーン（例 値 100〜127）に来た時だけアクションを発火させたい場合、`{ "mode": "absolute", "range": [100, 127], "outOfRange": "gate", ... }`。ウィンドウ内では値が 0..1 に正規化され（離散アクションは在圏中に発火、連続アクションはウィンドウ内で 0..1 に写像）、ウィンドウ外では何も起きない。
+>
+> 注: `gate` 単体では在圏中に CC が届くたび再発火する（しきい値 `trigger` モードと同じ挙動）。「入った瞬間に1回だけ」発火したい場合は `"edge": true` を併用する。
 
 ---
 
@@ -64,6 +72,20 @@
 - `key.keys` は修飾キー（`ctrl`/`shift`/`alt`/`win`）＋通常キーの配列。送信はスキャンコード既定。
 - `hold:true` は Trigger.mode=`hold` と組み合わせ、Note On で押下／Note Off で解放。
 - `useInputValue:true` は連続値（CC 等）を移動量/スクロール量へ写像（`scale`/`deadzone` 適用後）。
+
+`relative` で「ノブの増減を量として送る」例と「増えたら発火する」例:
+```jsonc
+// 増減をアクション量として送る（スクロール量に直結）
+{ "signal": { "type": "cc", "number": 74 },
+  "trigger": { "mode": "relative", "relativeFormat": "twosComplement", "relativeOutput": "amount" },
+  "actions": [ { "type": "scroll", "useInputValue": true } ] }
+
+// 絶対値デバイスでも、増えたときだけキーを発火（絶対値の差分を相対化）
+{ "signal": { "type": "cc", "number": 74 },
+  "trigger": { "mode": "relative", "relativeFormat": "absoluteDelta", "relativeOutput": "fireOnIncrease" },
+  "actions": [ { "type": "key", "keys": ["ctrl", "plus"] } ] }
+```
+> 増加→A・減少→B のように1ノブで2アクションへ分けたい場合は、`fireOnIncrease` の binding と `fireOnDecrease` の binding を別々に作る（旧 action 単位の `direction` は廃止し、トリガー側の `relativeOutput` に統一）。
 
 ---
 

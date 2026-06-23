@@ -59,7 +59,7 @@ public sealed class MidiOutActionHandler : IActionHandler
                 _output.Send(m.Device, m.Kind, m.Channel, m.Data1, value);
             }
         }
-        else if (trigger.Phase is TriggerPhase.Press or TriggerPhase.Change)
+        else if (trigger.Phase is TriggerPhase.Press || trigger.IsChange)
         {
             _output.Send(m.Device, m.Kind, m.Channel, m.Data1, m.Data2);
         }
