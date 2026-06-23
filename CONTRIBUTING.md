@@ -124,6 +124,10 @@ git push origin v1.0.0    # ← これだけでリリースが走る
 - タグ名は `v` プレフィックス必須（ワークフローの起動条件 `tags: ['v*']`）。
 - ポータブル zip には `MidiToEverything.exe`・`README.md`・`samples/config.sample.json`・`Resources/`（言語
   ファイル）を同梱。MSI は同じ内容を `Program Files\MidiToEverything` へインストールし、スタートメニュー
-  ショートカットを作成（定義は [installer/Package.wxs](installer/Package.wxs)）。
+  ショートカットを作成。
+- MSI ウィザードは多言語対応（最初に言語選択）。文言は翻訳表を持つ生成スクリプト
+  [installer/build-wxs.ps1](installer/build-wxs.ps1) が [installer/Package.wxs](installer/Package.wxs) を出力する
+  （言語追加・文言修正はスクリプト側を編集して再生成）。CI は生成済みの `Package.wxs` を `wix build`
+  （UI/Util 拡張つき）でビルドする。
 - 初回のみ、リポジトリ設定で Actions に「Read and write permissions」が必要（`gh release create` 用）。
   ワークフロー側でも `permissions: contents: write` を宣言済み。
