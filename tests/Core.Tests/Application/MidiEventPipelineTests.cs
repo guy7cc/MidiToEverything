@@ -64,6 +64,35 @@ public sealed class MidiEventPipelineTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Hold_NoteOnSignal_StillReleasesOnNoteOff()
+    {
+        // A Hold binding whose signal is NoteOn (e.g. captured via "learn") must still release when
+        // the device sends an explicit Note Off — otherwise the held key never comes back up.
+        var profile = new Profile
+        {
+            Id = "base",
+            Name = "b",
+            Bindings = new[]
+            {
+                new Binding
+                {
+                    Signal = new Signal { Type = SignalKind.NoteOn, Number = 39 },
+                    Trigger = new Trigger { Mode = TriggerMode.Hold },
+                    Actions = new InputAction[] { new KeyAction(new[] { "space" }, Hold: true) },
+                },
+            },
+        };
+        _context.Set(new ProfileLayers(profile));
+
+        _source.Emit(NoteOn(39));  // press → key down
+        _source.Emit(NoteOff(39)); // release → key up (this used to be ignored)
+
+        await _sink.WaitForCountAsync(2, Timeout);
+        Assert.Equal(new[] { "space" }, Assert.IsType<KeyDownCall>(_sink.Calls[0]).Keys);
+        Assert.Equal(new[] { "space" }, Assert.IsType<KeyUpCall>(_sink.Calls[1]).Keys);
+    }
+
+    [Fact]
     public async Task BlockedSignal_InClipStudio_EmitsNothing()
     {
         _context.Set(new ProfileLayers(_config.BaseProfile, Context: Profile("clip-studio")));

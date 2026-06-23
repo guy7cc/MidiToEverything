@@ -88,7 +88,7 @@ public sealed record Profile
 
         foreach (var binding in Bindings)
         {
-            if (!binding.Enabled || !binding.Signal.Matches(message))
+            if (!binding.Enabled || !binding.Matches(message))
             {
                 continue;
             }
