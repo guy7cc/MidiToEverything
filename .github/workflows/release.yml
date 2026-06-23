@@ -59,10 +59,15 @@ jobs:
         run: |
           dotnet tool install --global wix --version 5.0.0
           $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
+          # UI extension = guided wizard dialogs; Util extension = launch-after-install action.
+          # Pin to the wix tool's major (5.x) so the extension package layout matches.
+          wix extension add -g WixToolset.UI.wixext/5.0.0
+          wix extension add -g WixToolset.Util.wixext/5.0.0
           # MSI ProductVersion must be numeric — drop any prerelease suffix (e.g. 1.2.3-beta -> 1.2.3).
           $msiver = "${{ steps.ver.outputs.version }}".Split('-')[0]
           $out = "dist/MidiToEverything-${{ github.ref_name }}-win-x64.msi"
           wix build -arch x64 `
+            -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext `
             -d Version=$msiver `
             -d PublishDir="${{ github.workspace }}\publish" `
             -o $out installer/Package.wxs
