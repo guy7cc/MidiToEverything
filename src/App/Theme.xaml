@@ -46,6 +46,11 @@
         <GradientStop Color="#FF32323C" Offset="0" />
         <GradientStop Color="#FF202026" Offset="1" />
     </LinearGradientBrush>
+    <!-- Main-window header: same palette, swept left → right. -->
+    <LinearGradientBrush x:Key="HeaderBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#FF32323C" Offset="0" />
+        <GradientStop Color="#FF202026" Offset="1" />
+    </LinearGradientBrush>
     <DropShadowEffect x:Key="CardShadow" Color="#FF000000" BlurRadius="20" ShadowDepth="3"
                       Direction="270" Opacity="0.65" RenderingBias="Quality" />
     <Style x:Key="Card" TargetType="Border">

@@ -63,7 +63,7 @@
         </Grid>
 
         <!-- Header bar -->
-        <Border Grid.Row="1" Background="{StaticResource CardBrush}" Padding="16,10">
+        <Border Grid.Row="1" Background="{StaticResource HeaderBrush}" Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
