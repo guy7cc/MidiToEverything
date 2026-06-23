@@ -1,116 +1,30 @@
 using System.Globalization;
 using System.Windows.Data;
+using MidiToEverything.App.Localization;
 using MidiToEverything.App.ViewModels.Editing;
 using MidiToEverything.Core.Domain;
 
 namespace MidiToEverything.App;
 
-/// <summary>Concise Japanese descriptions of MIDI signal kinds and editor options (help text).</summary>
+/// <summary>Localized descriptions of MIDI signal kinds and editor options (looked up via <see cref="Loc"/>).</summary>
 public static class EditorHelp
 {
-    public static string SignalKind(SignalKind kind) => kind switch
-    {
-        Core.Domain.SignalKind.NoteOn => "鍵盤やパッドを押した瞬間に発火",
-        Core.Domain.SignalKind.NoteOff => "鍵盤やパッドを離した瞬間に発火",
-        Core.Domain.SignalKind.Note => "押した時と離した時の両方（押している間の動作=ホールド用）",
-        Core.Domain.SignalKind.Cc => "ノブ/フェーダー等を動かした時に発火（0〜127の連続値）",
-        Core.Domain.SignalKind.PitchBend => "ピッチベンドホイールを動かした時に発火（番号なし）",
-        Core.Domain.SignalKind.ProgramChange => "音色/プログラムを切り替えた時に発火",
-        _ => "",
-    };
+    public static string SignalKind(SignalKind kind) => Loc.T($"help.signalKind.{kind}");
 
     /// <summary>Short tag shown after the name in the dropdown (e.g. "NoteOn（押した時）").</summary>
-    public static string SignalKindTag(SignalKind kind) => kind switch
-    {
-        Core.Domain.SignalKind.NoteOn => "押した時",
-        Core.Domain.SignalKind.NoteOff => "離した時",
-        Core.Domain.SignalKind.Note => "押下/離す 両方",
-        Core.Domain.SignalKind.Cc => "ノブ/フェーダー",
-        Core.Domain.SignalKind.PitchBend => "ベンドホイール",
-        Core.Domain.SignalKind.ProgramChange => "音色切替",
-        _ => "",
-    };
+    public static string SignalKindTag(SignalKind kind) => Loc.T($"help.signalTag.{kind}");
 
-    public static string TriggerMode(TriggerMode mode) => mode switch
-    {
-        Core.Domain.TriggerMode.Trigger => "しきい値以上で1回だけ発火（ボタン的な単発動作）",
-        Core.Domain.TriggerMode.Hold => "押している間だけ作用（NoteOnで押下、NoteOffで解放）",
-        Core.Domain.TriggerMode.Absolute => "入力値(0〜127)を連続量として扱う（フェーダー→スクロール量など）",
-        Core.Domain.TriggerMode.Relative => "値の増減を相対量として扱う（エンドレスエンコーダ向け）",
-        _ => "",
-    };
+    public static string TriggerMode(TriggerMode mode) => Loc.T($"help.trigger.{mode}");
 
-    public static string ActionKind(EditableActionKind kind) => kind switch
-    {
-        EditableActionKind.Key => "キーボード入力。詳細に「ctrl+z」のようにキーを指定",
-        EditableActionKind.MouseClick => "マウスクリック。詳細に left / right / middle（x2 でダブルクリック）",
-        EditableActionKind.Scroll => "ホイールスクロール。詳細に vertical / horizontal",
-        EditableActionKind.CursorMove => "カーソル移動。詳細に relative（相対）/ absolute（絶対）",
-        EditableActionKind.WindowControl => "最前面ウィンドウを操作。詳細に minimize / maximize / restore / close / topmost",
-        EditableActionKind.MediaKey => "メディアキー。詳細に playpause / next / previous / stop / mute / volumeup / volumedown",
-        EditableActionKind.TypeText => "詳細に入力した文字列をそのまま入力（定型文）。改行可",
-        EditableActionKind.Launch => "アプリ/ファイル/URL を起動。詳細=対象、引数・作業ディレクトリは下の欄。要・外部起動の許可",
-        EditableActionKind.SetVolume => "音量を入力値で設定（フェーダー=Absolute推奨）。詳細に master / microphone",
-        EditableActionKind.Uia => "別ウィンドウのUI要素を操作。要素名＋対象ウィンドウ＋動作(invoke/toggle/setvalue)。「要素を取得」でカーソル下の要素を取込",
-        EditableActionKind.VirtualDesktop => "仮想デスクトップ切替（Win+Ctrl+矢印）。詳細に next / previous",
-        EditableActionKind.WindowsToggle => "Windows設定を切替。詳細に darkmode（ダーク/ライト テーマ）",
-        EditableActionKind.Brightness => "画面輝度を入力値で設定（フェーダー=Absolute推奨）。ノートPC等の内蔵ディスプレイ対応",
-        EditableActionKind.Http => "HTTPリクエスト/Webhook送信。詳細=URL、メソッド・本文は下の欄（Home Assistant / IFTTT 等）",
-        EditableActionKind.Osc => "OSCメッセージ送信(UDP)。詳細=アドレス(例 /1/fader1)、宛先 host:port と引数は下の欄",
-        EditableActionKind.Obs => "OBSを制御(obs-websocket)。操作を選択。sceneswitch=シーン名 / togglemute=入力名 を詳細に。接続はメイン画面のOBS設定",
-        EditableActionKind.MidiOut => "MIDIメッセージを出力デバイスへ送信（仮想ポート向け）。詳細=出力デバイス名(正規表現)、メッセージは下の欄",
-        EditableActionKind.Macro => "複数のキー入力を順番に実行。1行=1チョード（例 ctrl+c）。ステップ間ディレイ(ms)は下の欄",
-        EditableActionKind.Toggle => "押すたびにキーAとキーBを交互に実行。LED欄に「デバイス 番号 [ch]」でコントローラLEDに状態を反映",
-        EditableActionKind.Plugin => "プラグイン(plugins フォルダの拡張)を呼び出し。詳細=プラグインID、コマンド・引数は下の欄",
-        EditableActionKind.SwitchProfile => "プロファイル切替。詳細に next / prev / toggle / プロファイルID",
-        EditableActionKind.None => "何もしない（基本プロファイルの同じ割当を無効化＝ブロック）",
-        _ => "",
-    };
+    public static string ActionKind(EditableActionKind kind) => Loc.T($"help.action.{kind}");
 
     /// <summary>Step-by-step instructions for configuring a complex action (shown in the config dialog).</summary>
     public static string Instructions(EditableActionKind kind) => kind switch
     {
-        EditableActionKind.Launch =>
-            "アプリ・ファイル・URL・ms-settings: を起動します。\n" +
-            "• 対象: 実行ファイルのパス / ドキュメント / https://… / ms-settings:nightlight など\n" +
-            "• 引数・作業ディレクトリは任意\n" +
-            "※ メイン画面で「外部起動を許可」をONにする必要があります（既定OFF）。",
-        EditableActionKind.Uia =>
-            "別アプリのUI要素（ボタン等）を操作します。\n" +
-            "1. 「要素を取得」を押し、3秒以内に対象の要素へマウスカーソルを合わせます\n" +
-            "   → 要素名と対象ウィンドウが自動入力されます\n" +
-            "2. 動作を選択: invoke=押す / toggle=切替 / setvalue=値を設定\n" +
-            "3. setvalue のときは値を入力します。",
-        EditableActionKind.Http =>
-            "HTTPリクエスト / Webhook を送信します（Home Assistant・IFTTT・自作API 等）。\n" +
-            "• メソッド(GET/POST…)、URL、本文(JSON等)を指定\n" +
-            "• 例: POST  http://localhost:8123/api/...   本文 {\"state\":\"on\"}",
-        EditableActionKind.Osc =>
-            "OSCメッセージをUDPで送信します（照明・VJ・AV機器）。\n" +
-            "• アドレス（例 /1/fader1）、宛先 host:port、引数（空白区切り）\n" +
-            "• 引数は 整数 / 小数 / 文字列 を自動判別します。",
-        EditableActionKind.Obs =>
-            "OBS Studio を obs-websocket で制御します。\n" +
-            "• 先にメイン画面の「OBS接続」(host/port/password) を設定してください\n" +
-            "• 操作を選択。sceneswitch はシーン名、togglemute は入力名を「詳細」に入力。",
-        EditableActionKind.MidiOut =>
-            "出力デバイス（仮想MIDIポート等）へMIDIを送信します。\n" +
-            "• デバイス: 出力先の名前を正規表現で（例 ^loopMIDI）\n" +
-            "• メッセージ: 種別 ch 番号 値（cc 1 7 64 / note 1 60 100 / pc 1 5）\n" +
-            "• 値を value にすると入力値連動（トリガー=Absolute のフェーダー向け）。",
-        EditableActionKind.Macro =>
-            "複数のキー入力を順番に送ります。\n" +
-            "• 1行に1つのキー（例: ctrl+c / ctrl+v / enter）\n" +
-            "• ステップ間ディレイ(ms)で間隔を調整\n" +
-            "※ 動作確認では対象ウィンドウにフォーカスしてから実行してください。",
-        EditableActionKind.Toggle =>
-            "押すたびにキーAとキーBを交互に送ります（Bが空ならAと同じ）。\n" +
-            "• LED欄に「出力デバイス名 ノート番号 [ch]」を指定すると、状態を\n" +
-            "  コントローラのLEDに反映します（例 loopMIDI 36 1）。",
-        EditableActionKind.Plugin =>
-            "plugins フォルダのDLL拡張を呼び出します。\n" +
-            "• プラグインID・コマンド名・引数を指定（プラグインの仕様に従います）\n" +
-            "• 詳しくは docs/05 §10 を参照。",
+        EditableActionKind.Launch or EditableActionKind.Uia or EditableActionKind.Http
+            or EditableActionKind.Osc or EditableActionKind.Obs or EditableActionKind.MidiOut
+            or EditableActionKind.Macro or EditableActionKind.Toggle or EditableActionKind.Plugin
+            => Loc.T($"help.instructions.{kind}"),
         _ => "",
     };
 

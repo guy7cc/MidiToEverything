@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:edit="clr-namespace:MidiToEverything.App.ViewModels.Editing"
+        xmlns:loc="clr-namespace:MidiToEverything.App.Localization"
         mc:Ignorable="d"
-        Title="プロファイル編集" Height="660" Width="940" MinWidth="600" MinHeight="440"
+        Title="{loc:Tr editor.title}" Height="660" Width="940" MinWidth="600" MinHeight="440"
         WindowStyle="None" ResizeMode="CanResize"
         Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}" Icon="pack://application:,,,/app.ico" FontFamily="Segoe UI"
         WindowStartupLocation="CenterOwner"
@@ -32,7 +33,7 @@
         <!-- Per-kind "detail" editors (docs/05 §3.5). DataContext = the draft binding. -->
         <DataTemplate x:Key="KeyDetailTemplate">
             <ComboBox IsEditable="True" IsTextSearchEnabled="False" StaysOpenOnEdit="True"
-                      ToolTip="キー（例: ctrl+z）。候補から選択するか自由入力（無効な値は赤字）"
+                      ToolTip="{loc:Tr tip.key}"
                       ItemsSource="{Binding ActionKind, Converter={StaticResource ActionDetailCandidates}}"
                       Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.Foreground>
@@ -46,7 +47,7 @@
 
         <DataTemplate x:Key="SwitchProfileDetailTemplate">
             <ComboBox IsEditable="True" IsTextSearchEnabled="False" StaysOpenOnEdit="True"
-                      ToolTip="next / prev / toggle またはプロファイルID（無効な値は赤字）"
+                      ToolTip="{loc:Tr tip.switchProfile}"
                       ItemsSource="{Binding ActionKind, Converter={StaticResource ActionDetailCandidates}}"
                       Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}">
                 <ComboBox.Foreground>
@@ -65,13 +66,13 @@
         </DataTemplate>
 
         <DataTemplate x:Key="NoneDetailTemplate">
-            <TextBlock Text="このバインディングは何もしません（基本プロファイルの同じ割当をブロック）"
+            <TextBlock Text="{loc:Tr tip.none}"
                        Foreground="{StaticResource TextFaintBrush}" TextWrapping="Wrap"
                        VerticalAlignment="Center" Margin="2,6,0,0" />
         </DataTemplate>
 
         <DataTemplate x:Key="BrightnessDetailTemplate">
-            <TextBlock Text="入力値で画面輝度を設定（フェーダー＝トリガー Absolute 推奨）。内蔵ディスプレイ対応"
+            <TextBlock Text="{loc:Tr tip.brightness}"
                        Foreground="{StaticResource TextFaintBrush}" TextWrapping="Wrap"
                        VerticalAlignment="Center" Margin="2,6,0,0" />
         </DataTemplate>
@@ -87,7 +88,7 @@
         <DataTemplate x:Key="TypeTextDetailTemplate">
             <TextBox Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
                      AcceptsReturn="True" TextWrapping="Wrap" MinLines="1" MaxLines="4"
-                     VerticalScrollBarVisibility="Auto" ToolTip="入力する文字列（改行可）" />
+                     VerticalScrollBarVisibility="Auto" ToolTip="{loc:Tr tip.typeText}" />
         </DataTemplate>
 
 
@@ -101,7 +102,7 @@
 
         <!-- Title bar -->
         <Grid Grid.Row="0" Background="{StaticResource CaptionBrush}">
-            <TextBlock Text="プロファイル編集" Foreground="{StaticResource TextDimBrush}"
+            <TextBlock Text="{loc:Tr editor.title}" Foreground="{StaticResource TextDimBrush}"
                        VerticalAlignment="Center" Margin="14,0" FontSize="12" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Style="{StaticResource CaptionButton}" Click="Minimize_Click"
@@ -127,10 +128,10 @@
             <!-- Profile list (scrolls when many profiles) -->
             <Border Grid.Row="0" Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="10" Margin="0,0,12,0">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="プロファイル" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <TextBlock DockPanel.Dock="Top" Text="{loc:Tr editor.profiles}" FontWeight="SemiBold" Margin="0,0,0,8" />
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button Content="追加" Command="{Binding AddProfileCommand}" />
-                        <Button Content="削除" Command="{Binding RemoveProfileCommand}" />
+                        <Button Content="{loc:Tr editor.add}" Command="{Binding AddProfileCommand}" />
+                        <Button Content="{loc:Tr editor.remove}" Command="{Binding RemoveProfileCommand}" />
                     </StackPanel>
                     <ListBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}"
                              ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -149,11 +150,11 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                               DataContext="{Binding SelectedProfile}" Padding="0,0,8,0">
                     <StackPanel>
-                        <TextBlock Text="プロファイル名" />
+                        <TextBlock Text="{loc:Tr editor.profileName}" />
                         <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
 
                         <StackPanel Visibility="{Binding IsBase, Converter={StaticResource InverseBoolToVisibility}}">
-                            <TextBlock Text="対象アプリ (起動中から選択、または名前を直接入力 → 候補を追加)" Margin="0,8,0,0" />
+                            <TextBlock Text="{loc:Tr editor.targetApp}" Margin="0,8,0,0" />
                             <Grid Margin="0,2,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -165,13 +166,13 @@
                                           ItemsSource="{Binding DataContext.RunningProcesses, RelativeSource={RelativeSource AncestorType=Window}}"
                                           SelectedItem="{Binding DataContext.SelectedRunningProcess, RelativeSource={RelativeSource AncestorType=Window}}"
                                           DisplayMemberPath="Display"
-                                          ToolTip="起動中のウィンドウを持つプロセスから選べます" />
+                                          ToolTip="{loc:Tr editor.targetApp.tip}" />
                                 <TextBox Grid.Column="1" Margin="0,0,6,0"
                                          Text="{Binding DataContext.ProcessNameInput, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}"
-                                         ToolTip="手入力 (例: notepad.exe)" />
-                                <Button Grid.Column="2" Content="候補を追加" Margin="0,0,6,0"
+                                         ToolTip="{loc:Tr editor.targetApp.manualTip}" />
+                                <Button Grid.Column="2" Content="{loc:Tr editor.addCandidate}" Margin="0,0,6,0"
                                         Command="{Binding DataContext.AddProcessToPatternCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                                <Button Grid.Column="3" Content="更新"
+                                <Button Grid.Column="3" Content="{loc:Tr editor.refresh}"
                                         Command="{Binding DataContext.RefreshProcessesCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                             </Grid>
                             <TextBlock Margin="0,4,0,0" FontSize="11" TextWrapping="Wrap"
@@ -193,13 +194,13 @@
                                     <ColumnDefinition Width="120" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                    <TextBlock Text="ウィンドウ判別 (正規表現・自由に編集可)" />
+                                    <TextBlock Text="{loc:Tr editor.windowMatch}" />
                                     <TextBox Text="{Binding Pattern, UpdateSourceTrigger=PropertyChanged}"
                                              FontFamily="Consolas"
-                                             ToolTip="&quot;プロセス名&#x0a;ウィンドウタイトル&quot; に対してマッチします (複数行)" />
+                                             ToolTip="{loc:Tr tip.windowMatch}" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="優先度" />
+                                    <TextBlock Text="{loc:Tr editor.priority}" />
                                     <TextBox Text="{Binding Priority, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </Grid>
@@ -209,10 +210,10 @@
 
                         <!-- Binding list -->
                         <Grid Margin="0,0,0,6">
-                            <TextBlock Text="バインディング" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="{loc:Tr editor.bindings}" FontWeight="SemiBold" VerticalAlignment="Center" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="追加" Command="{Binding DataContext.AddBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                                <Button Content="削除" Command="{Binding DataContext.RemoveBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                <Button Content="{loc:Tr editor.add}" Command="{Binding DataContext.AddBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                <Button Content="{loc:Tr editor.remove}" Command="{Binding DataContext.RemoveBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                             </StackPanel>
                         </Grid>
                         <ListBox Height="140" ItemsSource="{Binding Bindings}"
@@ -236,7 +237,7 @@
                         <!-- Binding editor (edits a draft; committed to the list with "保存") -->
                         <Border Background="{StaticResource InputBgBrush}" CornerRadius="6" Padding="12" Margin="0,10,0,0">
                             <Grid>
-                                <TextBlock Text="バインディングを「追加」するか、一覧から選択すると、ここで編集できます。"
+                                <TextBlock Text="{loc:Tr editor.bindingPlaceholder}"
                                            Foreground="{StaticResource TextFaintBrush}" FontSize="12" TextWrapping="Wrap"
                                            Visibility="{Binding DataContext.HasDraft, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBoolToVisibility}}" />
                                 <StackPanel DataContext="{Binding DataContext.DraftBinding, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -246,13 +247,13 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="シグナル (編集中)" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="0" Text="{loc:Tr editor.signalEditing}" FontWeight="SemiBold" VerticalAlignment="Center" />
                                         <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                            <Button Content="最後の入力を取込"
-                                                    ToolTip="直近に受信した MIDI 信号を、編集中のバインディングの種別/番号/ch/デバイスに取り込みます"
+                                            <Button Content="{loc:Tr editor.learnLast}"
+                                                    ToolTip="{loc:Tr editor.learnLast.tip}"
                                                     Command="{Binding DataContext.LearnCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                                            <Button Content="バインディングを保存" Style="{StaticResource AccentButton}"
-                                                    ToolTip="編集中のシグナル内容を確定して保存します（他のバインディングを選ぶか閉じると破棄）"
+                                            <Button Content="{loc:Tr editor.saveBinding}" Style="{StaticResource AccentButton}"
+                                                    ToolTip="{loc:Tr editor.saveBinding.tip}"
                                                     Command="{Binding DataContext.CommitBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                                         </StackPanel>
                                     </Grid>
@@ -283,10 +284,10 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="種別" />
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="番号" />
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{loc:Tr editor.kind}" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{loc:Tr editor.number}" />
                                     <TextBlock Grid.Row="0" Grid.Column="2" Text="ch" />
-                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="デバイス (* = 任意)" />
+                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="{loc:Tr editor.device}" />
                                     <ComboBox Grid.Row="1" Grid.Column="0" Margin="0,0,8,0"
                                               ItemsSource="{Binding DataContext.SignalKinds, RelativeSource={RelativeSource AncestorType=Window}}"
                                               SelectedItem="{Binding Signal.Type}">
@@ -297,15 +298,15 @@
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
                                     <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,8,0"
-                                             ToolTip="番号: 0〜127、または空欄で任意"
+                                             ToolTip="{loc:Tr field.number.tip}"
                                              Foreground="{Binding Signal.NumberText, Converter={StaticResource NumberValidBrush}}"
                                              Text="{Binding Signal.NumberText, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBox Grid.Row="1" Grid.Column="2" Margin="0,0,8,0"
-                                             ToolTip="ch: 1〜16、または any"
+                                             ToolTip="{loc:Tr field.ch.tip}"
                                              Foreground="{Binding Signal.Channel, Converter={StaticResource ChannelValidBrush}}"
                                              Text="{Binding Signal.Channel, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBox Grid.Row="1" Grid.Column="3"
-                                             ToolTip="デバイス: 正規表現で判別（* で任意）。例: ^MPK"
+                                             ToolTip="{loc:Tr field.device.tip}"
                                              Foreground="{Binding Signal.Device, Converter={StaticResource DeviceValidBrush}}"
                                              Text="{Binding Signal.Device, UpdateSourceTrigger=PropertyChanged}" />
                                 </Grid>
@@ -320,9 +321,9 @@
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="トリガー" />
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="アクション" />
-                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="詳細" />
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{loc:Tr editor.trigger}" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{loc:Tr editor.action}" />
+                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{loc:Tr editor.detail}" />
                                     <ComboBox Grid.Row="1" Grid.Column="0" Margin="0,0,8,0"
                                               ItemsSource="{Binding DataContext.TriggerModes, RelativeSource={RelativeSource AncestorType=Window}}"
                                               SelectedItem="{Binding Mode}" />
@@ -387,22 +388,22 @@
                                 <Border Background="{StaticResource SurfaceBrush}" CornerRadius="4" Padding="9" Margin="0,8,0,0">
                                     <StackPanel>
                                         <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextDimBrush}">
-                                            <Run Text="種別: " Foreground="{StaticResource TextFaintBrush}" /><Run Text="{Binding Signal.Type, Converter={StaticResource SignalKindHelp}, Mode=OneWay}" />
+                                            <Run Text="{loc:Tr editor.help.kindPrefix}" Foreground="{StaticResource TextFaintBrush}" /><Run Text="{Binding Signal.Type, Converter={StaticResource SignalKindHelp}, Mode=OneWay}" />
                                         </TextBlock>
                                         <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextDimBrush}" Margin="0,3,0,0">
-                                            <Run Text="トリガー: " Foreground="{StaticResource TextFaintBrush}" /><Run Text="{Binding Mode, Converter={StaticResource TriggerModeHelp}, Mode=OneWay}" />
+                                            <Run Text="{loc:Tr editor.help.triggerPrefix}" Foreground="{StaticResource TextFaintBrush}" /><Run Text="{Binding Mode, Converter={StaticResource TriggerModeHelp}, Mode=OneWay}" />
                                         </TextBlock>
                                         <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextDimBrush}" Margin="0,3,0,0">
-                                            <Run Text="アクション: " Foreground="{StaticResource TextFaintBrush}" /><Run Text="{Binding ActionKind, Converter={StaticResource ActionKindHelp}, Mode=OneWay}" />
+                                            <Run Text="{loc:Tr editor.help.actionPrefix}" Foreground="{StaticResource TextFaintBrush}" /><Run Text="{Binding ActionKind, Converter={StaticResource ActionKindHelp}, Mode=OneWay}" />
                                         </TextBlock>
                                         <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextFaintBrush}" Margin="0,6,0,0"
-                                                   Text="番号: ノート/CC 番号 (0〜127、PitchBend は空欄)　／　ch: チャンネル (1〜16、any で全チャンネル)　／　デバイス: 対象デバイス名 (* で任意)　／　詳細: 上の「アクション」の説明どおりに入力" />
-                                        <TextBlock Text="ラベル (任意): バインディングの覚え書き。動作には影響しません" FontSize="11"
+                                                   Text="{loc:Tr editor.help.fields}" />
+                                        <TextBlock Text="{loc:Tr editor.help.label}" FontSize="11"
                                                    Foreground="{StaticResource TextFaintBrush}" Margin="0,3,0,0" />
                                     </StackPanel>
                                 </Border>
 
-                                    <TextBlock Text="ラベル (任意)" Margin="0,8,0,0" />
+                                    <TextBlock Text="{loc:Tr editor.label}" Margin="0,8,0,0" />
                                     <TextBox Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </Grid>
@@ -414,13 +415,13 @@
             <!-- Bottom bar -->
             <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="0,12,0,0">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                    <Button Content="インポート" Command="{Binding ImportCommand}" />
-                    <Button Content="エクスポート" Command="{Binding ExportCommand}" />
-                    <TextBlock Text="変更は自動保存されます（シグナル内容のみ「バインディングを保存」で確定）"
+                    <Button Content="{loc:Tr editor.import}" Command="{Binding ImportCommand}" />
+                    <Button Content="{loc:Tr editor.export}" Command="{Binding ExportCommand}" />
+                    <TextBlock Text="{loc:Tr editor.autosaveHint}"
                                Foreground="{StaticResource TextFaintBrush}" FontSize="11"
                                VerticalAlignment="Center" Margin="12,0,0,0" />
                 </StackPanel>
-                <Button HorizontalAlignment="Right" Content="閉じる" Command="{Binding CloseCommand}" Margin="0" />
+                <Button HorizontalAlignment="Right" Content="{loc:Tr common.close}" Command="{Binding CloseCommand}" Margin="0" />
             </Grid>
         </Grid>
     </Grid>

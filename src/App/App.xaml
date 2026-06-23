@@ -1,7 +1,8 @@
 <Application x:Class="MidiToEverything.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:MidiToEverything.App">
+             xmlns:local="clr-namespace:MidiToEverything.App"
+             xmlns:loc="clr-namespace:MidiToEverything.App.Localization">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -35,7 +36,7 @@
             <!-- Inline placeholder for complex actions: opens the config dialog. -->
             <DataTemplate x:Key="ComplexActionDetailTemplate">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,2,0,0">
-                    <Button Content="⚙ 詳細設定…"
+                    <Button Content="{loc:Tr editor.openConfig}"
                             Command="{Binding DataContext.OpenActionConfigCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                     <TextBlock Text="{Binding Detail}" Foreground="{StaticResource TextFaintBrush}" MaxWidth="420"
                                VerticalAlignment="Center" Margin="10,0,0,0" TextTrimming="CharacterEllipsis" />
@@ -45,7 +46,7 @@
             <DataTemplate x:Key="LaunchDetailTemplate">
                 <StackPanel>
                     <TextBox Style="{StaticResource DetailTextBox}" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="対象: 実行ファイル / ファイル / URL / ms-settings: など">
+                             ToolTip="{loc:Tr tip.launch.target}">
                         <TextBox.Foreground>
                             <MultiBinding Converter="{StaticResource DetailValidBrush}">
                                 <Binding Path="Detail" /><Binding Path="ActionKind" />
@@ -55,9 +56,9 @@
                     <Grid Margin="0,4,0,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Style="{StaticResource DetailTextBox}" Margin="0,0,4,0"
-                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" ToolTip="引数（任意）" />
+                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" ToolTip="{loc:Tr tip.args}" />
                         <TextBox Grid.Column="1" Style="{StaticResource DetailTextBox}" Margin="4,0,0,0"
-                                 Text="{Binding WorkingDir, UpdateSourceTrigger=PropertyChanged}" ToolTip="作業ディレクトリ（任意）" />
+                                 Text="{Binding WorkingDir, UpdateSourceTrigger=PropertyChanged}" ToolTip="{loc:Tr tip.workingDir}" />
                     </Grid>
                 </StackPanel>
             </DataTemplate>
@@ -67,26 +68,26 @@
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                         <TextBox Style="{StaticResource DetailTextBox}" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="要素名（Name または AutomationId）">
+                                 ToolTip="{loc:Tr tip.uia.element}">
                             <TextBox.Foreground>
                                 <MultiBinding Converter="{StaticResource DetailValidBrush}">
                                     <Binding Path="Detail" /><Binding Path="ActionKind" />
                                 </MultiBinding>
                             </TextBox.Foreground>
                         </TextBox>
-                        <Button Grid.Column="1" Content="要素を取得" Margin="6,0,0,0"
-                                ToolTip="押した後3秒以内に対象のUI要素へカーソルを合わせると取り込みます"
+                        <Button Grid.Column="1" Content="{loc:Tr editor.pickElement}" Margin="6,0,0,0"
+                                ToolTip="{loc:Tr tip.uia.pick}"
                                 Command="{Binding DataContext.PickUiaElementCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                     </Grid>
                     <TextBox Style="{StaticResource DetailTextBox}" Margin="0,4,0,0" Text="{Binding UiaWindow, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="対象ウィンドウの正規表現（process\ntitle に一致）。例: ^notepad" />
+                             ToolTip="{loc:Tr tip.uia.window}" />
                     <Grid Margin="0,4,0,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <ComboBox Grid.Column="0" Style="{StaticResource DetailComboBox}" Width="150" Margin="0,0,6,0"
                                   ItemsSource="{Binding DataContext.UiaVerbs, RelativeSource={RelativeSource AncestorType=Window}}"
-                                  SelectedItem="{Binding UiaVerb}" ToolTip="動作: invoke / toggle / setvalue" />
+                                  SelectedItem="{Binding UiaVerb}" ToolTip="{loc:Tr tip.uia.verb}" />
                         <TextBox Grid.Column="1" Style="{StaticResource DetailTextBox}" Text="{Binding UiaValue, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="setvalue のとき入力する値" />
+                                 ToolTip="{loc:Tr tip.uia.value}" />
                     </Grid>
                 </StackPanel>
             </DataTemplate>
@@ -97,9 +98,9 @@
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <ComboBox Grid.Column="0" Style="{StaticResource DetailComboBox}" Width="110" Margin="0,0,6,0"
                                   ItemsSource="{Binding DataContext.HttpMethods, RelativeSource={RelativeSource AncestorType=Window}}"
-                                  SelectedItem="{Binding HttpMethod}" ToolTip="HTTPメソッド" />
+                                  SelectedItem="{Binding HttpMethod}" ToolTip="{loc:Tr tip.http.method}" />
                         <TextBox Grid.Column="1" Style="{StaticResource DetailTextBox}" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="URL（http(s):// または http://localhost:8123/... など）">
+                                 ToolTip="{loc:Tr tip.http.url}">
                             <TextBox.Foreground>
                                 <MultiBinding Converter="{StaticResource DetailValidBrush}">
                                     <Binding Path="Detail" /><Binding Path="ActionKind" />
@@ -109,14 +110,14 @@
                     </Grid>
                     <TextBox Style="{StaticResource DetailTextBox}" Margin="0,4,0,0" Text="{Binding HttpBody, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True" TextWrapping="Wrap" MinLines="2" MaxLines="6"
-                             VerticalScrollBarVisibility="Auto" ToolTip="本文（任意、JSON 等。POST/PUT 時）" />
+                             VerticalScrollBarVisibility="Auto" ToolTip="{loc:Tr tip.http.body}" />
                 </StackPanel>
             </DataTemplate>
 
             <DataTemplate x:Key="OscDetailTemplate">
                 <StackPanel>
                     <TextBox Style="{StaticResource DetailTextBox}" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="OSCアドレス（例 /1/fader1）">
+                             ToolTip="{loc:Tr tip.osc.address}">
                         <TextBox.Foreground>
                             <MultiBinding Converter="{StaticResource DetailValidBrush}">
                                 <Binding Path="Detail" /><Binding Path="ActionKind" />
@@ -126,9 +127,9 @@
                     <Grid Margin="0,4,0,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Style="{StaticResource DetailTextBox}" Margin="0,0,4,0"
-                                 Text="{Binding OscTarget, UpdateSourceTrigger=PropertyChanged}" ToolTip="宛先 host:port（例 127.0.0.1:9000）" />
+                                 Text="{Binding OscTarget, UpdateSourceTrigger=PropertyChanged}" ToolTip="{loc:Tr tip.osc.target}" />
                         <TextBox Grid.Column="1" Style="{StaticResource DetailTextBox}" Margin="4,0,0,0"
-                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" ToolTip="引数（空白区切り。整数/小数/文字列を自動判別）" />
+                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" ToolTip="{loc:Tr tip.osc.args}" />
                     </Grid>
                 </StackPanel>
             </DataTemplate>
@@ -138,19 +139,19 @@
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                     <ComboBox Grid.Column="0" Style="{StaticResource DetailComboBox}" Width="190" Margin="0,0,6,0"
                               ItemsSource="{Binding DataContext.ObsOps, RelativeSource={RelativeSource AncestorType=Window}}"
-                              SelectedItem="{Binding ObsOpName}" ToolTip="OBS操作" />
+                              SelectedItem="{Binding ObsOpName}" ToolTip="{loc:Tr tip.obs.op}" />
                     <TextBox Grid.Column="1" Style="{StaticResource DetailTextBox}" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="sceneswitch=シーン名 / togglemute=入力名（他の操作では不要）" />
+                             ToolTip="{loc:Tr tip.obs.arg}" />
                 </Grid>
             </DataTemplate>
 
             <DataTemplate x:Key="MidiOutDetailTemplate">
                 <StackPanel>
                     <TextBox Style="{StaticResource DetailTextBox}" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="出力デバイス名の正規表現（例 ^loopMIDI）"
+                             ToolTip="{loc:Tr tip.midiout.device}"
                              Foreground="{Binding Detail, Converter={StaticResource DeviceValidBrush}}" />
                     <TextBox Style="{StaticResource DetailTextBox}" Margin="0,4,0,0" Text="{Binding MidiOutSpec, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="メッセージ: 種別 ch 番号 値（cc 1 7 64 / note 1 60 100 / cc 1 7 value で入力値連動 / pc 1 5）" />
+                             ToolTip="{loc:Tr tip.midiout.msg}" />
                 </StackPanel>
             </DataTemplate>
 
@@ -159,9 +160,9 @@
                     <TextBox Style="{StaticResource DetailTextBox}" Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True" TextWrapping="NoWrap" MinLines="3" MaxLines="8"
                              VerticalScrollBarVisibility="Auto" FontFamily="Consolas"
-                             ToolTip="1行に1つのキー（例: ctrl+c / ctrl+v / enter）" />
+                             ToolTip="{loc:Tr tip.macro.chords}" />
                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                        <TextBlock Text="ステップ間ディレイ(ms):" VerticalAlignment="Center"
+                        <TextBlock Text="{loc:Tr editor.stepDelay}" VerticalAlignment="Center"
                                    Foreground="{StaticResource TextDimBrush}" Margin="0,0,6,0" />
                         <TextBox Style="{StaticResource DetailTextBox}" Width="80" Text="{Binding MacroDelay, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
@@ -173,12 +174,12 @@
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Style="{StaticResource DetailTextBox}" Margin="0,0,4,0"
-                                 Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}" ToolTip="キーA（奇数回。例 ctrl+r）" />
+                                 Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}" ToolTip="{loc:Tr tip.toggle.keyA}" />
                         <TextBox Grid.Column="1" Style="{StaticResource DetailTextBox}" Margin="4,0,0,0"
-                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" ToolTip="キーB（偶数回。空ならAと同じ）" />
+                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" ToolTip="{loc:Tr tip.toggle.keyB}" />
                     </Grid>
                     <TextBox Style="{StaticResource DetailTextBox}" Margin="0,4,0,0" Text="{Binding ToggleLed, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="LEDフィードバック（任意）: 出力デバイス名 ノート番号 [ch]（例 loopMIDI 36 1）" />
+                             ToolTip="{loc:Tr tip.toggle.led}" />
                 </StackPanel>
             </DataTemplate>
 
@@ -187,12 +188,12 @@
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Style="{StaticResource DetailTextBox}" Margin="0,0,4,0"
-                                 Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}" ToolTip="プラグインID（plugins フォルダの拡張が公開するID）" />
+                                 Text="{Binding Detail, UpdateSourceTrigger=PropertyChanged}" ToolTip="{loc:Tr tip.plugin.id}" />
                         <TextBox Grid.Column="1" Style="{StaticResource DetailTextBox}" Margin="4,0,0,0"
-                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" ToolTip="コマンド名（プラグインが解釈）" />
+                                 Text="{Binding Arguments, UpdateSourceTrigger=PropertyChanged}" ToolTip="{loc:Tr tip.plugin.command}" />
                     </Grid>
                     <TextBox Style="{StaticResource DetailTextBox}" Margin="0,4,0,0" Text="{Binding PluginArg, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="引数（任意）" />
+                             ToolTip="{loc:Tr tip.args}" />
                 </StackPanel>
             </DataTemplate>
 
