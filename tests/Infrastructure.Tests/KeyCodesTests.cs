@@ -131,4 +131,16 @@ public class KeyCodesTests
     [InlineData("nope")]
     [InlineData("ctrl+z")] // a chord string is not a single token
     public void Unknown_TokensFail(string token) => Assert.False(KeyCodes.TryResolve(token, out _, out _));
+
+    [Theory]
+    [InlineData("ctrl", true)]   // resolves to a virtual key
+    [InlineData("-", true)]      // resolves via the OEM table
+    [InlineData("^", true)]      // unmapped single char → sent as a literal Unicode character
+    [InlineData("~", true)]
+    [InlineData("@", true)]
+    [InlineData("あ", true)]     // any single character is sendable
+    [InlineData("nope", false)]  // a multi-char typo is not sendable
+    [InlineData("", false)]
+    public void IsSendable_AllowsKnownKeysAndSingleChars(string token, bool sendable)
+        => Assert.Equal(sendable, KeyCodes.IsSendable(token));
 }

@@ -245,7 +245,7 @@
   "help.trigger.Relative": "In this mode, the knob's turn amount (delta) becomes the action amount.",
   "help.trigger.RelativeFromAbsolute": "In this mode, the change in the absolute value (vs. the previous one) becomes the action amount.",
 
-  "help.action.Key": "Keyboard input. Specify keys in Detail like \"ctrl+z\". Symbols (- = [ ] ; ' / `) and numpad (numpad1, add, subtract) work too; use \"comma\" for the , key and \"plus\" for +",
+  "help.action.Key": "Keyboard input. Specify keys in Detail like \"ctrl+z\". Numpad (numpad1, add, subtract) works too; any single character with no key name (e.g. ^ ~) is sent as a literal character (not combinable with modifiers). Use \"comma\" for the , key and \"plus\" for +",
   "help.action.MouseClick": "Mouse click. Detail: left / right / middle (x2 for double-click)",
   "help.action.Scroll": "Wheel scroll. Detail: vertical / horizontal",
   "help.action.CursorMove": "Cursor move. Detail: relative / absolute",
