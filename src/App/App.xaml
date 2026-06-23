@@ -17,6 +17,8 @@
             <local:SignalKindItemConverter x:Key="SignalKindItem" />
             <local:TriggerModeHelpConverter x:Key="TriggerModeHelp" />
             <local:ActionKindHelpConverter x:Key="ActionKindHelp" />
+            <local:TriggerModeNameConverter x:Key="TriggerModeName" />
+            <local:ActionKindNameConverter x:Key="ActionKindName" />
             <local:ActionDetailCandidatesConverter x:Key="ActionDetailCandidates" />
             <local:NumberValidBrushConverter x:Key="NumberValidBrush" />
             <local:ChannelValidBrushConverter x:Key="ChannelValidBrush" />

@@ -18,6 +18,12 @@ public static class EditorHelp
 
     public static string ActionKind(EditableActionKind kind) => Loc.T($"help.action.{kind}");
 
+    /// <summary>Localized display name for a trigger mode (shown in the editor dropdown).</summary>
+    public static string TriggerModeName(TriggerMode mode) => Loc.T($"trigger.{mode}");
+
+    /// <summary>Localized display name for an action kind (dropdown, bindings list, config header).</summary>
+    public static string ActionKindName(EditableActionKind kind) => Loc.T($"action.{kind}");
+
     /// <summary>Step-by-step instructions for configuring a complex action (shown in the config dialog).</summary>
     public static string Instructions(EditableActionKind kind) => kind switch
     {
@@ -85,6 +91,26 @@ public sealed class ActionKindHelpConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value is EditableActionKind k ? EditorHelp.ActionKind(k) : "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Dropdown/list label: localized trigger-mode name (instead of the raw enum).</summary>
+public sealed class TriggerModeNameConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is TriggerMode m ? EditorHelp.TriggerModeName(m) : value?.ToString() ?? "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Dropdown/list label: localized action-kind name (instead of the raw enum).</summary>
+public sealed class ActionKindNameConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is EditableActionKind k ? EditorHelp.ActionKindName(k) : value?.ToString() ?? "";
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
