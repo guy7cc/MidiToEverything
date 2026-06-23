@@ -15,10 +15,16 @@
             <local:PauseLabelConverter x:Key="PauseLabel" />
             <local:SignalKindHelpConverter x:Key="SignalKindHelp" />
             <local:SignalKindItemConverter x:Key="SignalKindItem" />
+            <local:SignalFlowConverter x:Key="SignalFlow" />
             <local:TriggerModeHelpConverter x:Key="TriggerModeHelp" />
             <local:ActionKindHelpConverter x:Key="ActionKindHelp" />
             <local:TriggerModeNameConverter x:Key="TriggerModeName" />
             <local:ActionKindNameConverter x:Key="ActionKindName" />
+            <local:OutOfRangeNameConverter x:Key="OutOfRangeName" />
+            <local:RelativeFormatNameConverter x:Key="RelativeFormatName" />
+            <local:RelativeOutputNameConverter x:Key="RelativeOutputName" />
+            <local:ModeFieldVisibilityConverter x:Key="ModeFieldVisible" />
+            <local:ActionAmountUsageConverter x:Key="ActionAmountUsage" />
             <local:ActionDetailCandidatesConverter x:Key="ActionDetailCandidates" />
             <local:NumberValidBrushConverter x:Key="NumberValidBrush" />
             <local:ChannelValidBrushConverter x:Key="ChannelValidBrush" />

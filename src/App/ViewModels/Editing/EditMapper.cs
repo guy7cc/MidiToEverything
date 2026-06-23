@@ -51,6 +51,18 @@ internal static class EditMapper
             Mode = binding.Trigger.Mode,
             ActionKind = kind,
             Detail = detail,
+            Threshold = binding.Trigger.Threshold,
+            RangeMin = binding.Trigger.RangeMin,
+            RangeMax = binding.Trigger.RangeMax,
+            OutOfRange = binding.Trigger.OutOfRange,
+            Deadzone = binding.Trigger.Deadzone,
+            Invert = binding.Trigger.Invert,
+            Scale = binding.Trigger.Scale,
+            RelativeFormat = binding.Trigger.RelativeFormat,
+            RelativeOutput = binding.Trigger.RelativeOutput,
+            Edge = binding.Trigger.Edge,
+            Wrap = binding.Trigger.Wrap,
+            ExtraActions = binding.Actions.Count > 1 ? binding.Actions.Skip(1).ToArray() : Array.Empty<InputAction>(),
             Label = binding.Label ?? "",
         };
 
@@ -196,11 +208,32 @@ internal static class EditMapper
             Number = b.Signal.Type == SignalKind.PitchBend ? null : number,
         };
 
+        var first = ToAction(b);
+
+        // The editor exposes only the first action; any others are carried through untouched.
+        var actions = b.ExtraActions.Count > 0
+            ? new[] { first }.Concat(b.ExtraActions).ToArray()
+            : new[] { first };
+
         return new Binding
         {
             Signal = signal,
-            Trigger = new Trigger { Mode = b.Mode },
-            Actions = new[] { ToAction(b) },
+            Trigger = new Trigger
+            {
+                Mode = b.Mode,
+                Threshold = b.Threshold,
+                RangeMin = b.RangeMin,
+                RangeMax = b.RangeMax,
+                OutOfRange = b.OutOfRange,
+                Deadzone = b.Deadzone,
+                Invert = b.Invert,
+                Scale = b.Scale,
+                RelativeFormat = b.RelativeFormat,
+                RelativeOutput = b.RelativeOutput,
+                Edge = b.Edge,
+                Wrap = b.Wrap,
+            },
+            Actions = actions,
             Label = string.IsNullOrWhiteSpace(b.Label) ? null : b.Label.Trim(),
         };
     }
