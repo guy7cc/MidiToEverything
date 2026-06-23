@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="アクション設定" Height="560" Width="600" MinWidth="460" MinHeight="380"
+        xmlns:loc="clr-namespace:MidiToEverything.App.Localization"
+        Title="{loc:Tr dialog.title}" Height="560" Width="600" MinWidth="460" MinHeight="380"
         WindowStyle="None" ResizeMode="CanResize"
         Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}" Icon="pack://application:,,,/app.ico" FontFamily="Segoe UI"
         WindowStartupLocation="CenterOwner">
@@ -21,7 +22,7 @@
 
         <!-- Title bar -->
         <Grid Grid.Row="0" Background="{StaticResource CaptionBrush}">
-            <TextBlock Text="アクション設定" Foreground="{StaticResource TextDimBrush}"
+            <TextBlock Text="{loc:Tr dialog.title}" Foreground="{StaticResource TextDimBrush}"
                        VerticalAlignment="Center" Margin="14,0" FontSize="12" />
             <Button Style="{StaticResource CaptionCloseButton}" Click="Close_Click" HorizontalAlignment="Right"
                     FontFamily="Segoe MDL2 Assets" FontSize="10" Content="&#xE8BB;" />
@@ -37,11 +38,11 @@
                            Foreground="{StaticResource TextDimBrush}" TextWrapping="Wrap" Margin="0,2,0,0" />
 
                 <!-- Settings -->
-                <TextBlock Text="設定" FontWeight="SemiBold" Margin="0,16,0,4" />
+                <TextBlock Text="{loc:Tr dialog.settings}" FontWeight="SemiBold" Margin="0,16,0,4" />
                 <ContentControl Content="{Binding}" Style="{StaticResource ComplexActionContent}" />
 
                 <!-- Instructions -->
-                <TextBlock Text="説明・設定方法" FontWeight="SemiBold" Margin="0,16,0,4" />
+                <TextBlock Text="{loc:Tr dialog.instructions}" FontWeight="SemiBold" Margin="0,16,0,4" />
                 <Border Background="{StaticResource SurfaceBrush}" CornerRadius="6" Padding="12">
                     <TextBlock Text="{Binding ActionKind, Converter={StaticResource ActionInstructions}, Mode=OneWay}"
                                Foreground="{StaticResource TextDimBrush}" TextWrapping="Wrap" FontSize="12"
@@ -49,17 +50,17 @@
                 </Border>
 
                 <!-- Test (unsaved) -->
-                <TextBlock Text="動作確認" FontWeight="SemiBold" Margin="0,16,0,4" />
+                <TextBlock Text="{loc:Tr dialog.test}" FontWeight="SemiBold" Margin="0,16,0,4" />
                 <Border Background="{StaticResource SurfaceBrush}" CornerRadius="6" Padding="12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <Button Content="この設定で実行" Style="{StaticResource AccentButton}"
+                            <Button Content="{loc:Tr dialog.run}" Style="{StaticResource AccentButton}"
                                     Command="{Binding DataContext.TestActionCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                             <TextBlock VerticalAlignment="Center" Margin="10,0,0,0" TextWrapping="Wrap"
                                        Foreground="{StaticResource TextDimBrush}" FontSize="12"
                                        Text="{Binding DataContext.TestStatus, RelativeSource={RelativeSource AncestorType=Window}}" />
                         </StackPanel>
-                        <TextBlock Text="※ 未保存の設定をそのまま実行します。キー系は対象ウィンドウにフォーカスしてから実行してください。"
+                        <TextBlock Text="{loc:Tr dialog.testNote}"
                                    Foreground="{StaticResource TextFaintBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
                     </StackPanel>
                 </Border>
@@ -68,7 +69,7 @@
 
         <!-- Footer -->
         <Border Grid.Row="2" Background="{StaticResource CaptionBrush}" Padding="14,8">
-            <Button Content="閉じる" HorizontalAlignment="Right" Click="Close_Click" Margin="0" />
+            <Button Content="{loc:Tr common.close}" HorizontalAlignment="Right" Click="Close_Click" Margin="0" />
         </Border>
     </Grid>
 </Window>

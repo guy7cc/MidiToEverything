@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MidiToEverything.App.Localization;
 using MidiToEverything.Core.Application;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
@@ -127,14 +128,14 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
 
         _editingOriginal = value;
         DraftBinding = value.Clone();
-        SetLearnStatus("一覧のバインディングを編集中。設定後に「バインディングを保存」で確定します。", isError: false);
+        SetLearnStatus(Loc.T("learn.editing"), isError: false);
     }
 
     [ObservableProperty] private RunningProcess? _selectedRunningProcess;
     [ObservableProperty] private string _processNameInput = "";
     [ObservableProperty] private string _matchStatus = "";
     [ObservableProperty] private bool _matchStatusIsError;
-    [ObservableProperty] private string _lastSignalText = "(まだ受信していません)";
+    [ObservableProperty] private string _lastSignalText = Loc.T("editor.notReceived");
     [ObservableProperty] private string _learnStatus = "";
     [ObservableProperty] private bool _learnStatusIsError;
 
@@ -161,7 +162,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void AddProfile()
     {
-        var profile = new EditableProfile { Id = Guid.NewGuid().ToString("N")[..8], Name = "新しいプロファイル" };
+        var profile = new EditableProfile { Id = Guid.NewGuid().ToString("N")[..8], Name = Loc.T("editor.newProfile") };
         Profiles.Add(profile);
         SelectedProfile = profile;
         SaveNow(); // profile add persists immediately
@@ -244,7 +245,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     {
         if (SelectedProfile is null)
         {
-            SetLearnStatus("先にプロファイルを選択してください。", isError: true);
+            SetLearnStatus(Loc.T("learn.selectProfile"), isError: true);
             return;
         }
 
@@ -255,7 +256,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         _editingOriginal = binding;
         DraftBinding = binding.Clone();
         SetSelectedBindingGuarded(binding);
-        SetLearnStatus("新規バインディングを追加しました。内容を設定して「バインディングを保存」で確定します。", isError: false);
+        SetLearnStatus(Loc.T("learn.added"), isError: false);
     }
 
     /// <summary>Remove the selected (committed) binding and close the editor.</summary>
@@ -277,7 +278,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     {
         if (DraftBinding is null || SelectedProfile is null)
         {
-            SetLearnStatus("編集中のバインディングがありません。「追加」するか一覧から選んでください。", isError: true);
+            SetLearnStatus(Loc.T("learn.noDraft"), isError: true);
             return;
         }
 
@@ -296,7 +297,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         }
 
         SaveNow();
-        SetLearnStatus("バインディングを保存しました。", isError: false);
+        SetLearnStatus(Loc.T("learn.saved"), isError: false);
     }
 
     private void DiscardDraft()
@@ -324,7 +325,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     {
         if (_lastMessage is not { } message)
         {
-            SetLearnStatus("まだ MIDI 信号を受信していません。デバイスを操作してから押してください。", isError: true);
+            SetLearnStatus(Loc.T("learn.noSignal"), isError: true);
             return;
         }
 
@@ -332,7 +333,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         {
             if (SelectedProfile is null)
             {
-                SetLearnStatus("先にプロファイルを選択してください。", isError: true);
+                SetLearnStatus(Loc.T("learn.selectProfile"), isError: true);
                 return;
             }
 
@@ -345,7 +346,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         ApplyLearn(DraftBinding, message);
 
         var desc = $"{DraftBinding.Signal.Type} 番号{message.Number?.ToString() ?? "-"} ch{message.Channel}";
-        SetLearnStatus($"取り込みました（{desc}）。「バインディングを保存」で確定します。", isError: false);
+        SetLearnStatus(string.Format(Loc.T("learn.captured"), desc), isError: false);
     }
 
     /// <summary>Capture the UI element under the cursor (after a short hover delay) into the draft.</summary>
@@ -354,21 +355,21 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     {
         if (DraftBinding is null)
         {
-            SetLearnStatus("先にバインディングを追加/選択してください。", isError: true);
+            SetLearnStatus(Loc.T("learn.selectBinding"), isError: true);
             return;
         }
 
-        SetLearnStatus("3秒以内に対象のUI要素へカーソルを合わせてください…", isError: false);
+        SetLearnStatus(Loc.T("learn.uiaHover"), isError: false);
         var pick = await _uiaPicker.PickAsync();
         if (pick is null)
         {
-            SetLearnStatus("要素を取得できませんでした。もう一度お試しください。", isError: true);
+            SetLearnStatus(Loc.T("learn.uiaFail"), isError: true);
             return;
         }
 
         DraftBinding.UiaWindow = pick.WindowPattern;
         DraftBinding.Detail = pick.ElementName;
-        SetLearnStatus($"取得しました（要素「{pick.ElementName}」／ウィンドウ {pick.WindowPattern}）。", isError: false);
+        SetLearnStatus(string.Format(Loc.T("learn.uiaGot"), pick.ElementName, pick.WindowPattern), isError: false);
     }
 
     private void SetLearnStatus(string message, bool isError)
@@ -415,11 +416,11 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
                 ? new TriggerResult(TriggerPhase.Change, 1.0)
                 : new TriggerResult(TriggerPhase.Press, 0);
             _executor.Execute(binding, trigger, new MidiMessage("test", 1, MidiMessageType.NoteOn, 0, 127));
-            TestStatus = "実行しました。対象アプリ/デバイスで結果を確認してください。";
+            TestStatus = Loc.T("test.ran");
         }
         catch (Exception ex)
         {
-            TestStatus = $"失敗: {ex.Message}";
+            TestStatus = string.Format(Loc.T("test.failed"), ex.Message);
         }
     }
 
