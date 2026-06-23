@@ -101,10 +101,13 @@ public partial class EditableBinding : ObservableObject
     private static readonly EditableActionKind[] FireCompatibleKinds =
         AllActionKinds.Where(k => !RequiresAmount(k)).ToArray();
 
-    /// <summary>Actions that consume an action amount, so they need an amount-sending trigger.</summary>
+    /// <summary>
+    /// Actions that only make sense with an amount-sending trigger. Scroll is intentionally NOT here:
+    /// it works on a fire trigger too (a button can scroll a fixed amount via a directional detail
+    /// like "down"), and value-driven (vertical/horizontal) for a knob.
+    /// </summary>
     private static bool RequiresAmount(EditableActionKind kind) =>
-        kind is EditableActionKind.Brightness or EditableActionKind.SetVolume
-             or EditableActionKind.Scroll or EditableActionKind.CursorMove;
+        kind is EditableActionKind.Brightness or EditableActionKind.SetVolume or EditableActionKind.CursorMove;
 
     // Switching to a fire-only trigger drops an amount-only action back to a safe default.
     partial void OnModeChanged(TriggerMode value) => FixActionForTrigger();

@@ -118,7 +118,7 @@ internal static class EditMapper
     {
         KeyAction k => (EditableActionKind.Key, string.Join("+", k.Keys)),
         MouseClickAction m => (EditableActionKind.MouseClick, (m.Double ? $"{m.Button} x2" : m.Button.ToString()).ToLowerInvariant()),
-        ScrollAction s => (EditableActionKind.Scroll, s.Axis.ToString().ToLowerInvariant()),
+        ScrollAction s => (EditableActionKind.Scroll, DescribeScroll(s)),
         CursorMoveAction c => (EditableActionKind.CursorMove, c.Mode.ToString().ToLowerInvariant()),
         WindowControlAction w => (EditableActionKind.WindowControl, WindowOpDetail(w.Op)),
         MediaKeyAction mk => (EditableActionKind.MediaKey, mk.Key.ToString().ToLowerInvariant()),
@@ -247,7 +247,7 @@ internal static class EditMapper
         {
             EditableActionKind.Key => new KeyAction(SplitKeys(detail), Hold: b.Mode == TriggerMode.Hold),
             EditableActionKind.MouseClick => ParseMouse(detail),
-            EditableActionKind.Scroll => new ScrollAction(ParseAxis(detail), UseInputValue: true),
+            EditableActionKind.Scroll => ParseScroll(detail),
             EditableActionKind.CursorMove => new CursorMoveAction(ParseMove(detail), UseInputValue: true),
             EditableActionKind.WindowControl => new WindowControlAction(ParseWindowOp(detail)),
             EditableActionKind.MediaKey => new MediaKeyAction(ParseMediaKey(detail)),
@@ -381,8 +381,47 @@ internal static class EditMapper
         return new MouseClickAction(button, doubleClick);
     }
 
-    private static ScrollAxis ParseAxis(string detail) =>
-        detail.StartsWith("h", StringComparison.OrdinalIgnoreCase) ? ScrollAxis.Horizontal : ScrollAxis.Vertical;
+    private const int WheelNotch = 120; // one wheel "click" in wheel-delta units
+
+    // "vertical"/"horizontal" → value-driven (a knob/fader drives the amount).
+    // "up"/"down"/"left"/"right" [notches] → a fixed scroll, so a button can scroll a set amount.
+    private static ScrollAction ParseScroll(string detail)
+    {
+        var parts = detail.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var dir = parts.Length > 0 ? parts[0].ToLowerInvariant() : "vertical";
+        var notches = parts.Length > 1 && int.TryParse(parts[1], out var n) && n > 0 ? n : 1;
+        var amount = notches * WheelNotch;
+
+        return dir switch
+        {
+            // Win32 wheel sign: positive is up/right.
+            "up" => new ScrollAction(ScrollAxis.Vertical, amount, UseInputValue: false),
+            "down" => new ScrollAction(ScrollAxis.Vertical, -amount, UseInputValue: false),
+            "right" => new ScrollAction(ScrollAxis.Horizontal, amount, UseInputValue: false),
+            "left" => new ScrollAction(ScrollAxis.Horizontal, -amount, UseInputValue: false),
+            "horizontal" => new ScrollAction(ScrollAxis.Horizontal, UseInputValue: true),
+            _ => new ScrollAction(ScrollAxis.Vertical, UseInputValue: true),
+        };
+    }
+
+    private static string DescribeScroll(ScrollAction s)
+    {
+        if (s.UseInputValue)
+        {
+            return s.Axis == ScrollAxis.Horizontal ? "horizontal" : "vertical";
+        }
+
+        var notches = Math.Max(1, Math.Abs(s.Amount) / WheelNotch);
+        var suffix = notches > 1 ? $" {notches}" : "";
+        var dir = (s.Axis, Up: s.Amount >= 0) switch
+        {
+            (ScrollAxis.Vertical, true) => "up",
+            (ScrollAxis.Vertical, false) => "down",
+            (ScrollAxis.Horizontal, true) => "right",
+            _ => "left",
+        };
+        return dir + suffix;
+    }
 
     private static MoveMode ParseMove(string detail) =>
         detail.StartsWith("a", StringComparison.OrdinalIgnoreCase) ? MoveMode.Absolute : MoveMode.Relative;

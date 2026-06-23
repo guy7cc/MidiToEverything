@@ -83,7 +83,7 @@ public static class EditorHelp
             "-", "=", "/", "numpad1", "add", "subtract",
         },
         EditableActionKind.MouseClick => new[] { "left", "right", "middle", "left x2", "right x2" },
-        EditableActionKind.Scroll => new[] { "vertical", "horizontal" },
+        EditableActionKind.Scroll => new[] { "down", "up", "left", "right", "down 3", "vertical", "horizontal" },
         EditableActionKind.CursorMove => new[] { "relative", "absolute" },
         EditableActionKind.WindowControl => new[] { "minimize", "maximize", "restore", "close", "topmost" },
         EditableActionKind.MediaKey => new[] { "playpause", "next", "previous", "stop", "mute", "volumeup", "volumedown" },

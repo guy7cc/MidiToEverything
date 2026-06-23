@@ -116,6 +116,35 @@ public sealed class MidiEventPipelineTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task FixedScroll_OnButtonPress_ScrollsThatAmount()
+    {
+        // A button (Trigger mode) with a fixed, non-value-driven scroll must scroll a set amount —
+        // so the wheel can be driven from a pad, not only a knob.
+        var profile = new Profile
+        {
+            Id = "base",
+            Name = "b",
+            Bindings = new[]
+            {
+                new Binding
+                {
+                    Signal = new Signal { Type = SignalKind.NoteOn, Number = 36 },
+                    Trigger = new Trigger { Mode = TriggerMode.Trigger },
+                    Actions = new InputAction[] { new ScrollAction(ScrollAxis.Vertical, -120, UseInputValue: false) },
+                },
+            },
+        };
+        _context.Set(new ProfileLayers(profile));
+
+        _source.Emit(NoteOn(36));
+
+        await _sink.WaitForCountAsync(1, Timeout);
+        var scroll = Assert.IsType<ScrollCall>(_sink.Calls[0]);
+        Assert.Equal(ScrollAxis.Vertical, scroll.Axis);
+        Assert.Equal(-120, scroll.Amount, 3);
+    }
+
+    [Fact]
     public async Task SwitchProfileBinding_RaisesEvent()
     {
         var tcs = new TaskCompletionSource<SwitchProfileAction>(TaskCreationOptions.RunContinuationsAsynchronously);

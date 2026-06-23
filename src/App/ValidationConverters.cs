@@ -60,7 +60,7 @@ public static class SignalValidation
         {
             EditableActionKind.Key => d.Length > 0 && SplitKeys(d).All(KeyCodes.IsSendable),
             EditableActionKind.MouseClick => lower.Contains("left") || lower.Contains("right") || lower.Contains("middle"),
-            EditableActionKind.Scroll => lower is "vertical" or "horizontal",
+            EditableActionKind.Scroll => lower.Split(' ')[0] is "vertical" or "horizontal" or "up" or "down" or "left" or "right",
             EditableActionKind.CursorMove => lower is "relative" or "absolute",
             EditableActionKind.WindowControl => lower is "minimize" or "maximize" or "restore" or "close" or "topmost",
             EditableActionKind.MediaKey => lower is "playpause" or "next" or "previous" or "stop" or "mute" or "volumeup" or "volumedown",
