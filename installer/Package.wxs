@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  WiX (v5+) source for the MidiToEverything MSI: a per-machine install of the
+  self-contained Windows build into Program Files, with a Start Menu shortcut.
+  Built by the Release workflow (.github/workflows/release.yml) via "wix build"
+  after "dotnet publish", passing Version and an absolute PublishDir.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Package Name="MidiToEverything"
+           Manufacturer="guy7cc"
+           Version="$(var.Version)"
+           UpgradeCode="6B9A3F2E-7C4D-4E1B-9A2C-3F5E8D1A7C20"
+           Scope="perMachine"
+           Compressed="yes">
+
+    <!-- Replace any older version on install (clean major upgrade). -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of MidiToEverything is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="AppIcon" SourceFile="src\App\app.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/guy7cc/MidiToEverything" />
+
+    <Feature Id="Main" Title="MidiToEverything" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentGroupRef Id="ExtraFiles" />
+      <ComponentRef Id="PluginsDir" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="MidiToEverything">
+        <Directory Id="PluginsFolder" Name="plugins" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+  </Fragment>
+
+  <Fragment>
+    <!-- Self-contained payload (exe + Resources/Localization/*.json), harvested from publish. -->
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(var.PublishDir)\**">
+        <Exclude Files="$(var.PublishDir)\**\*.pdb" />
+        <!-- macOS/Linux native MIDI libs ship in the package but aren't used on Windows. -->
+        <Exclude Files="$(var.PublishDir)\**\*.dylib" />
+        <Exclude Files="$(var.PublishDir)\**\*.so" />
+      </Files>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ExtraFiles" Directory="INSTALLFOLDER">
+      <Component>
+        <File Source="README.md" />
+      </Component>
+      <Component>
+        <File Source="samples\config.sample.json" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <!-- Empty folder where users drop custom action plugins (docs/05 §10). -->
+    <Component Id="PluginsDir" Directory="PluginsFolder" Guid="6B9A3F2E-7C4D-4E1B-9A2C-3F5E8D1A7C21">
+      <CreateFolder />
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="StartMenuShortcut" Directory="ProgramMenuFolder" Guid="6B9A3F2E-7C4D-4E1B-9A2C-3F5E8D1A7C22">
+      <Shortcut Id="StartShortcut"
+                Name="MidiToEverything"
+                Target="[INSTALLFOLDER]MidiToEverything.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon" />
+      <RegistryValue Root="HKMU" Key="Software\guy7cc\MidiToEverything" Name="installed"
+                     Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+</Wix>

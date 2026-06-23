@@ -2,8 +2,8 @@ name: Release
 
 # Cut a release by pushing a version tag, e.g.:
 #   git tag v1.0.0 && git push origin v1.0.0
-# This builds a self-contained single-file Windows exe, zips it, and publishes a
-# GitHub Release with auto-generated notes and the artifact attached.
+# This builds a self-contained single-file Windows exe and publishes a GitHub
+# Release with two artifacts attached: a portable zip and a per-machine MSI installer.
 
 on:
   push:
@@ -54,15 +54,19 @@ jobs:
           Copy-Item publish/Resources "dist/$name/Resources" -Recurse
           Compress-Archive -Path "dist/$name/*" -DestinationPath "dist/$name.zip"
 
-      - name: Build installer (Inno Setup)
+      - name: Build installer (MSI / WiX)
         shell: pwsh
         run: |
-          choco install innosetup -y --no-progress
-          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" `
-                  "/DSourceExe=${{ github.workspace }}\publish\MidiToEverything.exe" `
-                  "installer\MidiToEverything.iss"
-          if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
+          dotnet tool install --global wix --version 5.0.0
+          $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
+          # MSI ProductVersion must be numeric — drop any prerelease suffix (e.g. 1.2.3-beta -> 1.2.3).
+          $msiver = "${{ steps.ver.outputs.version }}".Split('-')[0]
+          $out = "dist/MidiToEverything-${{ github.ref_name }}-win-x64.msi"
+          wix build -arch x64 `
+            -d Version=$msiver `
+            -d PublishDir="${{ github.workspace }}\publish" `
+            -o $out installer/Package.wxs
+          if ($LASTEXITCODE -ne 0) { throw "wix build failed ($LASTEXITCODE)" }
 
       - name: Create GitHub Release
         shell: bash
@@ -70,9 +74,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           zip="dist/MidiToEverything-${GITHUB_REF_NAME}-win-x64.zip"
-          setup="installer/MidiToEverything-Setup-${{ steps.ver.outputs.version }}.exe"
+          msi="dist/MidiToEverything-${GITHUB_REF_NAME}-win-x64.msi"
           prerelease=""
           case "${GITHUB_REF_NAME}" in *-*) prerelease="--prerelease";; esac
-          gh release create "${GITHUB_REF_NAME}" "$zip" "$setup" \
+          gh release create "${GITHUB_REF_NAME}" "$zip" "$msi" \
             --title "MidiToEverything ${GITHUB_REF_NAME}" \
             --generate-notes $prerelease

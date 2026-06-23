@@ -33,6 +33,13 @@ dotnet run   --project src/App/App.csproj -c Release   # アプリ起動
 
 ## 配布（self-contained 単一ファイル）
 公開リリースは **GitHub Releases** に自動添付される（バージョンタグの push で CI が生成）。
+2 種類を配布:
+
+- **ポータブル zip** — 展開して `MidiToEverything.exe` を実行するだけ（インストール・管理者権限不要）。
+- **MSI インストーラ** — `Program Files` へのマシン単位インストール（インストール時に管理者権限/UAC が必要）。
+  スタートメニューにショートカットを作成し、「プログラムの追加と削除」に登録される。WiX で生成
+  （[installer/Package.wxs](installer/Package.wxs)）。
+
 リリース手順は [CONTRIBUTING.md](CONTRIBUTING.md) §6。
 
 ローカルで単一 exe を作る場合:
