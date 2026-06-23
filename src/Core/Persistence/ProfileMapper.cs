@@ -73,20 +73,29 @@ internal static class ProfileMapper
             return Trigger.Default;
         }
 
+        // Legacy: the old RelativeFromAbsolute mode is migrated to Relative + AbsoluteDelta on read.
+        var legacyAbs = t.Mode == TriggerMode.RelativeFromAbsolute;
+
         return new Trigger
         {
-            Mode = t.Mode,
+            Mode = legacyAbs ? TriggerMode.Relative : t.Mode,
             Threshold = t.Threshold,
             RangeMin = t.Range is { Length: 2 } ? t.Range[0] : 0,
             RangeMax = t.Range is { Length: 2 } ? t.Range[1] : 127,
             Deadzone = t.Deadzone,
             Invert = t.Invert,
             Scale = t.Scale,
-            RelativeFormat = t.RelativeFormat,
+            RelativeFormat = legacyAbs ? RelativeFormat.AbsoluteDelta : t.RelativeFormat,
+            RelativeOutput = t.RelativeOutput,
+            OutOfRange = t.OutOfRange,
+            Edge = t.Edge,
+            Wrap = t.Wrap,
         };
     }
 
-    private static InputAction ToDomain(ActionDto a) => a switch
+    private static InputAction ToDomain(ActionDto a) => MapToDomain(a);
+
+    private static InputAction MapToDomain(ActionDto a) => a switch
     {
         KeyActionDto k => new KeyAction(k.Keys.ToArray(), k.Hold, k.Repeat),
         MouseClickActionDto m => new MouseClickAction(m.Button, m.Double),
@@ -186,13 +195,19 @@ internal static class ProfileMapper
             Invert = b.Trigger.Invert,
             Scale = b.Trigger.Scale,
             RelativeFormat = b.Trigger.RelativeFormat,
+            RelativeOutput = b.Trigger.RelativeOutput,
+            OutOfRange = b.Trigger.OutOfRange,
+            Edge = b.Trigger.Edge,
+            Wrap = b.Trigger.Wrap,
         },
         Actions = b.Actions.Select(ToDto).ToList(),
         Label = b.Label,
         Enabled = b.Enabled,
     };
 
-    private static ActionDto ToDto(InputAction a) => a switch
+    private static ActionDto ToDto(InputAction a) => MapToDto(a);
+
+    private static ActionDto MapToDto(InputAction a) => a switch
     {
         KeyAction k => new KeyActionDto { Keys = k.Keys.ToList(), Hold = k.Hold, Repeat = k.Repeat },
         MouseClickAction m => new MouseClickActionDto { Button = m.Button, Double = m.Double },

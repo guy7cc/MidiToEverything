@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MidiToEverything.Core.Domain;
 
@@ -36,9 +37,103 @@ public partial class EditableSignal : ObservableObject
 public partial class EditableBinding : ObservableObject
 {
     [ObservableProperty] private EditableSignal _signal = new();
-    [ObservableProperty] private TriggerMode _mode = TriggerMode.Trigger;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FireHint), nameof(AvailableActionKinds), nameof(FlowLabel), nameof(WrapApplies))]
+    private TriggerMode _mode = TriggerMode.Trigger;
     [ObservableProperty] private EditableActionKind _actionKind = EditableActionKind.Key;
     [ObservableProperty] private string _detail = "";
+
+    // ── Advanced trigger tuning (preserved on round-trip; edited in the trigger-params panel) ──
+
+    /// <summary>Trigger/Hold fire threshold (value at or above which the control is "on").</summary>
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(FireHint))] private int _threshold = 1;
+
+    /// <summary>Absolute input window minimum (also the gate lower bound).</summary>
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(FireHint))] private int _rangeMin;
+
+    /// <summary>Absolute input window maximum (also the gate upper bound).</summary>
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(FireHint))] private int _rangeMax = 127;
+
+    /// <summary>Absolute out-of-range behavior: clamp (keep firing) or gate (fire only inside).</summary>
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(FireHint))] private OutOfRangeBehavior _outOfRange = OutOfRangeBehavior.Clamp;
+
+    /// <summary>Dead zone around the range edges / center.</summary>
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(FireHint))] private int _deadzone;
+
+    /// <summary>Invert the resulting magnitude / direction.</summary>
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(FireHint))] private bool _invert;
+
+    /// <summary>Output sensitivity multiplier.</summary>
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(FireHint))] private double _scale = 1.0;
+
+    /// <summary>How a Relative trigger decodes the delta (encoder encoding, or AbsoluteDelta).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FireHint), nameof(WrapApplies))]
+    private RelativeFormat _relativeFormat = RelativeFormat.TwosComplement;
+
+    /// <summary>What a Relative trigger does with the delta: send as amount, or fire on a direction.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FireHint), nameof(FlowLabel), nameof(AvailableActionKinds))]
+    private RelativeOutput _relativeOutput = RelativeOutput.Amount;
+
+    /// <summary>Rising-edge mode: fire once when entering the active zone (Trigger/Absolute-gate).</summary>
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(FireHint))] private bool _edge;
+
+    /// <summary>Relative + AbsoluteDelta: treat a wrap (127→0) as +1 for endless absolute knobs.</summary>
+    [ObservableProperty][NotifyPropertyChangedFor(nameof(FireHint))] private bool _wrap;
+
+    /// <summary>Live, localized one-line description of how the current trigger settings fire the action.</summary>
+    public string FireHint => TriggerHint.Describe(this);
+
+    /// <summary>Label shown next to the trigger→action arrow (fire vs. action amount).</summary>
+    public string FlowLabel => TriggerHint.FlowLabel(this);
+
+    /// <summary>True when the Wrap option is relevant (Relative + AbsoluteDelta).</summary>
+    public bool WrapApplies => Mode == TriggerMode.Relative && RelativeFormat == RelativeFormat.AbsoluteDelta;
+
+    /// <summary>
+    /// True when this trigger only fires (no action amount): Trigger/Hold, or a Relative trigger
+    /// whose output is fire-on-increase/decrease rather than sending the delta as an amount.
+    /// </summary>
+    public bool IsFireTrigger =>
+        Mode is TriggerMode.Trigger or TriggerMode.Hold
+        || (Mode == TriggerMode.Relative && RelativeOutput != RelativeOutput.Amount);
+
+    /// <summary>
+    /// Action kinds valid for the current trigger: fire-only triggers hide actions that need an
+    /// action amount; amount triggers allow everything (an amount can also act as a fire event).
+    /// </summary>
+    public IReadOnlyList<EditableActionKind> AvailableActionKinds =>
+        IsFireTrigger ? FireCompatibleKinds : AllActionKinds;
+
+    private static readonly EditableActionKind[] AllActionKinds = Enum.GetValues<EditableActionKind>();
+
+    private static readonly EditableActionKind[] FireCompatibleKinds =
+        AllActionKinds.Where(k => !RequiresAmount(k)).ToArray();
+
+    /// <summary>Actions that consume an action amount, so they need an amount-sending trigger.</summary>
+    private static bool RequiresAmount(EditableActionKind kind) =>
+        kind is EditableActionKind.Brightness or EditableActionKind.SetVolume
+             or EditableActionKind.Scroll or EditableActionKind.CursorMove;
+
+    // Switching to a fire-only trigger drops an amount-only action back to a safe default.
+    partial void OnModeChanged(TriggerMode value) => FixActionForTrigger();
+
+    partial void OnRelativeOutputChanged(RelativeOutput value) => FixActionForTrigger();
+
+    private void FixActionForTrigger()
+    {
+        if (IsFireTrigger && RequiresAmount(ActionKind))
+        {
+            ActionKind = EditableActionKind.Key;
+        }
+    }
+
+    /// <summary>
+    /// Actions beyond the first, preserved verbatim. The editor exposes only the first action,
+    /// so this keeps multi-action bindings (e.g. relative increase/decrease) intact across edits.
+    /// </summary>
+    public IReadOnlyList<InputAction> ExtraActions { get; set; } = Array.Empty<InputAction>();
 
     /// <summary>Launch action: command-line arguments.</summary>
     [ObservableProperty] private string _arguments = "";
@@ -88,6 +183,18 @@ public partial class EditableBinding : ObservableObject
         Mode = Mode,
         ActionKind = ActionKind,
         Detail = Detail,
+        Threshold = Threshold,
+        RangeMin = RangeMin,
+        RangeMax = RangeMax,
+        OutOfRange = OutOfRange,
+        Deadzone = Deadzone,
+        Invert = Invert,
+        Scale = Scale,
+        RelativeFormat = RelativeFormat,
+        RelativeOutput = RelativeOutput,
+        Edge = Edge,
+        Wrap = Wrap,
+        ExtraActions = ExtraActions,
         Arguments = Arguments,
         WorkingDir = WorkingDir,
         UiaWindow = UiaWindow,
@@ -111,6 +218,18 @@ public partial class EditableBinding : ObservableObject
         Mode = other.Mode;
         ActionKind = other.ActionKind;
         Detail = other.Detail;
+        Threshold = other.Threshold;
+        RangeMin = other.RangeMin;
+        RangeMax = other.RangeMax;
+        OutOfRange = other.OutOfRange;
+        Deadzone = other.Deadzone;
+        Invert = other.Invert;
+        Scale = other.Scale;
+        RelativeFormat = other.RelativeFormat;
+        RelativeOutput = other.RelativeOutput;
+        Edge = other.Edge;
+        Wrap = other.Wrap;
+        ExtraActions = other.ExtraActions;
         Arguments = other.Arguments;
         WorkingDir = other.WorkingDir;
         UiaWindow = other.UiaWindow;

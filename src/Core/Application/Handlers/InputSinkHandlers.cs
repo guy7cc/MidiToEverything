@@ -28,7 +28,7 @@ public sealed class KeyActionHandler : IActionHandler
                     break;
             }
         }
-        else if (trigger.Phase is TriggerPhase.Press or TriggerPhase.Change)
+        else if (trigger.Phase is TriggerPhase.Press || trigger.IsChange)
         {
             _sink.KeyTap(key.Keys);
         }

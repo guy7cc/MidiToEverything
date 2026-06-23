@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Windows;
 using System.Windows.Data;
 using MidiToEverything.App.Localization;
 using MidiToEverything.App.ViewModels.Editing;
@@ -14,6 +15,9 @@ public static class EditorHelp
     /// <summary>Short tag shown after the name in the dropdown (e.g. "NoteOn（押した時）").</summary>
     public static string SignalKindTag(SignalKind kind) => Loc.T($"help.signalTag.{kind}");
 
+    /// <summary>What the signal sends to the trigger (label next to the signal→trigger arrow).</summary>
+    public static string SignalFlow(SignalKind kind) => Loc.T($"signalFlow.{kind}");
+
     public static string TriggerMode(TriggerMode mode) => Loc.T($"help.trigger.{mode}");
 
     public static string ActionKind(EditableActionKind kind) => Loc.T($"help.action.{kind}");
@@ -23,6 +27,26 @@ public static class EditorHelp
 
     /// <summary>Localized display name for an action kind (dropdown, bindings list, config header).</summary>
     public static string ActionKindName(EditableActionKind kind) => Loc.T($"action.{kind}");
+
+    /// <summary>Localized display name for an Absolute out-of-range behavior (clamp / gate).</summary>
+    public static string OutOfRangeName(OutOfRangeBehavior behavior) => Loc.T($"outOfRange.{behavior}");
+
+    /// <summary>Localized display name for how a Relative trigger decodes its delta.</summary>
+    public static string RelativeFormatName(RelativeFormat format) => Loc.T($"relativeFormat.{format}");
+
+    /// <summary>Localized display name for a Relative trigger's output (amount / fire on a direction).</summary>
+    public static string RelativeOutputName(RelativeOutput output) => Loc.T($"relativeOutput.{output}");
+
+    /// <summary>How the selected action consumes the action amount it receives.</summary>
+    public static string ActionAmountUsage(EditableActionKind kind) => kind switch
+    {
+        EditableActionKind.Scroll => Loc.T("help.amount.scroll"),
+        EditableActionKind.CursorMove => Loc.T("help.amount.cursor"),
+        EditableActionKind.SetVolume => Loc.T("help.amount.volume"),
+        EditableActionKind.Brightness => Loc.T("help.amount.brightness"),
+        EditableActionKind.MidiOut => Loc.T("help.amount.midiout"),
+        _ => Loc.T("help.amount.none"),
+    };
 
     /// <summary>Step-by-step instructions for configuring a complex action (shown in the config dialog).</summary>
     public static string Instructions(EditableActionKind kind) => kind switch
@@ -61,6 +85,16 @@ public sealed class SignalKindHelpConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value is SignalKind k ? EditorHelp.SignalKind(k) : "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>"What flows" label next to the signal→trigger arrow.</summary>
+public sealed class SignalFlowConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is SignalKind k ? EditorHelp.SignalFlow(k) : "";
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
@@ -111,6 +145,79 @@ public sealed class ActionKindNameConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => value is EditableActionKind k ? EditorHelp.ActionKindName(k) : value?.ToString() ?? "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Dropdown label: localized Absolute out-of-range behavior name.</summary>
+public sealed class OutOfRangeNameConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is OutOfRangeBehavior b ? EditorHelp.OutOfRangeName(b) : value?.ToString() ?? "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Dropdown label: localized relative-encoder format name.</summary>
+public sealed class RelativeFormatNameConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is RelativeFormat f ? EditorHelp.RelativeFormatName(f) : value?.ToString() ?? "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Dropdown label: localized Relative output name (amount / fire on a direction).</summary>
+public sealed class RelativeOutputNameConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is RelativeOutput o ? EditorHelp.RelativeOutputName(o) : value?.ToString() ?? "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Action-side explanation of how the received action amount is used.</summary>
+public sealed class ActionAmountUsageConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is EditableActionKind k ? EditorHelp.ActionAmountUsage(k) : "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Shows a trigger field only in the modes that actually use it (parameter = field key), so the
+/// editor hides settings that have no effect in the current <see cref="TriggerMode"/>. Mirrors
+/// the engine: Trigger/Hold use threshold; Absolute uses range/out-of-range; Absolute+Relative
+/// use dead zone/scale/invert; Relative uses the signed format; edge applies to Trigger/Absolute.
+/// </summary>
+public sealed class ModeFieldVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is not TriggerMode m || parameter is not string key)
+        {
+            return Visibility.Collapsed;
+        }
+
+        var visible = key switch
+        {
+            "threshold" => m is TriggerMode.Trigger or TriggerMode.Hold,
+            "rangeMin" or "rangeMax" or "outOfRange" => m is TriggerMode.Absolute,
+            "deadzone" or "scale" or "invert" => m is TriggerMode.Absolute or TriggerMode.Relative,
+            "relativeFormat" or "relativeOutput" => m is TriggerMode.Relative,
+            "edge" => m is TriggerMode.Trigger or TriggerMode.Absolute,
+            "wrap" => m is TriggerMode.RelativeFromAbsolute,
+            _ => false,
+        };
+
+        return visible ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotSupportedException();

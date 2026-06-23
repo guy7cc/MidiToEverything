@@ -60,8 +60,15 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     public ObservableCollection<RunningProcess> RunningProcesses { get; } = new();
 
     public Array SignalKinds { get; } = Enum.GetValues<SignalKind>();
-    public Array TriggerModes { get; } = Enum.GetValues<TriggerMode>();
+
+    /// <summary>Selectable trigger modes (the legacy RelativeFromAbsolute is migrated, not shown).</summary>
+    public TriggerMode[] TriggerModes { get; } =
+        { TriggerMode.Trigger, TriggerMode.Hold, TriggerMode.Absolute, TriggerMode.Relative };
+
     public Array ActionKinds { get; } = Enum.GetValues<EditableActionKind>();
+    public Array OutOfRangeOptions { get; } = Enum.GetValues<OutOfRangeBehavior>();
+    public Array RelativeFormatOptions { get; } = Enum.GetValues<RelativeFormat>();
+    public Array RelativeOutputOptions { get; } = Enum.GetValues<RelativeOutput>();
     public string[] UiaVerbs { get; } = { "invoke", "toggle", "setvalue" };
     public string[] HttpMethods { get; } = { "GET", "POST", "PUT", "DELETE", "PATCH" };
 

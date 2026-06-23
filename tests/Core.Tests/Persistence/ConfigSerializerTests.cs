@@ -195,6 +195,55 @@ public class ConfigSerializerTests
     }
 
     [Fact]
+    public void RelativeOutput_RoundTrips()
+    {
+        var config = SingleBinding(new Signal { Type = SignalKind.Cc, Number = 74 }, new KeyAction(new[] { "a" }));
+        config = config with
+        {
+            BaseProfile = config.BaseProfile with
+            {
+                Bindings = new[]
+                {
+                    config.BaseProfile.Bindings[0] with
+                    {
+                        Trigger = new Trigger { Mode = TriggerMode.Relative, RelativeOutput = RelativeOutput.FireOnIncrease },
+                    },
+                },
+            },
+        };
+
+        var json = ConfigSerializer.Serialize(config);
+        Assert.Contains("\"relativeOutput\": \"fireOnIncrease\"", json);
+
+        var trigger = ConfigSerializer.Deserialize(json).BaseProfile.Bindings[0].Trigger;
+        Assert.Equal(RelativeOutput.FireOnIncrease, trigger.RelativeOutput);
+    }
+
+    [Fact]
+    public void LegacyRelativeFromAbsolute_MigratesToRelativeAbsoluteDelta()
+    {
+        // The old standalone mode is migrated to Relative + AbsoluteDelta on read.
+        var json = """
+        {
+          "version": 2,
+          "baseProfile": {
+            "id": "base", "name": "b",
+            "bindings": [ {
+              "signal": { "type": "cc", "number": 74 },
+              "trigger": { "mode": "relativeFromAbsolute", "wrap": true },
+              "actions": [ { "type": "scroll" } ]
+            } ]
+          }
+        }
+        """;
+
+        var trigger = ConfigSerializer.Deserialize(json).BaseProfile.Bindings[0].Trigger;
+        Assert.Equal(TriggerMode.Relative, trigger.Mode);
+        Assert.Equal(RelativeFormat.AbsoluteDelta, trigger.RelativeFormat);
+        Assert.True(trigger.Wrap);
+    }
+
+    [Fact]
     public void ObsConnectionSettings_RoundTrip()
     {
         var config = DefaultConfig.Create();
@@ -251,6 +300,40 @@ public class ConfigSerializerTests
         Assert.Equal(10, trigger.RangeMin);
         Assert.Equal(120, trigger.RangeMax);
         Assert.Equal(2.5, trigger.Scale, 3);
+        Assert.Equal(OutOfRangeBehavior.Clamp, trigger.OutOfRange); // default preserved
+    }
+
+    [Fact]
+    public void AbsoluteGate_RoundTrips_OutOfRangeBehavior()
+    {
+        var config = SingleBinding(new Signal { Type = SignalKind.Cc, Number = 74 }, new KeyAction(new[] { "a" }));
+        config = config with
+        {
+            BaseProfile = config.BaseProfile with
+            {
+                Bindings = new[]
+                {
+                    config.BaseProfile.Bindings[0] with
+                    {
+                        Trigger = new Trigger
+                        {
+                            Mode = TriggerMode.Absolute,
+                            RangeMin = 60,
+                            RangeMax = 70,
+                            OutOfRange = OutOfRangeBehavior.Gate,
+                        },
+                    },
+                },
+            },
+        };
+
+        var json = ConfigSerializer.Serialize(config);
+        Assert.Contains("\"outOfRange\": \"gate\"", json);
+
+        var trigger = ConfigSerializer.Deserialize(json).BaseProfile.Bindings[0].Trigger;
+        Assert.Equal(OutOfRangeBehavior.Gate, trigger.OutOfRange);
+        Assert.Equal(60, trigger.RangeMin);
+        Assert.Equal(70, trigger.RangeMax);
     }
 
     [Fact]

@@ -16,7 +16,7 @@ public sealed class WindowControlActionHandler : IActionHandler
     public void Execute(InputAction action, TriggerResult trigger, MidiMessage message)
     {
         // Fire once on press/change; ignore release so Note (on+off) bindings don't double-apply.
-        if (trigger.Phase is TriggerPhase.Press or TriggerPhase.Change)
+        if (trigger.Phase is TriggerPhase.Press || trigger.IsChange)
         {
             _windows.Apply(((WindowControlAction)action).Op);
         }
