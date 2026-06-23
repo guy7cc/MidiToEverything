@@ -9,7 +9,8 @@ namespace MidiToEverything.Infrastructure.Input;
 /// <summary>
 /// <see cref="IInputSink"/> implemented with Win32 <c>SendInput</c> (docs/02_Architecture.md §3.4).
 /// Keys are sent as scan codes by default for broad app/game compatibility (FR-4.1); modifier
-/// chords press in order and release in reverse. Unknown key tokens are skipped with a warning.
+/// chords press in order and release in reverse. A single-character token with no key mapping
+/// (e.g. ^ ~) is sent as a literal Unicode character; longer unknown tokens are skipped with a warning.
 ///
 /// UIPI note: a non-elevated process cannot send input to elevated windows (PRD §6); callers
 /// should surface that when emission appears to have no effect.
@@ -155,6 +156,15 @@ public sealed class Win32InputSink : IInputSink
     {
         if (!KeyCodes.TryResolve(token, out var vk, out var extended))
         {
+            // Fallback: any single character with no key mapping (e.g. ^ ~ ! @ and non-ASCII) is
+            // sent as a literal Unicode character, layout-independently. Multi-char tokens are typos.
+            var literal = token.Trim();
+            if (literal.Length == 1)
+            {
+                SendUnicode(literal[0], up);
+                return;
+            }
+
             _logger.LogWarning("Unknown key token '{Token}', skipped", token);
             return;
         }

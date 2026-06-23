@@ -245,7 +245,7 @@
   "help.trigger.Relative": "このモードでは、ノブの回転量（増減）をアクション量とします。",
   "help.trigger.RelativeFromAbsolute": "このモードでは、絶対値の変化（前回との差）をアクション量とします。",
 
-  "help.action.Key": "キーボード入力。詳細に「ctrl+z」のようにキーを指定。記号（- = [ ] ; ' / `）やテンキー（numpad1・add・subtract）も可。カンマキーは comma、+ は plus と書く",
+  "help.action.Key": "キーボード入力。詳細に「ctrl+z」のようにキーを指定。テンキー（numpad1・add・subtract）も可。^ ~ などキー名に無い1文字はそのまま文字として送信（修飾キーとの組合せは不可）。カンマキーは comma、+ は plus と書く",
   "help.action.MouseClick": "マウスクリック。詳細に left / right / middle（x2 でダブルクリック）",
   "help.action.Scroll": "ホイールスクロール。詳細に vertical / horizontal",
   "help.action.CursorMove": "カーソル移動。詳細に relative（相対）/ absolute（絶対）",

@@ -106,6 +106,13 @@ public static class KeyCodes
     public static bool IsModifier(string token) => Modifiers.Contains(token.Trim());
 
     /// <summary>
+    /// True when a token can be emitted: it either resolves to a virtual key, or is a single
+    /// character that the input sink sends as a literal Unicode character (e.g. <c>^</c>, <c>~</c>).
+    /// </summary>
+    public static bool IsSendable(string token)
+        => TryResolve(token, out _, out _) || token.Trim().Length == 1;
+
+    /// <summary>
     /// Resolves a token to its virtual-key code and whether it is an extended key.
     /// Handles a–z and 0–9 directly; everything else via the named table.
     /// </summary>

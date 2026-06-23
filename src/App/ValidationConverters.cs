@@ -58,7 +58,7 @@ public static class SignalValidation
         var lower = d.ToLowerInvariant();
         return kind switch
         {
-            EditableActionKind.Key => d.Length > 0 && SplitKeys(d).All(t => KeyCodes.TryResolve(t, out _, out _)),
+            EditableActionKind.Key => d.Length > 0 && SplitKeys(d).All(KeyCodes.IsSendable),
             EditableActionKind.MouseClick => lower.Contains("left") || lower.Contains("right") || lower.Contains("middle"),
             EditableActionKind.Scroll => lower is "vertical" or "horizontal",
             EditableActionKind.CursorMove => lower is "relative" or "absolute",
