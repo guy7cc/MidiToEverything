@@ -177,6 +177,8 @@ public class TriggerEvaluatorTests
     [InlineData(126, RelativeOutput.FireOnIncrease, false)] // -2 → no fire
     [InlineData(126, RelativeOutput.FireOnDecrease, true)]  // -2 decrease → fires
     [InlineData(2, RelativeOutput.FireOnDecrease, false)]   // +2 → no fire
+    [InlineData(2, RelativeOutput.FireOnEither, true)]      // +2 → fires (either direction)
+    [InlineData(126, RelativeOutput.FireOnEither, true)]    // -2 → fires (either direction)
     public void Relative_FireOutput_FiresOnChosenDirectionOnly(int value, RelativeOutput output, bool fires)
     {
         var t = new Trigger { Mode = TriggerMode.Relative, RelativeOutput = output };
@@ -188,6 +190,14 @@ public class TriggerEvaluatorTests
         {
             Assert.Equal(TriggerPhase.Press, r.Phase); // fires like a button (no amount)
         }
+    }
+
+    [Fact]
+    public void Relative_FireOnEither_DoesNotFireOnZeroChange()
+    {
+        var t = new Trigger { Mode = TriggerMode.Relative, RelativeFormat = RelativeFormat.BinaryOffset, RelativeOutput = RelativeOutput.FireOnEither };
+
+        Assert.False(TriggerEvaluator.Evaluate(t, Cc(64)).ShouldFire); // 64 → 0 delta → no fire
     }
 
     [Fact]

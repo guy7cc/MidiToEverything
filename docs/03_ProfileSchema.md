@@ -34,7 +34,7 @@
 | `invert` | bool | false | 値の反転 |
 | `scale` | number | 1.0 | 感度（出力量の倍率） |
 | `relativeFormat` | enum | `twosComplement` | `relative` の増減の読み取り方。エンコーダ符号方式（`twosComplement`/`signedBit`/`binaryOffset`）または `absoluteDelta`（絶対値の前回との差分を増減として扱う＝絶対値デバイスを相対化）|
-| `relativeOutput` | enum | `amount` | `relative` の増減の使い方。`amount`(アクション量として送る) / `fireOnIncrease`(増えたら発火) / `fireOnDecrease`(減ったら発火)。fire 系は発火トリガーになる |
+| `relativeOutput` | enum | `amount` | `relative` の発火の向き。`amount`(増減量をアクション量として送る) / `fireOnIncrease`(増加=エンコーダなら右回り) / `fireOnDecrease`(減少=左回り) / `fireOnEither`(どちらでも発火)。fire 系は発火トリガー。エディタのラベルは `relativeFormat` に応じて回転方向（エンコーダ）か値の増減（`absoluteDelta`）で表示される |
 | `edge` | bool | false | `trigger`/`absolute`(gate) のエッジ発火。**ゾーンに入った瞬間に1回だけ**発火し、出てから再度入るまで再発火しない。CC/フェーダをボタンのように使う場合に有効（`hold`/`relative` では無視） |
 | `wrap` | bool | false | `relative` + `absoluteDelta` 専用。値が一周する無限ノブ（…126,127,0,1…）で `127→0` を `+1` と解釈。境界のあるフェーダでは off（大きなスイープを誤検出しないため）|
 
