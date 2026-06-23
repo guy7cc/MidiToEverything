@@ -28,8 +28,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     private readonly IUiaElementPicker _uiaPicker;
     private readonly ActionExecutor _executor;
     private volatile MidiMessage? _lastMessage;
-    private EditableBinding? _editingOriginal; // the list binding being edited (null = creating new)
-    private bool _loadingDraft;                // guards programmatic SelectedBinding changes
+    private EditableBinding? _subscribedBinding; // selected binding we auto-save on edit
     private EditableProfile? _subscribedProfile;
     // Debounces auto-save: every change except an in-progress binding signal persists automatically.
     private readonly DispatcherTimer _saveTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
@@ -81,15 +80,10 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     [ObservableProperty] private EditableProfile? _selectedProfile;
     [ObservableProperty] private EditableBinding? _selectedBinding;
 
-    /// <summary>The binding currently being edited (a draft). Committed to the list on "save".</summary>
-    [ObservableProperty] private EditableBinding? _draftBinding;
+    /// <summary>True when a binding is selected and shown in the editor.</summary>
+    public bool IsBindingSelected => SelectedBinding is not null;
 
-    /// <summary>True while a binding draft is open in the editor.</summary>
-    public bool HasDraft => DraftBinding is not null;
-
-    partial void OnDraftBindingChanged(EditableBinding? value) => OnPropertyChanged(nameof(HasDraft));
-
-    // Switching profiles abandons any open draft, and re-targets field auto-save at the new profile.
+    // Switching profiles clears the binding selection and re-targets field auto-save at the new profile.
     partial void OnSelectedProfileChanged(EditableProfile? value)
     {
         if (_subscribedProfile is not null)
@@ -103,11 +97,14 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
             value.PropertyChanged += OnProfileFieldChanged;
         }
 
-        DiscardDraft();
+        SelectedBinding = null;
     }
 
     // Profile name / match pattern / priority edits persist automatically (debounced).
     private void OnProfileFieldChanged(object? sender, PropertyChangedEventArgs e) => RequestAutoSave();
+
+    // Any selected-binding (or its signal) edit persists automatically (debounced).
+    private void OnBindingFieldChanged(object? sender, PropertyChangedEventArgs e) => RequestAutoSave();
 
     /// <summary>Persist after a short idle (coalesces rapid edits like typing a name).</summary>
     private void RequestAutoSave()
@@ -125,17 +122,28 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         _manager.Reload(config);
     }
 
-    // Clicking a binding in the list opens a working copy to edit (changes apply on commit).
+    // Selecting a binding opens it for editing; subscribe so its edits auto-save (debounced).
     partial void OnSelectedBindingChanged(EditableBinding? value)
     {
-        if (_loadingDraft || value is null)
+        if (_subscribedBinding is not null)
         {
-            return;
+            _subscribedBinding.PropertyChanged -= OnBindingFieldChanged;
+            _subscribedBinding.Signal.PropertyChanged -= OnBindingFieldChanged;
         }
 
-        _editingOriginal = value;
-        DraftBinding = value.Clone();
-        SetLearnStatus(Loc.T("learn.editing"), isError: false);
+        _subscribedBinding = value;
+        if (value is not null)
+        {
+            value.PropertyChanged += OnBindingFieldChanged;
+            value.Signal.PropertyChanged += OnBindingFieldChanged;
+            SetLearnStatus(Loc.T("learn.editing"), isError: false);
+        }
+        else
+        {
+            SetLearnStatus("", isError: false);
+        }
+
+        OnPropertyChanged(nameof(IsBindingSelected));
     }
 
     [ObservableProperty] private RunningProcess? _selectedRunningProcess;
@@ -243,10 +251,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>
-    /// Add a new binding to the profile (persisted immediately) and open it for editing.
-    /// Its signal content is a draft until "バインディングを保存" is pressed.
-    /// </summary>
+    /// <summary>Add a new binding to the profile and open it for editing (auto-saved).</summary>
     [RelayCommand]
     private void AddBinding()
     {
@@ -258,68 +263,21 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
 
         var binding = new EditableBinding();
         SelectedProfile.Bindings.Add(binding);
+        SelectedBinding = binding;
         SaveNow(); // binding add persists immediately
-
-        _editingOriginal = binding;
-        DraftBinding = binding.Clone();
-        SetSelectedBindingGuarded(binding);
         SetLearnStatus(Loc.T("learn.added"), isError: false);
     }
 
-    /// <summary>Remove the selected (committed) binding and close the editor.</summary>
+    /// <summary>Remove the selected binding and close the editor.</summary>
     [RelayCommand]
     private void RemoveBinding()
     {
-        if (SelectedProfile is not null && SelectedBinding is not null)
+        if (SelectedProfile is not null && SelectedBinding is { } binding)
         {
-            SelectedProfile.Bindings.Remove(SelectedBinding);
+            SelectedBinding = null; // unsubscribe + close the editor
+            SelectedProfile.Bindings.Remove(binding);
             SaveNow(); // binding delete persists immediately
         }
-
-        DiscardDraft();
-    }
-
-    /// <summary>Commit the draft's signal content into the list and persist it.</summary>
-    [RelayCommand]
-    private void CommitBinding()
-    {
-        if (DraftBinding is null || SelectedProfile is null)
-        {
-            SetLearnStatus(Loc.T("learn.noDraft"), isError: true);
-            return;
-        }
-
-        if (_editingOriginal is not null)
-        {
-            _editingOriginal.CopyValuesFrom(DraftBinding);
-            SetSelectedBindingGuarded(_editingOriginal);
-        }
-        else
-        {
-            var committed = DraftBinding.Clone();
-            SelectedProfile.Bindings.Add(committed);
-            _editingOriginal = committed;
-            DraftBinding = committed.Clone();
-            SetSelectedBindingGuarded(committed);
-        }
-
-        SaveNow();
-        SetLearnStatus(Loc.T("learn.saved"), isError: false);
-    }
-
-    private void DiscardDraft()
-    {
-        _editingOriginal = null;
-        DraftBinding = null;
-        SetSelectedBindingGuarded(null);
-        SetLearnStatus("", isError: false);
-    }
-
-    private void SetSelectedBindingGuarded(EditableBinding? value)
-    {
-        _loadingDraft = true;
-        SelectedBinding = value;
-        _loadingDraft = false;
     }
 
     /// <summary>
@@ -336,7 +294,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (DraftBinding is null)
+        if (SelectedBinding is null)
         {
             if (SelectedProfile is null)
             {
@@ -344,15 +302,16 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            // No draft open yet — start a new one so "learn" always does something.
-            SetSelectedBindingGuarded(null);
-            _editingOriginal = null;
-            DraftBinding = new EditableBinding();
+            // Nothing selected — create a new binding so "learn" always does something.
+            var binding = new EditableBinding();
+            SelectedProfile.Bindings.Add(binding);
+            SelectedBinding = binding;
         }
 
-        ApplyLearn(DraftBinding, message);
+        ApplyLearn(SelectedBinding, message);
+        SaveNow();
 
-        var desc = $"{DraftBinding.Signal.Type} 番号{message.Number?.ToString() ?? "-"} ch{message.Channel}";
+        var desc = $"{SelectedBinding.Signal.Type} 番号{message.Number?.ToString() ?? "-"} ch{message.Channel}";
         SetLearnStatus(string.Format(Loc.T("learn.captured"), desc), isError: false);
     }
 
@@ -360,7 +319,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task PickUiaElement()
     {
-        if (DraftBinding is null)
+        if (SelectedBinding is null)
         {
             SetLearnStatus(Loc.T("learn.selectBinding"), isError: true);
             return;
@@ -374,8 +333,8 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
             return;
         }
 
-        DraftBinding.UiaWindow = pick.WindowPattern;
-        DraftBinding.Detail = pick.ElementName;
+        SelectedBinding.UiaWindow = pick.WindowPattern;
+        SelectedBinding.Detail = pick.ElementName;
         SetLearnStatus(string.Format(Loc.T("learn.uiaGot"), pick.ElementName, pick.WindowPattern), isError: false);
     }
 
@@ -394,7 +353,7 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void OpenActionConfig()
     {
-        if (DraftBinding is not null)
+        if (SelectedBinding is not null)
         {
             TestStatus = "";
             ActionConfigRequested?.Invoke(this, EventArgs.Empty);
@@ -405,14 +364,14 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void TestAction()
     {
-        if (DraftBinding is null)
+        if (SelectedBinding is null)
         {
             return;
         }
 
         try
         {
-            var action = EditMapper.ToAction(DraftBinding);
+            var action = EditMapper.ToAction(SelectedBinding);
             var binding = new MidiToEverything.Core.Domain.Binding
             {
                 Signal = new Signal(),
@@ -497,6 +456,12 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         if (_subscribedProfile is not null)
         {
             _subscribedProfile.PropertyChanged -= OnProfileFieldChanged;
+        }
+
+        if (_subscribedBinding is not null)
+        {
+            _subscribedBinding.PropertyChanged -= OnBindingFieldChanged;
+            _subscribedBinding.Signal.PropertyChanged -= OnBindingFieldChanged;
         }
     }
 }

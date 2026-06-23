@@ -30,7 +30,7 @@
             <Setter Property="Margin" Value="0,0,6,0" />
         </Style>
 
-        <!-- Per-kind "detail" editors (docs/05 §3.5). DataContext = the draft binding. -->
+        <!-- Per-kind "detail" editors (docs/05 §3.5). DataContext = the selected binding. -->
         <DataTemplate x:Key="KeyDetailTemplate">
             <ComboBox IsEditable="True" IsTextSearchEnabled="False" StaysOpenOnEdit="True"
                       ToolTip="{loc:Tr tip.key}"
@@ -239,13 +239,13 @@
                         </StackPanel>
                         </Border>
 
-                        <!-- Binding editor: signal / trigger / action as sibling boxes; committed with "保存" -->
+                        <!-- Binding editor: signal / trigger / action as sibling boxes; edits auto-save -->
                         <Grid Margin="0,10,0,0">
                                 <TextBlock Text="{loc:Tr editor.bindingPlaceholder}"
                                            Foreground="{StaticResource TextFaintBrush}" FontSize="12" TextWrapping="Wrap"
-                                           Visibility="{Binding DataContext.HasDraft, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBoolToVisibility}}" />
-                                <StackPanel DataContext="{Binding DataContext.DraftBinding, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            Visibility="{Binding DataContext.HasDraft, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
+                                           Visibility="{Binding DataContext.IsBindingSelected, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource InverseBoolToVisibility}}" />
+                                <StackPanel DataContext="{Binding DataContext.SelectedBinding, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            Visibility="{Binding DataContext.IsBindingSelected, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}">
                                     <!-- ── Signal: which MIDI message this binding listens to ── -->
                                     <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="9">
                                     <StackPanel>
@@ -259,9 +259,6 @@
                                             <Button Content="{loc:Tr editor.learnLast}"
                                                     ToolTip="{loc:Tr editor.learnLast.tip}"
                                                     Command="{Binding DataContext.LearnCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                                            <Button Content="{loc:Tr editor.saveBinding}" Style="{StaticResource AccentButton}"
-                                                    ToolTip="{loc:Tr editor.saveBinding.tip}"
-                                                    Command="{Binding DataContext.CommitBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                                         </StackPanel>
                                     </Grid>
                                 <TextBlock Text="{Binding DataContext.LastSignalText, RelativeSource={RelativeSource AncestorType=Window}}"
