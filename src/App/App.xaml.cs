@@ -28,7 +28,10 @@ public partial class App : Application
     private IHost? _host;
     private EngineCoordinator? _engine;
     private NotifyIcon? _tray;
+    private ToolStripMenuItem? _showItem;
+    private ToolStripMenuItem? _toggleItem;
     private ToolStripMenuItem? _startupItem;
+    private ToolStripMenuItem? _exitItem;
     private MainWindow? _window;
     private bool _exiting;
 
@@ -202,20 +205,35 @@ public partial class App : Application
         };
 
         var menu = new ContextMenuStrip();
-        menu.Items.Add(Localization.Loc.T("tray.show"), null, (_, _) => ShowWindow());
-        menu.Items.Add(Localization.Loc.T("common.emergencyToggle"), null, (_, _) =>
+        _showItem = new ToolStripMenuItem(Localization.Loc.T("tray.show"), null, (_, _) => ShowWindow());
+        _toggleItem = new ToolStripMenuItem(Localization.Loc.T("common.emergencyToggle"), null, (_, _) =>
             _host!.Services.GetRequiredService<GatedInputSink>().Toggle());
-
         _startupItem = new ToolStripMenuItem(Localization.Loc.T("tray.startup"), null, (_, _) => ToggleAutoStart())
         {
             CheckOnClick = false,
         };
+        _exitItem = new ToolStripMenuItem(Localization.Loc.T("tray.exit"), null, (_, _) => ExitApp());
+        menu.Items.Add(_showItem);
+        menu.Items.Add(_toggleItem);
         menu.Items.Add(_startupItem);
-
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(Localization.Loc.T("tray.exit"), null, (_, _) => ExitApp());
+        menu.Items.Add(_exitItem);
         _tray.ContextMenuStrip = menu;
         _tray.DoubleClick += (_, _) => ShowWindow();
+
+        // Reflect the current auto-start state each time the menu opens (it may have been
+        // changed from the main window's checkbox).
+        menu.Opening += (_, _) =>
+        {
+            if (_startupItem is not null)
+            {
+                _startupItem.Checked = _host!.Services.GetRequiredService<ProfileManager>()
+                    .CurrentConfig.Settings.StartWithWindows;
+            }
+        };
+
+        // Re-translate the menu when the UI language changes at runtime.
+        Localization.Loc.Instance.LanguageChanged += (_, _) => Dispatcher.BeginInvoke(RetranslateTray);
 
         // Reflect the active profile in the tray tooltip (FR-5.6).
         var profiles = _host!.Services.GetRequiredService<ProfileManager>();
@@ -227,6 +245,15 @@ public partial class App : Application
                 _tray.Text = text.Length > 63 ? text[..63] : text;
             }
         });
+    }
+
+    // Update tray menu item captions to the current language.
+    private void RetranslateTray()
+    {
+        if (_showItem is not null) _showItem.Text = Localization.Loc.T("tray.show");
+        if (_toggleItem is not null) _toggleItem.Text = Localization.Loc.T("common.emergencyToggle");
+        if (_startupItem is not null) _startupItem.Text = Localization.Loc.T("tray.startup");
+        if (_exitItem is not null) _exitItem.Text = Localization.Loc.T("tray.exit");
     }
 
     // Apply the persisted "start with Windows" setting to the registry on launch (FR-7.6).

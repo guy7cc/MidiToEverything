@@ -8,6 +8,7 @@ using MidiToEverything.Core.Application;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
 using MidiToEverything.Infrastructure.Input;
+using MidiToEverything.Infrastructure.Startup;
 
 namespace MidiToEverything.App.ViewModels;
 
@@ -42,7 +43,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         EmissionEnabled = gate.Enabled;
         _allowExternalLaunch = launchPolicy.Allowed;
-        _runAtStartup = StartupManager.IsEnabled;
+        _runAtStartup = profiles.CurrentConfig.Settings.StartWithWindows;
         var settings = profiles.CurrentConfig.Settings;
         _obsHost = settings.ObsHost;
         _obsPort = settings.ObsPort;
@@ -125,8 +126,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _profiles.Reload(updated);
     }
 
-    // Launch-at-startup (HKCU Run): the registry entry itself is the source of truth.
-    partial void OnRunAtStartupChanged(bool value) => StartupManager.SetEnabled(value);
+    // Launch-at-startup: apply to the HKCU Run key and persist in config (so it survives
+    // restart and stays in sync with the tray menu's toggle). _suppressStartupWrite guards
+    // the reverse sync (config -> checkbox) from looping back here.
+    private bool _suppressStartupWrite;
+
+    partial void OnRunAtStartupChanged(bool value)
+    {
+        if (_suppressStartupWrite)
+        {
+            return;
+        }
+
+        WindowsStartup.SetEnabled(value, Environment.ProcessPath ?? string.Empty);
+        var config = _profiles.CurrentConfig;
+        var updated = config with { Settings = config.Settings with { StartWithWindows = value } };
+        _repository.Save(updated);
+        _profiles.Reload(updated);
+    }
 
     // OBS connection settings: persist on edit; the OBS client reads them on next connect.
     partial void OnObsHostChanged(string value) => SaveObsSettings();
@@ -188,6 +205,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         ContextWindow = string.IsNullOrEmpty(state.Window.WindowTitle)
             ? process
             : $"{process} — {state.Window.WindowTitle}";
+
+        // Keep the header checkbox in sync if the setting changed elsewhere (e.g. tray menu).
+        _suppressStartupWrite = true;
+        RunAtStartup = _profiles.CurrentConfig.Settings.StartWithWindows;
+        _suppressStartupWrite = false;
     }
 
     // ── Batched UI update (UI thread) ─────────────────────────────────────────
