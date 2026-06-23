@@ -30,7 +30,7 @@
 
         <!-- Body -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                      Padding="18,14,18,14" DataContext="{Binding DraftBinding}">
+                      Padding="18,14,18,14" DataContext="{Binding SelectedBinding}">
             <StackPanel>
                 <!-- Header: action kind + one-line description -->
                 <TextBlock Text="{Binding ActionKind, Converter={StaticResource ActionKindName}}" FontSize="18" FontWeight="SemiBold" />
