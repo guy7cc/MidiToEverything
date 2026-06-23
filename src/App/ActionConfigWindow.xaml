@@ -33,7 +33,7 @@
                       Padding="18,14,18,14" DataContext="{Binding DraftBinding}">
             <StackPanel>
                 <!-- Header: action kind + one-line description -->
-                <TextBlock Text="{Binding ActionKind}" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="{Binding ActionKind, Converter={StaticResource ActionKindName}}" FontSize="18" FontWeight="SemiBold" />
                 <TextBlock Text="{Binding ActionKind, Converter={StaticResource ActionKindHelp}, Mode=OneWay}"
                            Foreground="{StaticResource TextDimBrush}" TextWrapping="Wrap" Margin="0,2,0,0" />
 
