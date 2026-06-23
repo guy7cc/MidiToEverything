@@ -64,8 +64,10 @@ public static class EditorHelp
         EditableActionKind.Key => new[]
         {
             "ctrl+z", "ctrl+y", "ctrl+c", "ctrl+x", "ctrl+v", "ctrl+s", "ctrl+a", "ctrl+f",
+            "ctrl+-", "ctrl+=", "ctrl+0",
             "space", "enter", "tab", "esc", "delete", "backspace",
             "up", "down", "left", "right", "f1", "f2", "f5",
+            "-", "=", "/", "numpad1", "add", "subtract",
         },
         EditableActionKind.MouseClick => new[] { "left", "right", "middle", "left x2", "right x2" },
         EditableActionKind.Scroll => new[] { "vertical", "horizontal" },

@@ -69,7 +69,10 @@
 ```
 
 アクション共通補足:
-- `key.keys` は修飾キー（`ctrl`/`shift`/`alt`/`win`）＋通常キーの配列。送信はスキャンコード既定。
+- `key.keys` は修飾キー（`ctrl`/`shift`/`alt`/`win`、左右別の `lctrl`/`rctrl`/`lshift`/`rshift`/`lalt`/`ralt`/`altgr` も可）＋通常キーの配列。送信はスキャンコード既定。
+  - 通常キーは標準キーボードを概ね網羅: 英数字 `a`–`z` / `0`–`9`、ファンクション `f1`–`f24`、移動・編集 `enter`/`tab`/`esc`/`space`/`backspace`/`delete`/`insert`/`home`/`end`/`pageup`/`pagedown`/`up`/`down`/`left`/`right`、ロック `capslock`/`numlock`/`scrolllock`、`printscreen`/`pause`/`apps`(コンテキストメニュー)。
+  - 記号キーは記号そのもの（`-` `=` `[` `]` `\` `;` `'` `.` `/` `` ` ``）か語名（`minus`/`equals`/`plus`/`semicolon`/`backslash`/`period`/`slash`/`backtick` 等）。`,`（カンマ）と空白は区切り文字なので語名 `comma`/`space` を使う。記号はスキャンコード送信のため、実際の文字は送信先のキーボード配列に従う。
+  - テンキー: `numpad0`–`numpad9`、`add`/`subtract`/`multiply`/`divide`/`decimal`、`numpadenter`（数字・小数点は NumLock 有効時のみ数字を生成）。
 - `hold:true` は Trigger.mode=`hold` と組み合わせ、Note On で押下／Note Off で解放。
 - `useInputValue:true` は連続値（CC 等）を移動量/スクロール量へ写像（`scale`/`deadzone` 適用後）。
 
