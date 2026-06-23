@@ -43,7 +43,7 @@
 
                 <!-- Instructions -->
                 <TextBlock Text="{loc:Tr dialog.instructions}" FontWeight="SemiBold" Margin="0,16,0,4" />
-                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="6" Padding="12">
+                <Border Style="{StaticResource Card}" CornerRadius="6" Padding="12">
                     <TextBlock Text="{Binding ActionKind, Converter={StaticResource ActionInstructions}, Mode=OneWay}"
                                Foreground="{StaticResource TextDimBrush}" TextWrapping="Wrap" FontSize="12"
                                LineHeight="18" />
@@ -51,7 +51,7 @@
 
                 <!-- Test (unsaved) -->
                 <TextBlock Text="{loc:Tr dialog.test}" FontWeight="SemiBold" Margin="0,16,0,4" />
-                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="6" Padding="12">
+                <Border Style="{StaticResource Card}" CornerRadius="6" Padding="12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Button Content="{loc:Tr dialog.run}" Style="{StaticResource AccentButton}"
