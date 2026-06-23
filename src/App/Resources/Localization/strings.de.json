@@ -10,6 +10,8 @@
   "main.status.stopped": "Gestoppt (Not-Stopp)",
   "main.allowLaunch": "Externen Start erlauben",
   "main.allowLaunch.tip": "Aktiviert Start-Aktionen (Apps/Dateien/URLs). Standardmäßig aus Sicherheitsgründen deaktiviert.",
+  "main.runAtStartup": "Mit Windows starten",
+  "main.runAtStartup.tip": "MidiToEverything beim Anmelden bei Windows automatisch starten (aktueller Benutzer).",
   "main.editProfiles": "Profile bearbeiten",
   "main.devices": "Geräte",
   "main.detect.auto": "Auto-Erkennung",

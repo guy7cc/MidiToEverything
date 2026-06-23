@@ -10,6 +10,8 @@
   "main.status.stopped": "已停止 (紧急停止)",
   "main.allowLaunch": "允许外部启动",
   "main.allowLaunch.tip": "启用启动操作（应用/文件/URL）。出于安全默认关闭",
+  "main.runAtStartup": "开机启动",
+  "main.runAtStartup.tip": "登录 Windows 时自动启动 MidiToEverything（当前用户）。",
   "main.editProfiles": "编辑配置文件",
   "main.devices": "设备",
   "main.detect.auto": "自动检测",

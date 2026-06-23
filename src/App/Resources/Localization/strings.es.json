@@ -10,6 +10,8 @@
   "main.status.stopped": "Detenido (emergencia)",
   "main.allowLaunch": "Permitir inicio externo",
   "main.allowLaunch.tip": "Habilita acciones de inicio (apps/archivos/URLs). Desactivado por defecto por seguridad.",
+  "main.runAtStartup": "Iniciar con Windows",
+  "main.runAtStartup.tip": "Iniciar MidiToEverything automáticamente al iniciar sesión en Windows (usuario actual).",
   "main.editProfiles": "Editar perfiles",
   "main.devices": "Dispositivos",
   "main.detect.auto": "Auto-detectar",

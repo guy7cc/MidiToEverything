@@ -42,6 +42,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         EmissionEnabled = gate.Enabled;
         _allowExternalLaunch = launchPolicy.Allowed;
+        _runAtStartup = StartupManager.IsEnabled;
         var settings = profiles.CurrentConfig.Settings;
         _obsHost = settings.ObsHost;
         _obsPort = settings.ObsPort;
@@ -79,6 +80,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _monitorPaused;
     [ObservableProperty] private bool _isAutoDetect = true;
     [ObservableProperty] private bool _allowExternalLaunch;
+    [ObservableProperty] private bool _runAtStartup;
     [ObservableProperty] private string _obsHost = "localhost";
     [ObservableProperty] private int _obsPort = 4455;
     [ObservableProperty] private string _obsPassword = "";
@@ -122,6 +124,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _repository.Save(updated);
         _profiles.Reload(updated);
     }
+
+    // Launch-at-startup (HKCU Run): the registry entry itself is the source of truth.
+    partial void OnRunAtStartupChanged(bool value) => StartupManager.SetEnabled(value);
 
     // OBS connection settings: persist on edit; the OBS client reads them on next connect.
     partial void OnObsHostChanged(string value) => SaveObsSettings();

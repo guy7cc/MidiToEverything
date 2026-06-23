@@ -98,6 +98,9 @@
                     <CheckBox Content="{loc:Tr main.allowLaunch}" IsChecked="{Binding AllowExternalLaunch}"
                               VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" Margin="0,0,12,0"
                               ToolTip="{loc:Tr main.allowLaunch.tip}" />
+                    <CheckBox Content="{loc:Tr main.runAtStartup}" IsChecked="{Binding RunAtStartup}"
+                              VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" Margin="0,0,12,0"
+                              ToolTip="{loc:Tr main.runAtStartup.tip}" />
                     <Button Content="{loc:Tr common.emergencyToggle}" Command="{Binding ToggleEmissionCommand}" Margin="0,0,8,0" />
                     <Button Content="{loc:Tr main.editProfiles}" Click="OpenEditor_Click" Style="{StaticResource AccentButton}" />
                 </StackPanel>
