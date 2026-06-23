@@ -43,8 +43,8 @@
     <!-- ============================== Card "box" surface ============================== -->
     <!-- Panel boxes use a subtle top-lit gradient + a soft drop shadow for depth. -->
     <LinearGradientBrush x:Key="CardBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Color="#FF32323C" Offset="0" />
-        <GradientStop Color="#FF202026" Offset="1" />
+        <GradientStop Color="#FF3A3A45" Offset="0" />
+        <GradientStop Color="#FF2B2B33" Offset="1" />
     </LinearGradientBrush>
     <!-- Main-window header: same palette, swept left → right. -->
     <LinearGradientBrush x:Key="HeaderBrush" StartPoint="0,0" EndPoint="1,0">
@@ -57,6 +57,27 @@
         <Setter Property="Background" Value="{StaticResource CardBrush}" />
         <Setter Property="Effect" Value="{StaticResource CardShadow}" />
         <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!-- ToolTip — dark surface + light text (the default light chrome made our light text unreadable). -->
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="MaxWidth" Value="380" />
+        <Setter Property="HasDropShadow" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="9,6">
+                        <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                                   TextWrapping="Wrap" FontSize="12" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- ============================== TextBlock ============================== -->
