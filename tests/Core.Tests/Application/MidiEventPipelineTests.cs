@@ -100,6 +100,38 @@ public sealed class MidiEventPipelineTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TwoRelativeBindings_SameCc_SplitIncreaseAndDecrease()
+    {
+        // One knob (CC14): one binding fires on increase, the other on decrease — the documented
+        // two-binding split. Both bindings must be evaluated, not just the first match.
+        var profile = new Profile
+        {
+            Id = "base",
+            Name = "b",
+            Bindings = new[]
+            {
+                RelCc(14, RelativeOutput.FireOnIncrease, "a"),
+                RelCc(14, RelativeOutput.FireOnDecrease, "b"),
+            },
+        };
+        _context.Set(new ProfileLayers(profile));
+
+        _source.Emit(Cc(14, 1));   // two's complement 1 → +1 → increase → fires "a"
+        _source.Emit(Cc(14, 127)); // two's complement 127 → -1 → decrease → fires "b"
+
+        await _sink.WaitForCountAsync(2, Timeout);
+        Assert.Equal(new[] { "a" }, Assert.IsType<KeyTapCall>(_sink.Calls[0]).Keys);
+        Assert.Equal(new[] { "b" }, Assert.IsType<KeyTapCall>(_sink.Calls[1]).Keys);
+    }
+
+    private static Binding RelCc(int number, RelativeOutput output, string key) => new()
+    {
+        Signal = new Signal { Type = SignalKind.Cc, Number = number },
+        Trigger = new Trigger { Mode = TriggerMode.Relative, RelativeFormat = RelativeFormat.TwosComplement, RelativeOutput = output },
+        Actions = new InputAction[] { new KeyAction(new[] { key }) },
+    };
+
+    [Fact]
     public async Task MessageOrder_IsPreserved()
     {
         _source.Emit(NoteOn(36)); // undo

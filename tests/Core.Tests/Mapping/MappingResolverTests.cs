@@ -137,6 +137,37 @@ public class MappingResolverTests
         Assert.Equal(new[] { "ctrl", "z" }, Key(r).Keys);
     }
 
+    // ── Multiple bindings on one control all win (increase/decrease split) ─────
+
+    [Fact]
+    public void TwoBindingsSameControl_ResolveAll_ReturnsBoth()
+    {
+        var profile = new Profile
+        {
+            Id = "base",
+            Name = "b",
+            Bindings = new[]
+            {
+                RelCc(14, RelativeOutput.FireOnIncrease, "a"),
+                RelCc(14, RelativeOutput.FireOnDecrease, "b"),
+            },
+        };
+
+        var r = _resolver.ResolveAll(Cc(14, 1), new ProfileLayers(profile));
+
+        Assert.Equal(ResolutionOutcome.Resolved, r.Outcome);
+        Assert.Equal(2, r.Bindings.Count);
+        // Single Resolve still returns just the first (used by the monitor's primary label).
+        Assert.NotNull(_resolver.Resolve(Cc(14, 1), new ProfileLayers(profile)).Binding);
+    }
+
+    private static Binding RelCc(int number, RelativeOutput output, string key) => new()
+    {
+        Signal = new Signal { Type = SignalKind.Cc, Number = number },
+        Trigger = new Trigger { Mode = TriggerMode.Relative, RelativeOutput = output },
+        Actions = new InputAction[] { new KeyAction(new[] { key }) },
+    };
+
     // ── CC continuous binding resolves in context ─────────────────────────────
 
     [Fact]

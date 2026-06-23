@@ -71,8 +71,20 @@ public sealed record Profile
     /// </summary>
     public Binding? FindBestMatch(MidiMessage message)
     {
-        Binding? best = null;
+        var matches = FindAllMatches(message);
+        return matches.Count > 0 ? matches[0] : null;
+    }
+
+    /// <summary>
+    /// Every enabled binding that matches the message at the highest specificity present (ties
+    /// included, in declaration order). A more specific binding still shadows less specific ones,
+    /// but equally specific bindings all match — so one control can drive several actions, e.g. a
+    /// relative knob's increase and decrease split across two bindings (docs/03_ProfileSchema.md §6).
+    /// </summary>
+    public IReadOnlyList<Binding> FindAllMatches(MidiMessage message)
+    {
         var bestScore = int.MinValue;
+        var matches = new List<Binding>();
 
         foreach (var binding in Bindings)
         {
@@ -84,11 +96,16 @@ public sealed record Profile
             var score = binding.Signal.Specificity;
             if (score > bestScore)
             {
-                best = binding;
                 bestScore = score;
+                matches.Clear();
+                matches.Add(binding);
+            }
+            else if (score == bestScore)
+            {
+                matches.Add(binding);
             }
         }
 
-        return best;
+        return matches;
     }
 }

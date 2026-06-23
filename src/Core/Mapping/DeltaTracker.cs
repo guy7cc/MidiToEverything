@@ -22,20 +22,31 @@ public sealed class DeltaTracker
 
     public TriggerResult Evaluate(Trigger trigger, MidiMessage message)
     {
+        var raw = Advance(message);
+        return raw is { } delta
+            ? TriggerEvaluator.RelativeResult(trigger, ApplyWrap(trigger, delta))
+            : TriggerResult.None;
+    }
+
+    /// <summary>
+    /// Advance the per-control baseline and return the raw signed delta (current − previous), or
+    /// null on the first sample. Kept separate from <see cref="Evaluate"/> so several bindings on
+    /// one control can share a single advance per message (each applying its own <see cref="Trigger.Wrap"/>),
+    /// rather than consuming each other's delta.
+    /// </summary>
+    public int? Advance(MidiMessage message)
+    {
         var key = new ControlKey(message.Device, message.Channel, message.Type, message.Number);
         var hasPrev = _last.TryGetValue(key, out var prev);
         _last[key] = message.Value;
+        return hasPrev ? message.Value - prev : null;
+    }
 
-        // The first value only establishes a baseline; we can't know a delta yet.
-        if (!hasPrev)
-        {
-            return TriggerResult.None;
-        }
-
-        var delta = message.Value - prev;
+    /// <summary>Apply endless-knob wrap handling: a jump bigger than half the 7-bit range is a wrap.</summary>
+    public static int ApplyWrap(Trigger trigger, int delta)
+    {
         if (trigger.Wrap)
         {
-            // A jump bigger than half the 7-bit range is read as a wrap of an endless knob.
             if (delta > 64)
             {
                 delta -= 128;
@@ -46,7 +57,7 @@ public sealed class DeltaTracker
             }
         }
 
-        return TriggerEvaluator.RelativeResult(trigger, delta);
+        return delta;
     }
 
     /// <summary>Forget all tracked baselines (e.g. on profile reload).</summary>
