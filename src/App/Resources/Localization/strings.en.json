@@ -147,6 +147,8 @@
   "editor.profiles": "Profiles",
   "editor.add": "Add",
   "editor.remove": "Delete",
+  "editor.moveUp": "Move the selected binding up",
+  "editor.moveDown": "Move the selected binding down",
   "editor.profileName": "Profile name",
   "editor.targetApp": "Target app (pick a running app, or type a name → add candidate)",
   "editor.targetApp.tip": "Pick from processes that have a visible window",

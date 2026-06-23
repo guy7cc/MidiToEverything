@@ -147,6 +147,8 @@
   "editor.profiles": "プロファイル",
   "editor.add": "追加",
   "editor.remove": "削除",
+  "editor.moveUp": "選択中のバインディングを上へ移動",
+  "editor.moveDown": "選択中のバインディングを下へ移動",
   "editor.profileName": "プロファイル名",
   "editor.targetApp": "対象アプリ (起動中から選択、または名前を直接入力 → 候補を追加)",
   "editor.targetApp.tip": "起動中のウィンドウを持つプロセスから選べます",
