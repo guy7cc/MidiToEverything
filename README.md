@@ -37,7 +37,9 @@ dotnet run   --project src/App/App.csproj -c Release   # アプリ起動
 
 - **ポータブル zip** — 展開して `MidiToEverything.exe` を実行するだけ（インストール・管理者権限不要）。
 - **MSI インストーラ** — `Program Files` へのマシン単位インストール（インストール時に管理者権限/UAC が必要）。
-  スタートメニューにショートカットを作成し、「プログラムの追加と削除」に登録される。WiX で生成
+  ウィザード形式で、①インストール先の選択 ②インストール進捗の表示 ③デスクトップショートカット作成の確認
+  ④Windows スタートアップ時に起動するかの確認 ⑤インストール完了後に起動するかの確認 を行う。スタート
+  メニューにショートカットを作成し、「プログラムの追加と削除」に登録される。WiX で生成
   （[installer/Package.wxs](installer/Package.wxs)）。
 
 リリース手順は [CONTRIBUTING.md](CONTRIBUTING.md) §6。

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  WiX (v5+) source for the MidiToEverything MSI: a per-machine install of the
-  self-contained Windows build into Program Files, with a Start Menu shortcut.
+  WiX (v5+) source for the MidiToEverything MSI: a per-machine install into
+  Program Files with a guided wizard UI (install-dir selection, progress,
+  desktop-shortcut / run-at-startup / launch-after-install prompts).
   Built by the Release workflow (.github/workflows/release.yml) via "wix build"
-  after "dotnet publish", passing Version and an absolute PublishDir.
+  with the UI and Util extensions, passing Version and an absolute PublishDir.
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
 
   <Package Name="MidiToEverything"
            Manufacturer="guy7cc"
@@ -22,12 +24,71 @@
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/guy7cc/MidiToEverything" />
 
+    <!-- Wizard options. Desktop shortcut on by default; startup off by default
+         (left undeclared so its checkbox starts unchecked). -->
+    <Property Id="INSTALLDESKTOPSHORTCUT" Value="1" Secure="yes" />
+
     <Feature Id="Main" Title="MidiToEverything" Level="1">
+      <ComponentRef Id="MainExe" />
       <ComponentGroupRef Id="AppFiles" />
       <ComponentGroupRef Id="ExtraFiles" />
       <ComponentRef Id="PluginsDir" />
       <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+      <ComponentRef Id="StartupRun" />
     </Feature>
+
+    <!-- ============================ Wizard UI ============================ -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch MidiToEverything now" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+    <ui:WixUI Id="WixUI_InstallDir" />
+
+    <UI>
+      <!-- No LICENSE file in the project: route Welcome straight to the
+           install-dir page, skipping the license agreement dialog. -->
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="3" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="3" />
+
+      <!-- Insert the options page between install-dir and the ready/confirm page. -->
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="OptionsDlg" Order="3"
+               Condition="WIXUI_INSTALLDIR_VALID = &quot;1&quot;" />
+      <Publish Dialog="OptionsDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" />
+      <Publish Dialog="OptionsDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="OptionsDlg" Order="3" />
+
+      <!-- Launch the app from the Finish page when its checkbox is ticked. -->
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApplication"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed" />
+
+      <Dialog Id="OptionsDlg" Width="370" Height="270" Title="[ProductName] Setup">
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="300" Height="15" Transparent="yes" NoPrefix="yes"
+                 Text="{\WixUI_Font_Title}Options" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="320" Height="15" Transparent="yes" NoPrefix="yes"
+                 Text="Choose additional setup options." />
+
+        <Control Id="DesktopCheckBox" Type="CheckBox" X="20" Y="65" Width="330" Height="18"
+                 Property="INSTALLDESKTOPSHORTCUT" CheckBoxValue="1"
+                 Text="Create a shortcut on the Desktop" />
+        <Control Id="StartupCheckBox" Type="CheckBox" X="20" Y="92" Width="330" Height="18"
+                 Property="INSTALLSTARTUP" CheckBoxValue="1"
+                 Text="Start MidiToEverything automatically when Windows starts" />
+
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)" />
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)" />
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+      </Dialog>
+    </UI>
+
+    <!-- Launch-after-install: ShellExecute the installed exe as the user. -->
+    <Property Id="WixShellExecTarget" Value="[#MidiToEverythingExe]" />
+    <CustomAction Id="LaunchApplication" BinaryRef="Wix4UtilCA_X64" DllEntry="WixShellExec" Impersonate="yes" />
   </Package>
 
   <Fragment>
@@ -37,12 +98,21 @@
       </Directory>
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
   </Fragment>
 
   <Fragment>
-    <!-- Self-contained payload (exe + Resources/Localization/*.json), harvested from publish. -->
+    <!-- Main executable, with a stable File id for shortcuts and launch. -->
+    <Component Id="MainExe" Directory="INSTALLFOLDER" Guid="6B9A3F2E-7C4D-4E1B-9A2C-3F5E8D1A7C25">
+      <File Id="MidiToEverythingExe" Source="$(var.PublishDir)\MidiToEverything.exe" KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <!-- Remaining payload (Resources/Localization/*.json), harvested from publish. -->
     <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
       <Files Include="$(var.PublishDir)\**">
+        <Exclude Files="$(var.PublishDir)\MidiToEverything.exe" />
         <Exclude Files="$(var.PublishDir)\**\*.pdb" />
         <!-- macOS/Linux native MIDI libs ship in the package but aren't used on Windows. -->
         <Exclude Files="$(var.PublishDir)\**\*.dylib" />
@@ -71,13 +141,30 @@
 
   <Fragment>
     <Component Id="StartMenuShortcut" Directory="ProgramMenuFolder" Guid="6B9A3F2E-7C4D-4E1B-9A2C-3F5E8D1A7C22">
-      <Shortcut Id="StartShortcut"
-                Name="MidiToEverything"
-                Target="[INSTALLFOLDER]MidiToEverything.exe"
-                WorkingDirectory="INSTALLFOLDER"
-                Icon="AppIcon" />
+      <Shortcut Id="StartShortcut" Name="MidiToEverything" Target="[#MidiToEverythingExe]"
+                WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" />
       <RegistryValue Root="HKMU" Key="Software\guy7cc\MidiToEverything" Name="installed"
                      Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <!-- Optional Desktop shortcut (created only when the option is ticked). -->
+    <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="6B9A3F2E-7C4D-4E1B-9A2C-3F5E8D1A7C23"
+               Condition="INSTALLDESKTOPSHORTCUT = &quot;1&quot;">
+      <Shortcut Id="DesktopSc" Name="MidiToEverything" Target="[#MidiToEverythingExe]"
+                WorkingDirectory="INSTALLFOLDER" Icon="AppIcon" />
+      <RegistryValue Root="HKMU" Key="Software\guy7cc\MidiToEverything" Name="desktopShortcut"
+                     Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <!-- Optional run-at-startup (all users), created only when the option is ticked. -->
+    <Component Id="StartupRun" Directory="INSTALLFOLDER" Guid="6B9A3F2E-7C4D-4E1B-9A2C-3F5E8D1A7C24"
+               Condition="INSTALLSTARTUP = &quot;1&quot;">
+      <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="MidiToEverything"
+                     Type="string" Value="&quot;[#MidiToEverythingExe]&quot;" KeyPath="yes" />
     </Component>
   </Fragment>
 
