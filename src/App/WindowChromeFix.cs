@@ -18,7 +18,26 @@ internal static class WindowChromeFix
     {
         var handle = new WindowInteropHelper(window).Handle;
         HwndSource.FromHwnd(handle)?.AddHook(Hook);
+        RoundCorners(handle);
     }
+
+    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    private const int DWMWCP_ROUND = 2;
+
+    /// <summary>Ask DWM to round the window corners (Windows 11+; a no-op on older OSes).</summary>
+    private static void RoundCorners(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        var preference = DWMWCP_ROUND;
+        _ = DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
+    }
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
     private static IntPtr Hook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {

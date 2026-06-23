@@ -126,7 +126,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Profile list (scrolls when many profiles) -->
-            <Border Grid.Row="0" Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="10" Margin="0,0,12,0">
+            <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}" CornerRadius="8" Padding="10" Margin="0,0,12,0">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="{loc:Tr editor.profiles}" FontWeight="SemiBold" Margin="0,0,0,8" />
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
@@ -146,7 +146,7 @@
             </Border>
 
             <!-- Profile details + bindings (whole panel scrolls so nothing is hidden when small) -->
-            <Border Grid.Row="0" Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="14">
+            <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}" CornerRadius="8" Padding="14">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                               DataContext="{Binding SelectedProfile}" Padding="0,0,8,0">
                     <StackPanel>
@@ -385,7 +385,7 @@
                                 </Grid>
 
                                 <!-- Live help: explains the selected type / trigger / action + field guidance -->
-                                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="4" Padding="9" Margin="0,8,0,0">
+                                <Border Background="{StaticResource CardBrush}" CornerRadius="4" Padding="9" Margin="0,8,0,0">
                                     <StackPanel>
                                         <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TextDimBrush}">
                                             <Run Text="{loc:Tr editor.help.kindPrefix}" Foreground="{StaticResource TextFaintBrush}" /><Run Text="{Binding Signal.Type, Converter={StaticResource SignalKindHelp}, Mode=OneWay}" />

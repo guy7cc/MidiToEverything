@@ -63,7 +63,7 @@
         </Grid>
 
         <!-- Header bar -->
-        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" Padding="16,10">
+        <Border Grid.Row="1" Background="{StaticResource CardBrush}" Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -112,7 +112,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Devices + detection mode (B-1) -->
-            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,12,0">
+            <Border Grid.Column="0" Style="{StaticResource Card}" CornerRadius="8" Padding="12" Margin="0,0,12,0">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="{loc:Tr main.devices}" FontWeight="SemiBold"
                                Foreground="{StaticResource TextDimBrush}" Margin="0,0,0,10" />
@@ -157,7 +157,7 @@
             </Border>
 
             <!-- Input monitor (expanded, vertical + horizontal scroll) -->
-            <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="12">
+            <Border Grid.Column="1" Style="{StaticResource Card}" CornerRadius="8" Padding="12">
                 <DockPanel>
                     <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
                         <TextBlock Text="{loc:Tr main.monitor}" FontWeight="SemiBold" Foreground="{StaticResource TextDimBrush}"

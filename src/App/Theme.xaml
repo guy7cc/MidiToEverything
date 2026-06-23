@@ -40,6 +40,20 @@
     <SolidColorBrush x:Key="PressedBrush" Color="{StaticResource Pal.Pressed}" />
     <SolidColorBrush x:Key="ScrollThumbBrush" Color="#FF44444F" />
 
+    <!-- ============================== Card "box" surface ============================== -->
+    <!-- Panel boxes use a subtle top-lit gradient + a soft drop shadow for depth. -->
+    <LinearGradientBrush x:Key="CardBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF32323C" Offset="0" />
+        <GradientStop Color="#FF202026" Offset="1" />
+    </LinearGradientBrush>
+    <DropShadowEffect x:Key="CardShadow" Color="#FF000000" BlurRadius="20" ShadowDepth="3"
+                      Direction="270" Opacity="0.65" RenderingBias="Quality" />
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource CardBrush}" />
+        <Setter Property="Effect" Value="{StaticResource CardShadow}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
     <!-- ============================== TextBlock ============================== -->
     <Style TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
