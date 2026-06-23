@@ -32,7 +32,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _flushTimer;
     private readonly ConcurrentQueue<MidiMessage> _incoming = new();
-    private readonly MappingResolver _resolver = new();
+    private readonly FiringEvaluator _firing = new();
 
     public MainViewModel(IMidiSource source, ProfileManager profiles, GatedInputSink gate,
         LaunchPolicy launchPolicy, IProfileRepository repository)
@@ -219,10 +219,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void Flush()
     {
-        if (_incoming.IsEmpty || MonitorPaused)
+        if (_incoming.IsEmpty)
         {
-            // Still drain when paused so the queue does not grow unbounded.
-            while (_incoming.TryDequeue(out _)) { }
             return;
         }
 
@@ -231,7 +229,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         while (_incoming.TryDequeue(out var message) && drained < 512)
         {
             drained++;
-            Monitor.Insert(0, new MonitorEntry(message, time, ResolveActionLabel(message))); // newest first
+            // Always evaluate (the firing state is stateful and must track every message in order,
+            // matching the engine); only add a row when not paused.
+            var action = ResolveActionLabel(message);
+            if (!MonitorPaused)
+            {
+                Monitor.Insert(0, new MonitorEntry(message, time, action)); // newest first
+            }
         }
 
         while (Monitor.Count > MaxLogRows)
@@ -241,21 +245,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Find the action this input maps to in the active profile layers (the same resolution the
-    /// engine uses), so the monitor can show it. Independent of the emission gate / trigger state:
-    /// it reports "this input has a mapping", not "it fired just now". Null when nothing matches.
+    /// The action(s) that <em>actually fire</em> for this message — the same matching + trigger +
+    /// edge evaluation the engine uses (<see cref="FiringEvaluator"/>), not merely "the signal
+    /// matched". Null when nothing fires (e.g. a fire-on-increase binding on a decrease tick).
     /// </summary>
     private string? ResolveActionLabel(MidiMessage message)
     {
-        var resolution = _resolver.ResolveAll(message, _profiles.Current);
-        if (!resolution.ShouldEmit || resolution.Bindings.Count == 0)
+        var firings = _firing.Evaluate(message, _profiles.Current);
+        if (firings.Count == 0)
         {
             return null;
         }
 
-        // Several bindings can share one control (e.g. a relative knob's increase/decrease split);
-        // show each action so the monitor reflects everything the input drives.
-        var labels = resolution.Bindings
+        var labels = firings
+            .Select(f => f.Binding)
             .Where(b => b.Actions.Count > 0)
             .Select(DescribeBindingAction)
             .ToList();

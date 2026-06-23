@@ -19,12 +19,10 @@ public sealed class MidiEventPipeline : IAsyncDisposable
 {
     private readonly IMidiSource _source;
     private readonly IMappingContext _context;
-    private readonly MappingResolver _resolver;
+    private readonly FiringEvaluator _firing;
     private readonly ActionExecutor _executor;
     private readonly ILogger<MidiEventPipeline> _logger;
     private readonly Channel<Envelope> _channel;
-    private readonly EdgeGate _edgeGate = new();
-    private readonly DeltaTracker _deltaTracker = new();
 
     private CancellationTokenSource? _cts;
     private Task? _worker;
@@ -40,7 +38,7 @@ public sealed class MidiEventPipeline : IAsyncDisposable
         _source = source;
         _context = context;
         _executor = executor;
-        _resolver = resolver ?? new MappingResolver();
+        _firing = new FiringEvaluator(resolver);
         _logger = logger ?? NullLogger<MidiEventPipeline>.Instance;
         _channel = Channel.CreateBounded<Envelope>(new BoundedChannelOptions(capacity)
         {
@@ -118,57 +116,20 @@ public sealed class MidiEventPipeline : IAsyncDisposable
     private void Process(Envelope envelope)
     {
         var message = envelope.Message;
-        var resolution = _resolver.ResolveAll(message, _context.Current);
 
-        if (!resolution.ShouldEmit)
+        // FiringEvaluator applies matching + trigger + AbsoluteDelta + edge, returning every binding
+        // that actually fires (one control can drive several, e.g. a relative knob's increase and
+        // decrease split across two bindings). The pipeline just executes each.
+        var firings = _firing.Evaluate(message, _context.Current);
+        foreach (var firing in firings)
         {
-            if (resolution.Outcome == ResolutionOutcome.Blocked)
-            {
-                _logger.LogTrace("Blocked {Key} by {Profile}", message, resolution.SourceProfileId);
-            }
-
-            return;
+            _executor.Execute(firing.Binding, firing.Trigger, message);
         }
 
-        // Every co-winning binding fires, so one control can drive several actions (e.g. a relative
-        // knob's increase and decrease split across two bindings). AbsoluteDelta is stateful per
-        // control: advance its baseline once per message and reuse the raw delta for each binding
-        // (each applies its own Wrap), so two such bindings don't consume each other's delta.
-        int? absDelta = null;
-        var absAdvanced = false;
-
-        foreach (var binding in resolution.Bindings)
-        {
-            TriggerResult trigger;
-            if (binding.Trigger is { Mode: TriggerMode.Relative, RelativeFormat: RelativeFormat.AbsoluteDelta })
-            {
-                if (!absAdvanced)
-                {
-                    absDelta = _deltaTracker.Advance(message);
-                    absAdvanced = true;
-                }
-
-                trigger = absDelta is { } raw
-                    ? TriggerEvaluator.RelativeResult(binding.Trigger, DeltaTracker.ApplyWrap(binding.Trigger, raw))
-                    : TriggerResult.None;
-            }
-            else
-            {
-                trigger = TriggerEvaluator.Evaluate(binding.Trigger, message);
-            }
-
-            // EdgeGate collapses repeated in-zone fires to a single rising edge when Trigger.Edge
-            // is set; otherwise it just mirrors ShouldFire. Runs on the single worker thread.
-            if (_edgeGate.ShouldEmit(binding.Trigger, message, trigger))
-            {
-                _executor.Execute(binding, trigger, message);
-            }
-        }
-
-        if (_logger.IsEnabled(LogLevel.Trace))
+        if (firings.Count > 0 && _logger.IsEnabled(LogLevel.Trace))
         {
             var micros = (Stopwatch.GetTimestamp() - envelope.Timestamp) * 1_000_000.0 / Stopwatch.Frequency;
-            _logger.LogTrace("Emitted {Profile} in {Micros:F1}us", resolution.SourceProfileId, micros);
+            _logger.LogTrace("Emitted {Count} action(s) in {Micros:F1}us", firings.Count, micros);
         }
     }
 
