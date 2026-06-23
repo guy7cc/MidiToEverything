@@ -22,7 +22,7 @@
             <local:ActionKindNameConverter x:Key="ActionKindName" />
             <local:OutOfRangeNameConverter x:Key="OutOfRangeName" />
             <local:RelativeFormatNameConverter x:Key="RelativeFormatName" />
-            <local:RelativeOutputNameConverter x:Key="RelativeOutputName" />
+            <local:RelativeOutputLabelConverter x:Key="RelativeOutputLabel" />
             <local:ModeFieldVisibilityConverter x:Key="ModeFieldVisible" />
             <local:ActionAmountUsageConverter x:Key="ActionAmountUsage" />
             <local:ActionDetailCandidatesConverter x:Key="ActionDetailCandidates" />

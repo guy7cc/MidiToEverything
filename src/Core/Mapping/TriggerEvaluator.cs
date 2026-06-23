@@ -166,6 +166,8 @@ public static class TriggerEvaluator
         {
             RelativeOutput.FireOnIncrease => increasing ? new TriggerResult(TriggerPhase.Press, 0) : TriggerResult.None,
             RelativeOutput.FireOnDecrease => decreasing ? new TriggerResult(TriggerPhase.Press, 0) : TriggerResult.None,
+            // Any non-zero change fires (zero was already filtered out above).
+            RelativeOutput.FireOnEither => new TriggerResult(TriggerPhase.Press, 0),
             // Amount: signed magnitude carried as an Increase/Decrease tick.
             _ => new TriggerResult(increasing ? TriggerPhase.Increase : TriggerPhase.Decrease, magnitude),
         };

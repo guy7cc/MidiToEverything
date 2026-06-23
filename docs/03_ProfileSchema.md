@@ -34,7 +34,7 @@
 | `invert` | bool | false | 値の反転 |
 | `scale` | number | 1.0 | 感度（出力量の倍率） |
 | `relativeFormat` | enum | `twosComplement` | `relative` の増減の読み取り方。エンコーダ符号方式（`twosComplement`/`signedBit`/`binaryOffset`）または `absoluteDelta`（絶対値の前回との差分を増減として扱う＝絶対値デバイスを相対化）|
-| `relativeOutput` | enum | `amount` | `relative` の増減の使い方。`amount`(アクション量として送る) / `fireOnIncrease`(増えたら発火) / `fireOnDecrease`(減ったら発火)。fire 系は発火トリガーになる |
+| `relativeOutput` | enum | `amount` | `relative` の発火の向き。`amount`(増減量をアクション量として送る) / `fireOnIncrease`(増加=エンコーダなら右回り) / `fireOnDecrease`(減少=左回り) / `fireOnEither`(どちらでも発火)。fire 系は発火トリガー。エディタのラベルは `relativeFormat` に応じて回転方向（エンコーダ）か値の増減（`absoluteDelta`）で表示される |
 | `edge` | bool | false | `trigger`/`absolute`(gate) のエッジ発火。**ゾーンに入った瞬間に1回だけ**発火し、出てから再度入るまで再発火しない。CC/フェーダをボタンのように使う場合に有効（`hold`/`relative` では無視） |
 | `wrap` | bool | false | `relative` + `absoluteDelta` 専用。値が一周する無限ノブ（…126,127,0,1…）で `127→0` を `+1` と解釈。境界のあるフェーダでは off（大きなスイープを誤検出しないため）|
 
@@ -235,7 +235,9 @@
 | Clip Studio Paint 前面 | 個別に定義なし→基本へフォールバック: **元に戻す** | 個別が `none` で**明示ブロック→何もしない** |
 | OBS 前面 | 個別が上書き: **シーン1へ(Ctrl+Shift+1)** | 個別に定義なし→基本: **コピー** |
 
-> ルール: 上位レイヤ（ピン留め > コンテキスト一致 > 基本）で最初に見つかった定義を採用。`none` はフォールバックを止める。詳細は [02_Architecture.md](02_Architecture.md) §3.2。
+> ルール: 上位レイヤ（ピン留め > コンテキスト一致 > 基本）で最初に定義が見つかったレイヤを採用。`none` はフォールバックを止める。詳細は [02_Architecture.md](02_Architecture.md) §3.2。
+>
+> 採用レイヤ内で**同一シグナルに同じ具体度のバインディングが複数ある場合は、それら全てが発火する**（より具体的なバインディングは曖昧なものを引き続き上書きする）。これにより1つのコントロールで複数アクションを駆動できる。例えば相対値ノブで `fireOnIncrease` の binding と `fireOnDecrease` の binding を別々に作れば、増加で前者・減少で後者がそれぞれ発火する。
 
 ---
 

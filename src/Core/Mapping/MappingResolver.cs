@@ -57,4 +57,60 @@ public sealed class MappingResolver
 
         return MappingResolution.NoMatch;
     }
+
+    /// <summary>
+    /// Like <see cref="Resolve"/>, but returns every co-winning binding in the deciding layer
+    /// (same control, same specificity) so one control can drive several actions — e.g. a relative
+    /// knob with one binding firing on increase and another on decrease (docs/03_ProfileSchema.md §6).
+    /// An explicit block among the winners stops fallback and emits nothing (FR-6.4).
+    /// </summary>
+    public LayerResolution ResolveAll(MidiMessage message, ProfileLayers layers)
+    {
+        foreach (var profile in layers.InPriorityOrder())
+        {
+            if (!profile.Enabled)
+            {
+                continue;
+            }
+
+            var matches = profile.FindAllMatches(message);
+            if (matches.Count == 0)
+            {
+                continue; // layer defines nothing — fall through (FR-6.3)
+            }
+
+            foreach (var binding in matches)
+            {
+                if (binding.IsBlock)
+                {
+                    return LayerResolution.Blocked(profile.Id);
+                }
+            }
+
+            return LayerResolution.Resolved(matches, profile.Id);
+        }
+
+        return LayerResolution.NoMatch;
+    }
+}
+
+/// <summary>
+/// Outcome of <see cref="MappingResolver.ResolveAll"/>: the set of co-winning bindings (all at the
+/// top specificity of the deciding layer) that should each be evaluated and emitted.
+/// </summary>
+public readonly record struct LayerResolution(
+    ResolutionOutcome Outcome,
+    IReadOnlyList<Binding> Bindings,
+    string? SourceProfileId)
+{
+    public bool ShouldEmit => Outcome == ResolutionOutcome.Resolved;
+
+    public static readonly LayerResolution NoMatch =
+        new(ResolutionOutcome.NoMatch, Array.Empty<Binding>(), null);
+
+    public static LayerResolution Blocked(string profileId) =>
+        new(ResolutionOutcome.Blocked, Array.Empty<Binding>(), profileId);
+
+    public static LayerResolution Resolved(IReadOnlyList<Binding> bindings, string profileId) =>
+        new(ResolutionOutcome.Resolved, bindings, profileId);
 }

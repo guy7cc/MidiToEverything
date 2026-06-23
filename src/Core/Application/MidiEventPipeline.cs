@@ -118,7 +118,7 @@ public sealed class MidiEventPipeline : IAsyncDisposable
     private void Process(Envelope envelope)
     {
         var message = envelope.Message;
-        var resolution = _resolver.Resolve(message, _context.Current);
+        var resolution = _resolver.ResolveAll(message, _context.Current);
 
         if (!resolution.ShouldEmit)
         {
@@ -130,22 +130,40 @@ public sealed class MidiEventPipeline : IAsyncDisposable
             return;
         }
 
-        var binding = resolution.Binding!;
+        // Every co-winning binding fires, so one control can drive several actions (e.g. a relative
+        // knob's increase and decrease split across two bindings). AbsoluteDelta is stateful per
+        // control: advance its baseline once per message and reuse the raw delta for each binding
+        // (each applies its own Wrap), so two such bindings don't consume each other's delta.
+        int? absDelta = null;
+        var absAdvanced = false;
 
-        // Relative + AbsoluteDelta needs the previous value, so it's evaluated by the stateful
-        // DeltaTracker rather than the pure evaluator.
-        var trigger = binding.Trigger is { Mode: TriggerMode.Relative, RelativeFormat: RelativeFormat.AbsoluteDelta }
-            ? _deltaTracker.Evaluate(binding.Trigger, message)
-            : TriggerEvaluator.Evaluate(binding.Trigger, message);
-
-        // EdgeGate collapses repeated in-zone fires to a single rising edge when Trigger.Edge
-        // is set; otherwise it just mirrors ShouldFire. Runs on the single worker thread.
-        if (!_edgeGate.ShouldEmit(binding.Trigger, message, trigger))
+        foreach (var binding in resolution.Bindings)
         {
-            return;
-        }
+            TriggerResult trigger;
+            if (binding.Trigger is { Mode: TriggerMode.Relative, RelativeFormat: RelativeFormat.AbsoluteDelta })
+            {
+                if (!absAdvanced)
+                {
+                    absDelta = _deltaTracker.Advance(message);
+                    absAdvanced = true;
+                }
 
-        _executor.Execute(binding, trigger, message);
+                trigger = absDelta is { } raw
+                    ? TriggerEvaluator.RelativeResult(binding.Trigger, DeltaTracker.ApplyWrap(binding.Trigger, raw))
+                    : TriggerResult.None;
+            }
+            else
+            {
+                trigger = TriggerEvaluator.Evaluate(binding.Trigger, message);
+            }
+
+            // EdgeGate collapses repeated in-zone fires to a single rising edge when Trigger.Edge
+            // is set; otherwise it just mirrors ShouldFire. Runs on the single worker thread.
+            if (_edgeGate.ShouldEmit(binding.Trigger, message, trigger))
+            {
+                _executor.Execute(binding, trigger, message);
+            }
+        }
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {

@@ -72,6 +72,9 @@ public enum RelativeOutput
 
     /// <summary>Fire once per decrease tick; ignore increases (a fire trigger).</summary>
     FireOnDecrease,
+
+    /// <summary>Fire once on any change, either direction (a fire trigger).</summary>
+    FireOnEither,
 }
 
 /// <summary>

@@ -81,11 +81,14 @@ internal static class TriggerHint
             s += Loc.T("hint.rel.wrap");
         }
 
-        // 2) What the delta does: send as amount, or fire on a direction.
+        // 2) What the delta does: fire on a direction / either, or send as amount. Phrased for the
+        // source — rotation (right/left turn) for an encoder, value change for AbsoluteDelta.
+        var abs = b.RelativeFormat == RelativeFormat.AbsoluteDelta;
         s += b.RelativeOutput switch
         {
-            RelativeOutput.FireOnIncrease => Loc.T("hint.rel.out.increase"),
-            RelativeOutput.FireOnDecrease => Loc.T("hint.rel.out.decrease"),
+            RelativeOutput.FireOnIncrease => Loc.T(abs ? "hint.rel.out.abs.up" : "hint.rel.out.enc.right"),
+            RelativeOutput.FireOnDecrease => Loc.T(abs ? "hint.rel.out.abs.down" : "hint.rel.out.enc.left"),
+            RelativeOutput.FireOnEither => Loc.T("hint.rel.out.either"),
             _ => Loc.T("hint.rel.out.amount"),
         };
 

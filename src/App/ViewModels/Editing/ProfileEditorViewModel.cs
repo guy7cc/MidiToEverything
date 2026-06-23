@@ -67,7 +67,10 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
     public Array ActionKinds { get; } = Enum.GetValues<EditableActionKind>();
     public Array OutOfRangeOptions { get; } = Enum.GetValues<OutOfRangeBehavior>();
     public Array RelativeFormatOptions { get; } = Enum.GetValues<RelativeFormat>();
-    public Array RelativeOutputOptions { get; } = Enum.GetValues<RelativeOutput>();
+
+    /// <summary>Relative output options, ordered for the dropdown (directions first, then amount).</summary>
+    public RelativeOutput[] RelativeOutputOptions { get; } =
+        { RelativeOutput.FireOnIncrease, RelativeOutput.FireOnDecrease, RelativeOutput.FireOnEither, RelativeOutput.Amount };
     public string[] UiaVerbs { get; } = { "invoke", "toggle", "setvalue" };
     public string[] HttpMethods { get; } = { "GET", "POST", "PUT", "DELETE", "PATCH" };
 

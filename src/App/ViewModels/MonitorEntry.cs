@@ -7,18 +7,25 @@ namespace MidiToEverything.App.ViewModels;
 /// <summary>One row in the input monitor log (FR-2.1). Immutable; built off the UI thread is fine.</summary>
 public sealed class MonitorEntry
 {
-    public MonitorEntry(MidiMessage message, string time)
+    public MonitorEntry(MidiMessage message, string time, string? action = null)
     {
         Time = time;
         Source = $"{message.Device}  ch{message.Channel:00}";
         Detail = Describe(message);
         Accent = AccentFor(message.Type);
+        Action = action ?? "";
     }
 
     public string Time { get; }
     public string Source { get; }
     public string Detail { get; }
     public Brush Accent { get; }
+
+    /// <summary>Label of the action this input maps to in the active profile layers ("" if none).</summary>
+    public string Action { get; }
+
+    /// <summary>Arrowed action label for display, or empty when no action matches.</summary>
+    public string ActionLabel => Action.Length == 0 ? "" : $"→ {Action}";
 
     private static string Describe(MidiMessage m) => m.Type switch
     {

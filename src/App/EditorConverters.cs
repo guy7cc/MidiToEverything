@@ -34,8 +34,21 @@ public static class EditorHelp
     /// <summary>Localized display name for how a Relative trigger decodes its delta.</summary>
     public static string RelativeFormatName(RelativeFormat format) => Loc.T($"relativeFormat.{format}");
 
-    /// <summary>Localized display name for a Relative trigger's output (amount / fire on a direction).</summary>
-    public static string RelativeOutputName(RelativeOutput output) => Loc.T($"relativeOutput.{output}");
+    /// <summary>
+    /// Localized RelativeOutput label, phrased for the source: rotation (right/left turn) for an
+    /// encoder, or value change (increased/decreased) for AbsoluteDelta.
+    /// </summary>
+    public static string RelativeOutputName(RelativeOutput output, RelativeFormat format)
+    {
+        var abs = format == RelativeFormat.AbsoluteDelta;
+        return output switch
+        {
+            RelativeOutput.FireOnIncrease => Loc.T(abs ? "relOut.abs.up" : "relOut.enc.right"),
+            RelativeOutput.FireOnDecrease => Loc.T(abs ? "relOut.abs.down" : "relOut.enc.left"),
+            RelativeOutput.FireOnEither => Loc.T("relOut.either"),
+            _ => Loc.T("relOut.amount"),
+        };
+    }
 
     /// <summary>How the selected action consumes the action amount it receives.</summary>
     public static string ActionAmountUsage(EditableActionKind kind) => kind switch
@@ -172,13 +185,15 @@ public sealed class RelativeFormatNameConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-/// <summary>Dropdown label: localized Relative output name (amount / fire on a direction).</summary>
-public sealed class RelativeOutputNameConverter : IValueConverter
+/// <summary>Dropdown label for a RelativeOutput, phrased for the current RelativeFormat (rotation vs value).</summary>
+public sealed class RelativeOutputLabelConverter : IMultiValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        => value is RelativeOutput o ? EditorHelp.RelativeOutputName(o) : value?.ToString() ?? "";
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        => values.Length >= 2 && values[0] is RelativeOutput o && values[1] is RelativeFormat f
+            ? EditorHelp.RelativeOutputName(o, f)
+            : "";
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         => throw new NotSupportedException();
 }
 

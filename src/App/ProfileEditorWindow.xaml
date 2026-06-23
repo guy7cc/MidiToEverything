@@ -410,7 +410,18 @@
                                                 <ComboBox ToolTip="{loc:Tr field.relativeOutput.tip}"
                                                           ItemsSource="{Binding DataContext.RelativeOutputOptions, RelativeSource={RelativeSource AncestorType=Window}}"
                                                           SelectedItem="{Binding RelativeOutput}">
-                                                    <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Converter={StaticResource RelativeOutputName}}" /></DataTemplate></ComboBox.ItemTemplate>
+                                                    <ComboBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock>
+                                                                <TextBlock.Text>
+                                                                    <MultiBinding Converter="{StaticResource RelativeOutputLabel}">
+                                                                        <Binding />
+                                                                        <Binding Path="DataContext.RelativeFormat" RelativeSource="{RelativeSource AncestorType=ComboBox}" />
+                                                                    </MultiBinding>
+                                                                </TextBlock.Text>
+                                                            </TextBlock>
+                                                        </DataTemplate>
+                                                    </ComboBox.ItemTemplate>
                                                 </ComboBox>
                                             </StackPanel>
                                         </WrapPanel>
