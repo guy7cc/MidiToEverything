@@ -10,6 +10,8 @@
   "main.status.stopped": "停止中 (緊急停止)",
   "main.allowLaunch": "外部起動を許可",
   "main.allowLaunch.tip": "起動アクション（アプリ/ファイル/URL）を有効化。安全のため既定は無効",
+  "main.runAtStartup": "スタートアップ起動",
+  "main.runAtStartup.tip": "Windows サインイン時に MidiToEverything を自動起動します（現在のユーザー）。",
   "main.editProfiles": "プロファイル編集",
   "main.devices": "デバイス",
   "main.detect.auto": "自動更新",

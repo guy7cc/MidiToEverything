@@ -10,6 +10,8 @@
   "main.status.stopped": "중지됨 (비상 정지)",
   "main.allowLaunch": "외부 실행 허용",
   "main.allowLaunch.tip": "실행 동작(앱/파일/URL)을 활성화합니다. 안전을 위해 기본값은 꺼짐.",
+  "main.runAtStartup": "시작 시 실행",
+  "main.runAtStartup.tip": "Windows 로그인 시 MidiToEverything 을(를) 자동 실행합니다(현재 사용자).",
   "main.editProfiles": "프로필 편집",
   "main.devices": "장치",
   "main.detect.auto": "자동 감지",

@@ -32,3 +32,6 @@ desktop.ini
 
 # Runtime user data (profiles/logs live in %APPDATA%, never in-repo)
 *.log
+
+# local installer/UI verification artifacts
+_verify/

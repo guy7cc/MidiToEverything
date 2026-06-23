@@ -10,6 +10,8 @@
   "main.status.stopped": "Stopped (emergency)",
   "main.allowLaunch": "Allow external launch",
   "main.allowLaunch.tip": "Enable launch actions (apps/files/URLs). Off by default for safety.",
+  "main.runAtStartup": "Run at startup",
+  "main.runAtStartup.tip": "Launch MidiToEverything automatically when you sign in to Windows (current user).",
   "main.editProfiles": "Edit profiles",
   "main.devices": "Devices",
   "main.detect.auto": "Auto-detect",
