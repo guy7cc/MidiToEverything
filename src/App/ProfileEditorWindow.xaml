@@ -215,6 +215,10 @@
                         <Grid Margin="0,0,0,6">
                             <TextBlock Text="{loc:Tr editor.bindings}" FontWeight="SemiBold" VerticalAlignment="Center" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="▲" ToolTip="{loc:Tr editor.moveUp}" MinWidth="30"
+                                        Command="{Binding DataContext.MoveBindingUpCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                <Button Content="▼" ToolTip="{loc:Tr editor.moveDown}" MinWidth="30"
+                                        Command="{Binding DataContext.MoveBindingDownCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                                 <Button Content="{loc:Tr editor.add}" Command="{Binding DataContext.AddBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                                 <Button Content="{loc:Tr editor.remove}" Command="{Binding DataContext.RemoveBindingCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
                             </StackPanel>

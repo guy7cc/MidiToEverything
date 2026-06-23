@@ -280,6 +280,34 @@ public partial class ProfileEditorViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>Move the selected binding one place earlier in the list (persisted).</summary>
+    [RelayCommand]
+    private void MoveBindingUp() => MoveSelectedBinding(-1);
+
+    /// <summary>Move the selected binding one place later in the list (persisted).</summary>
+    [RelayCommand]
+    private void MoveBindingDown() => MoveSelectedBinding(+1);
+
+    // Reorder within the profile; the moved item stays selected (Move keeps the instance).
+    private void MoveSelectedBinding(int delta)
+    {
+        if (SelectedProfile is null || SelectedBinding is null)
+        {
+            return;
+        }
+
+        var list = SelectedProfile.Bindings;
+        var from = list.IndexOf(SelectedBinding);
+        var to = from + delta;
+        if (from < 0 || to < 0 || to >= list.Count)
+        {
+            return;
+        }
+
+        list.Move(from, to);
+        SaveNow(); // order change persists immediately
+    }
+
     /// <summary>
     /// Capture the last received MIDI signal into the selected binding (FR-2.3). If no binding is
     /// selected, a new one is created in the current profile so "learn" always does something.
