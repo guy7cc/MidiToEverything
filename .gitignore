@@ -27,8 +27,9 @@ coverage*.xml
 Thumbs.db
 desktop.ini
 
-# Claude Code local settings
-.claude/
+# Claude Code local settings (skills are shared tooling — tracked below)
+.claude/*
+!.claude/skills/
 
 # Runtime user data (profiles/logs live in %APPDATA%, never in-repo)
 *.log
