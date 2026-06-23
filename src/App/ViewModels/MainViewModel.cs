@@ -4,9 +4,11 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MidiToEverything.App.Localization;
+using MidiToEverything.App.ViewModels.Editing;
 using MidiToEverything.Core.Application;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
+using MidiToEverything.Core.Mapping;
 using MidiToEverything.Infrastructure.Input;
 using MidiToEverything.Infrastructure.Startup;
 
@@ -30,6 +32,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _flushTimer;
     private readonly ConcurrentQueue<MidiMessage> _incoming = new();
+    private readonly MappingResolver _resolver = new();
 
     public MainViewModel(IMidiSource source, ProfileManager profiles, GatedInputSink gate,
         LaunchPolicy launchPolicy, IProfileRepository repository)
@@ -228,13 +231,60 @@ public partial class MainViewModel : ObservableObject, IDisposable
         while (_incoming.TryDequeue(out var message) && drained < 512)
         {
             drained++;
-            Monitor.Insert(0, new MonitorEntry(message, time)); // newest first
+            Monitor.Insert(0, new MonitorEntry(message, time, ResolveActionLabel(message))); // newest first
         }
 
         while (Monitor.Count > MaxLogRows)
         {
             Monitor.RemoveAt(Monitor.Count - 1);
         }
+    }
+
+    /// <summary>
+    /// Find the action this input maps to in the active profile layers (the same resolution the
+    /// engine uses), so the monitor can show it. Independent of the emission gate / trigger state:
+    /// it reports "this input has a mapping", not "it fired just now". Null when nothing matches.
+    /// </summary>
+    private string? ResolveActionLabel(MidiMessage message)
+    {
+        var resolution = _resolver.ResolveAll(message, _profiles.Current);
+        if (!resolution.ShouldEmit || resolution.Bindings.Count == 0)
+        {
+            return null;
+        }
+
+        // Several bindings can share one control (e.g. a relative knob's increase/decrease split);
+        // show each action so the monitor reflects everything the input drives.
+        var labels = resolution.Bindings
+            .Where(b => b.Actions.Count > 0)
+            .Select(DescribeBindingAction)
+            .ToList();
+
+        return labels.Count == 0 ? null : string.Join("  /  ", labels);
+    }
+
+    private static string DescribeBindingAction(MidiToEverything.Core.Domain.Binding binding)
+    {
+        var (kind, detail) = EditMapper.DescribeAction(binding.Actions[0]);
+        var label = EditorHelp.ActionKindName(kind);
+        detail = Shorten(detail);
+        if (detail.Length > 0)
+        {
+            label += $" {detail}";
+        }
+
+        if (binding.Actions.Count > 1)
+        {
+            label += $" +{binding.Actions.Count - 1}";
+        }
+
+        return label;
+    }
+
+    private static string Shorten(string detail)
+    {
+        var s = detail.Replace('\r', ' ').Replace('\n', ' ').Trim();
+        return s.Length > 40 ? s[..39] + "…" : s;
     }
 
     public void Dispose()

@@ -113,7 +113,8 @@ internal static class EditMapper
         return editable;
     }
 
-    private static (EditableActionKind Kind, string Detail) DescribeAction(InputAction action) => action switch
+    /// <summary>Map a domain action to its editor kind and a short detail string (also used by the input monitor).</summary>
+    public static (EditableActionKind Kind, string Detail) DescribeAction(InputAction action) => action switch
     {
         KeyAction k => (EditableActionKind.Key, string.Join("+", k.Keys)),
         MouseClickAction m => (EditableActionKind.MouseClick, (m.Double ? $"{m.Button} x2" : m.Button.ToString()).ToLowerInvariant()),

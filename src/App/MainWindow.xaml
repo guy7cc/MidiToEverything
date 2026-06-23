@@ -27,6 +27,8 @@
                            FontFamily="Consolas" FontSize="12" TextTrimming="CharacterEllipsis" />
                 <TextBlock Text="{Binding Detail}" Foreground="{Binding Accent}"
                            FontFamily="Consolas" FontSize="12" TextWrapping="NoWrap" />
+                <TextBlock Text="{Binding ActionLabel}" Foreground="{StaticResource OkBrush}" Margin="12,0,0,0"
+                           FontFamily="Consolas" FontSize="12" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
