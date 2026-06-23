@@ -39,6 +39,9 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Install crash handling first so even startup failures are logged and surfaced.
+        CrashReporter.Install(this);
+
         Directory.CreateDirectory(AppInfo.DataDirectory);
 
         Log.Logger = new LoggerConfiguration()
@@ -72,6 +75,9 @@ public partial class App : Application
         SetupTray();
         SyncAutoStart();
         _window.Show();
+
+        // If the previous run crashed and restarted us, tell the user now that the UI is up.
+        CrashReporter.ShowPendingCrashNotice();
     }
 
     private static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
@@ -220,6 +226,12 @@ public partial class App : Application
         menu.Items.Add(_exitItem);
         _tray.ContextMenuStrip = menu;
         _tray.DoubleClick += (_, _) => ShowWindow();
+
+        // Remove the tray icon if the app is torn down by the crash handler (which bypasses OnExit).
+        CrashReporter.Cleanup = () =>
+        {
+            try { if (_tray is not null) { _tray.Visible = false; _tray.Dispose(); } } catch { /* ignore */ }
+        };
 
         // Reflect the current auto-start state each time the menu opens (it may have been
         // changed from the main window's checkbox).
