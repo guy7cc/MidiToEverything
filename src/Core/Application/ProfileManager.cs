@@ -46,7 +46,10 @@ public sealed class ProfileManager : IMappingContext, IDisposable
     private AppConfig _config;
     private Profile _base;
     private IReadOnlyList<Profile> _profiles;
-    private string? _pinnedId;
+
+    // Manual override per rule id: true = force on (active regardless of regex), false = force off
+    // (inactive regardless of regex). Absent = auto (regex decides). Session-only.
+    private readonly Dictionary<string, bool> _manual = new();
     private WindowContext _window = WindowContext.Unknown;
 
     public ProfileManager(AppConfig config, IWindowWatcher watcher, ILogger<ProfileManager>? logger = null)
@@ -76,9 +79,11 @@ public sealed class ProfileManager : IMappingContext, IDisposable
             _config = config;
             _base = config.BaseProfile;
             _profiles = config.Profiles;
-            if (_pinnedId is not null && Find(_pinnedId) is null)
+
+            // Drop manual overrides for rules that no longer exist.
+            foreach (var id in _manual.Keys.Where(id => Find(id) is null).ToList())
             {
-                _pinnedId = null;
+                _manual.Remove(id);
             }
         }
 
@@ -99,9 +104,10 @@ public sealed class ProfileManager : IMappingContext, IDisposable
         get { lock (_gate) { return BuildState(); } }
     }
 
+    /// <summary>True when any rule has a manual force on/off override in effect.</summary>
     public bool IsPinned
     {
-        get { lock (_gate) { return _pinnedId is not null; } }
+        get { lock (_gate) { return _manual.Count > 0; } }
     }
 
     public void Start()
@@ -119,34 +125,51 @@ public sealed class ProfileManager : IMappingContext, IDisposable
 
     public void Dispose() => Stop();
 
-    /// <summary>Manually force-enable a rule (UI selection), keeping it active regardless of its regex (FR-5.3/5.5).</summary>
+    /// <summary>Force-enable a rule (active regardless of its regex), e.g. from the UI (FR-5.3/5.5).</summary>
     public void Pin(string profileId)
     {
+        if (Find(profileId) is null || profileId == _base.Id)
+        {
+            return;
+        }
+
         lock (_gate)
         {
-            if (Find(profileId) is null)
-            {
-                return;
-            }
-
-            _pinnedId = profileId;
+            _manual[profileId] = true;
         }
 
         RaiseChanged();
     }
 
-    /// <summary>Clear the manual force-enable and resume regex-only matching (FR-5.5).</summary>
+    /// <summary>Clear all manual overrides and resume regex-only matching (FR-5.5).</summary>
     public void Unpin()
     {
         lock (_gate)
         {
-            _pinnedId = null;
+            _manual.Clear();
         }
 
         RaiseChanged();
     }
 
-    /// <summary>Handle a MIDI-driven rule force-enable (FR-5.4).</summary>
+    /// <summary>Flip a rule's effective active state with a manual override (force on if off, off if on).</summary>
+    public void ToggleRule(string profileId)
+    {
+        var rule = Find(profileId);
+        if (rule is null || profileId == _base.Id)
+        {
+            return;
+        }
+
+        lock (_gate)
+        {
+            _manual[profileId] = !IsActive(rule);
+        }
+
+        RaiseChanged();
+    }
+
+    /// <summary>Handle a MIDI-driven rule toggle/force (FR-5.4).</summary>
     public void HandleSwitch(SwitchProfileAction action)
     {
         switch (action.Target)
@@ -158,10 +181,10 @@ public sealed class ProfileManager : IMappingContext, IDisposable
                 Cycle(-1);
                 break;
             case ProfileSwitchTarget.Specific when action.ProfileId is { } id:
-                Pin(id);
+                ToggleRule(id);
                 break;
-            case ProfileSwitchTarget.Toggle:
-                TogglePin();
+            case ProfileSwitchTarget.Toggle when PrimaryMatch() is { } primary:
+                ToggleRule(primary.Id);
                 break;
         }
     }
@@ -178,14 +201,28 @@ public sealed class ProfileManager : IMappingContext, IDisposable
         RaiseChanged();
     }
 
-    /// <summary>Every enabled rule whose regex matches the current window (in declaration order).</summary>
-    private IEnumerable<Profile> Matching() => _profiles
-        .Where(p => p.Enabled && p.Match is not null &&
-                    p.Match.Matches(_window.ProcessName, _window.WindowTitle));
+    /// <summary>Whether a rule is active now: a manual override wins, otherwise its regex decides.</summary>
+    private bool IsActive(Profile p)
+    {
+        if (!p.Enabled)
+        {
+            return false;
+        }
 
-    /// <summary>A representative matched rule (highest priority) for force-enable cycling/toggle.</summary>
-    private Profile? PrimaryMatch() =>
-        Matching().OrderByDescending(p => p.Match!.Priority).FirstOrDefault();
+        if (_manual.TryGetValue(p.Id, out var forced))
+        {
+            return forced;
+        }
+
+        return p.Match is not null && p.Match.Matches(_window.ProcessName, _window.WindowTitle);
+    }
+
+    /// <summary>A representative regex-matched rule (highest priority) for toggle/cycle.</summary>
+    private Profile? PrimaryMatch() => _profiles
+        .Where(p => p.Enabled && p.Match is not null &&
+                    p.Match.Matches(_window.ProcessName, _window.WindowTitle))
+        .OrderByDescending(p => p.Match!.Priority)
+        .FirstOrDefault();
 
     private void Cycle(int direction)
     {
@@ -196,7 +233,8 @@ public sealed class ProfileManager : IMappingContext, IDisposable
                 return;
             }
 
-            var currentId = _pinnedId ?? PrimaryMatch()?.Id;
+            // Cycle exclusively force-enables one rule (clearing other manual overrides).
+            var currentId = _manual.FirstOrDefault(kv => kv.Value).Key ?? PrimaryMatch()?.Id;
             var index = currentId is null ? -1 : IndexOf(currentId);
 
             int next;
@@ -210,18 +248,8 @@ public sealed class ProfileManager : IMappingContext, IDisposable
                 next = ((index + direction) % _profiles.Count + _profiles.Count) % _profiles.Count;
             }
 
-            _pinnedId = _profiles[next].Id;
-        }
-
-        RaiseChanged();
-    }
-
-    private void TogglePin()
-    {
-        lock (_gate)
-        {
-            // Force-enabled -> release to regex-only. Otherwise -> force-enable the primary match.
-            _pinnedId = _pinnedId is not null ? null : PrimaryMatch()?.Id;
+            _manual.Clear();
+            _manual[_profiles[next].Id] = true;
         }
 
         RaiseChanged();
@@ -246,11 +274,12 @@ public sealed class ProfileManager : IMappingContext, IDisposable
     private ActiveRules BuildActive()
     {
         var rules = new List<Profile> { _base };
-        rules.AddRange(Matching());
-
-        if (_pinnedId is not null && Find(_pinnedId) is { } pinned && rules.All(r => r.Id != pinned.Id))
+        foreach (var p in _profiles)
         {
-            rules.Add(pinned);
+            if (IsActive(p))
+            {
+                rules.Add(p);
+            }
         }
 
         return new ActiveRules(rules);
@@ -258,9 +287,11 @@ public sealed class ProfileManager : IMappingContext, IDisposable
 
     private ActiveProfileState BuildState()
     {
-        var pinned = _pinnedId is null ? null : Find(_pinnedId);
+        // A representative force-on rule for display (the "pinned" badge), if any.
+        var forcedOnId = _manual.FirstOrDefault(kv => kv.Value).Key;
+        var pinned = forcedOnId is null ? null : Find(forcedOnId);
         var active = BuildActive().Rules;
-        return new ActiveProfileState(active, pinned, pinned is not null, _window);
+        return new ActiveProfileState(active, pinned, _manual.Count > 0, _window);
     }
 
     private void RaiseChanged()

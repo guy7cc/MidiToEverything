@@ -128,17 +128,19 @@ public class ProfileManagerTests
     }
 
     [Fact]
-    public void Toggle_PinsContextThenReleases()
+    public void Toggle_DisablesThenEnablesPrimaryMatch()
     {
         var (manager, watcher) = Build(App("notepad", "notepad.exe"));
         watcher.SetForeground("notepad.exe", "");
 
+        // notepad auto-matches; toggling force-disables it (no longer active).
         manager.HandleSwitch(new SwitchProfileAction(ProfileSwitchTarget.Toggle));
-        Assert.True(manager.State.IsPinned);
-        Assert.Equal("notepad", manager.State.Effective.Id);
+        Assert.True(manager.State.IsPinned); // a manual override is in effect
+        Assert.DoesNotContain(manager.State.Active, p => p.Id == "notepad");
 
+        // toggling again force-enables it back.
         manager.HandleSwitch(new SwitchProfileAction(ProfileSwitchTarget.Toggle));
-        Assert.False(manager.State.IsPinned);
+        Assert.Contains(manager.State.Active, p => p.Id == "notepad");
     }
 
     [Fact]
