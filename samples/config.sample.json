@@ -35,7 +35,7 @@
   },
   "baseProfile": {
     "id": "base",
-    "name": "基本プロファイル",
+    "name": "基本ルール",
     "enabled": true,
     "bindings": [
       {
@@ -141,7 +141,7 @@
             "target": "next"
           }
         ],
-        "label": "プロファイル切替(次)",
+        "label": "ルール切替(次)",
         "enabled": true
       }
     ]

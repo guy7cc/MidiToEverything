@@ -150,7 +150,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                               DataContext="{Binding SelectedProfile}" Padding="0,0,8,0">
                     <StackPanel>
-                        <!-- ── プロファイルとバインディング編集ボックス ── -->
+                        <!-- ── ルールとバインディング編集ボックス ── -->
                         <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
                         <StackPanel>
                         <TextBlock Text="{loc:Tr editor.profileName}" />

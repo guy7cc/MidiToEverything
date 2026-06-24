@@ -570,14 +570,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void ApplyState(ActiveProfileState state)
     {
-        // Tray notification on an actual profile switch (skip the initial baseline).
-        if (_lastProfileName is not null && _lastProfileName != state.Effective.Name && TrayNotifications)
-        {
-            App.NotifyTray(Loc.T("tray.profileSwitched.title"), state.Effective.Name);
-        }
-        _lastProfileName = state.Effective.Name;
+        // All active rules joined (base first), e.g. "基本ルール + Clip Studio Paint".
+        var summary = string.Join(" + ", state.ActiveNames);
 
-        ActiveProfile = state.Effective.Name;
+        // Tray notification when the active rule set changes (skip the initial baseline).
+        if (_lastProfileName is not null && _lastProfileName != summary && TrayNotifications)
+        {
+            App.NotifyTray(Loc.T("tray.profileSwitched.title"), summary);
+        }
+        _lastProfileName = summary;
+
+        ActiveProfile = summary;
         IsPinned = state.IsPinned;
         var process = string.IsNullOrEmpty(state.Window.ProcessName) ? "(なし)" : state.Window.ProcessName;
         ContextWindow = string.IsNullOrEmpty(state.Window.WindowTitle)
