@@ -8,7 +8,12 @@ namespace MidiToEverything.App;
 /// </summary>
 public partial class SettingsWindow : Window
 {
-    public SettingsWindow() => InitializeComponent();
+    public SettingsWindow()
+    {
+        InitializeComponent();
+        // Match the other windows: DWM-round the corners (Windows 11+) for a consistent look.
+        SourceInitialized += (_, _) => WindowChromeFix.Apply(this);
+    }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 }

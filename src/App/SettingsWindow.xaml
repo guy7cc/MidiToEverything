@@ -8,7 +8,7 @@
         xmlns:vm="clr-namespace:MidiToEverything.App.ViewModels"
         mc:Ignorable="d"
         Title="{loc:Tr settings.title}" Width="500" Height="520"
-        WindowStyle="None" ResizeMode="NoResize"
+        WindowStyle="None" ResizeMode="CanResize"
         Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
         Icon="pack://application:,,,/app.ico" FontFamily="Segoe UI"
         WindowStartupLocation="CenterOwner"
@@ -16,7 +16,7 @@
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="38" CornerRadius="0" GlassFrameThickness="0"
-                            ResizeBorderThickness="0" UseAeroCaptionButtons="False" />
+                            ResizeBorderThickness="6" UseAeroCaptionButtons="False" />
     </shell:WindowChrome.WindowChrome>
 
     <Grid>
