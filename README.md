@@ -1,3 +1,5 @@
+↓AIの味を余すことなく絞ったREADMEを堪能してください。
+
 # MidiToEverything 🎹→⌨️
 
 **お手持ちの MIDI コントローラーを、Windows の「万能な左手デバイス」に。**
