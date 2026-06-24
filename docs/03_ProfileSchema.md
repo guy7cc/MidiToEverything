@@ -126,10 +126,34 @@
 {
   "version": 2,                         // スキーマバージョン（マイグレーション用 FR-7.5）
   "settings": {
+    // 起動・常駐
     "startWithWindows": false,          // ログオン時自動起動 FR-7.6
-    "emergencyStopHotkey": "ctrl+alt+pause",
+    "startMinimized": false,            // トレイに最小化した状態で起動
+    "closeToTray": true,                // 閉じるボタンでトレイへ（false=終了）
+    "startEmissionEnabled": true,       // 起動時に発行（セーフティゲート）を有効化
+    "emergencyStopHotkey": "ctrl+alt+pause", // 緊急停止ホットキー（設定で変更可）
+    // 入力・連携
+    "allowExternalLaunch": false,       // launch/command 系アクションの許可
+    "language": "ja",                   // UI 言語（ja/en …）docs/07
+    "autoDetectDevices": true,          // MIDI を自動ポーリング検出（false=手動）
     "watchedDevices": ["*"],            // 監視対象（"*"=全デバイス）
-    "monitor": { "maxLogLines": 500, "uiThrottleMs": 30 }
+    "obsHost": "localhost",             // obs-websocket 接続
+    "obsPort": 4455,
+    "obsPassword": "",
+    // アップデート（自動チェックは公式ビルドのみ）
+    "autoUpdate": true,                 // GitHub Releases を起動時/定期に確認
+    "updateChannel": "stable",          // stable / prerelease
+    "updateCheckHours": 24,             // 自動確認の間隔（時間）
+    // 通知・外観
+    "trayNotifications": true,          // トレイ通知（プロファイル切替・更新あり）
+    "theme": "dark",                    // dark / light（即時反映）
+    "accentColor": "blue",              // blue / green / purple / orange
+    "uiScale": 1.0,                     // UI 拡大率（1.0=100%）
+    // ログ・診断
+    "logLevel": "Debug",                // Serilog 最小レベル（即時反映）
+    "logRetentionDays": 7,              // 日次ログの保持数
+    "crashAutoRestart": true,           // 未処理例外で自動再起動
+    "monitor": { "maxLogLines": 500, "uiThrottleMs": 30 } // 入力モニターのUI調整
   },
 
   "activeContext": {                    // ランタイム状態（参考。保存は任意）
@@ -253,14 +277,36 @@ public sealed record Signal(string Device, string Channel, MessageType Type, int
 }
 
 public sealed record Trigger(TriggerMode Mode = TriggerMode.Trigger, int Threshold = 1,
-    int[]? Range = null, int Deadzone = 0, bool Invert = false, double Scale = 1.0);
+    int[]? Range = null, int Deadzone = 0, bool Invert = false, double Scale = 1.0,
+    RelativeFormat RelativeFormat = RelativeFormat.TwosComplement,
+    RelativeOutput RelativeOutput = RelativeOutput.Amount,
+    OutOfRangeBehavior OutOfRange = OutOfRangeBehavior.Clamp,
+    bool Edge = false, bool Wrap = false);
 
+// アクションは type 判別子の union。下記は判別子の一覧（フィールドの詳細は §3 と
+// docs/05_ActionExpansion.md のカタログを参照。実体は src/Core/Persistence/ConfigDto.cs の ActionDto）。
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
 [JsonDerivedType(typeof(KeyAction), "key")]
 [JsonDerivedType(typeof(MouseClickAction), "mouseClick")]
 [JsonDerivedType(typeof(CursorMoveAction), "cursorMove")]
 [JsonDerivedType(typeof(ScrollAction), "scroll")]
 [JsonDerivedType(typeof(SwitchProfileAction), "switchProfile")]
+[JsonDerivedType(typeof(WindowControlAction), "windowControl")]
+[JsonDerivedType(typeof(MediaKeyAction), "mediaKey")]
+[JsonDerivedType(typeof(TypeTextAction), "typeText")]
+[JsonDerivedType(typeof(LaunchAction), "launch")]
+[JsonDerivedType(typeof(SetVolumeAction), "setVolume")]
+[JsonDerivedType(typeof(UiaAction), "uia")]
+[JsonDerivedType(typeof(VirtualDesktopAction), "virtualDesktop")]
+[JsonDerivedType(typeof(WindowsToggleAction), "windowsToggle")]
+[JsonDerivedType(typeof(BrightnessAction), "brightness")]
+[JsonDerivedType(typeof(HttpAction), "http")]
+[JsonDerivedType(typeof(OscAction), "osc")]
+[JsonDerivedType(typeof(ObsAction), "obs")]
+[JsonDerivedType(typeof(MidiOutAction), "midiOut")]
+[JsonDerivedType(typeof(MacroAction), "macro")]
+[JsonDerivedType(typeof(ToggleAction), "toggle")]
+[JsonDerivedType(typeof(PluginAction), "plugin")]
 [JsonDerivedType(typeof(NoneAction), "none")]
 public abstract record GameAction;     // System.Text.Json のポリモーフィズムで union を表現
 

@@ -8,9 +8,9 @@ using MidiToEverything.Infrastructure.Input;
 namespace MidiToEverything.App;
 
 /// <summary>
-/// Shell window: custom title bar, full-width header, device panel (with detection-mode toggle)
-/// and an expanded input monitor (docs/04_Roadmap.md M7). Registers the global emergency-stop
-/// hotkey (Ctrl+Alt+Pause) and keeps a borderless maximized window from covering the taskbar.
+/// Shell window: custom title bar, full-width header, device panel and an expanded input monitor
+/// (docs/04_Roadmap.md M7). Registers the global emergency-stop hotkey (configurable in settings,
+/// default Ctrl+Alt+Pause) and keeps a borderless maximized window from covering the taskbar.
 /// </summary>
 public partial class MainWindow : Window
 {
