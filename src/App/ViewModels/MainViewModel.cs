@@ -104,7 +104,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             Interval = TimeSpan.FromHours(Math.Max(1, _updateCheckHours)),
         };
         _updateTimer.Tick += async (_, _) => await CheckForUpdatesAsync(manual: false);
-        if (AutoUpdate)
+        // Only official (CI release) builds auto-check; local/dev builds use the manual button only.
+        if (AutoUpdate && App.IsOfficialBuild)
         {
             _updateTimer.Start();
             _ = _dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle,
@@ -456,7 +457,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         PersistSetting(s => s with { AutoUpdate = value });
 
-        if (value)
+        if (value && App.IsOfficialBuild)
         {
             _updateTimer.Start();
             // Don't fire a network check while batch-applying (reset/import); only on a real toggle.

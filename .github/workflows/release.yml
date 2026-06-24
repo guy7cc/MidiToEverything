@@ -40,6 +40,7 @@ jobs:
           --self-contained true
           -p:PublishSingleFile=true
           -p:Version=${{ steps.ver.outputs.version }}
+          -p:OfficialBuild=true
           --output publish
 
       - name: Package portable zip

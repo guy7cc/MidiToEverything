@@ -20,6 +20,13 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
+  <!-- Official (CI) release builds pass -p:OfficialBuild=true, which defines OFFICIAL_BUILD and
+       enables the automatic update check (see App.IsOfficialBuild). Local/source builds leave it
+       off, so they never auto-check or self-update. -->
+  <PropertyGroup Condition="'$(OfficialBuild)' == 'true'">
+    <DefineConstants>$(DefineConstants);OFFICIAL_BUILD</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
