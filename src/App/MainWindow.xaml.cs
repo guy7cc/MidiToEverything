@@ -61,6 +61,13 @@ public partial class MainWindow : Window
         editor.ShowDialog();
     }
 
+    private void OpenSettings_Click(object sender, RoutedEventArgs e)
+    {
+        // Reuse the same MainViewModel so changes persist exactly as the inline controls did.
+        var settings = new SettingsWindow { Owner = this, DataContext = DataContext };
+        settings.ShowDialog();
+    }
+
     // ── Caption buttons ───────────────────────────────────────────────────────
 
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;

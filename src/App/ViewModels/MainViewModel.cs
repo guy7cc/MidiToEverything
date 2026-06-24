@@ -56,6 +56,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _runAtStartup = profiles.CurrentConfig.Settings.StartWithWindows;
         var settings = profiles.CurrentConfig.Settings;
         _autoUpdate = settings.AutoUpdate;
+        _startMinimized = settings.StartMinimized;
+        _closeToTray = settings.CloseToTray;
+        _startEmissionEnabled = settings.StartEmissionEnabled;
         _obsHost = settings.ObsHost;
         _obsPort = settings.ObsPort;
         _obsPassword = settings.ObsPassword;
@@ -109,6 +112,23 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _obsHost = "localhost";
     [ObservableProperty] private int _obsPort = 4455;
     [ObservableProperty] private string _obsPassword = "";
+
+    // ── Startup / window ──────────────────────────────────────────────────────
+    [ObservableProperty] private bool _startMinimized;
+    [ObservableProperty] private bool _closeToTray = true;
+    [ObservableProperty] private bool _startEmissionEnabled = true;
+
+    partial void OnStartMinimizedChanged(bool value) => PersistSetting(s => s with { StartMinimized = value });
+    partial void OnCloseToTrayChanged(bool value) => PersistSetting(s => s with { CloseToTray = value });
+    partial void OnStartEmissionEnabledChanged(bool value) => PersistSetting(s => s with { StartEmissionEnabled = value });
+
+    private void PersistSetting(Func<AppSettings, AppSettings> mutate)
+    {
+        var config = _profiles.CurrentConfig;
+        var updated = config with { Settings = mutate(config.Settings) };
+        _repository.Save(updated);
+        _profiles.Reload(updated);
+    }
 
     // ── Auto-update ───────────────────────────────────────────────────────────
     [ObservableProperty] private bool _autoUpdate = true;

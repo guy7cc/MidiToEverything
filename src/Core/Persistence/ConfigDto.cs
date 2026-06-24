@@ -24,6 +24,9 @@ internal sealed class SettingsDto
     public bool AllowExternalLaunch { get; set; }
     public string Language { get; set; } = "ja";
     public bool AutoUpdate { get; set; } = true;
+    public bool StartMinimized { get; set; }
+    public bool CloseToTray { get; set; } = true;
+    public bool StartEmissionEnabled { get; set; } = true;
     public string ObsHost { get; set; } = "localhost";
     public int ObsPort { get; set; } = 4455;
     public string ObsPassword { get; set; } = "";

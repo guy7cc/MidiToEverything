@@ -46,16 +46,8 @@
             <TextBlock Text="MidiToEverything" Foreground="{StaticResource TextDimBrush}"
                        VerticalAlignment="Center" Margin="14,0" FontSize="12" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <ComboBox ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}"
-                          Width="112" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"
-                          shell:WindowChrome.IsHitTestVisibleInChrome="True"
-                          ToolTip="{loc:Tr main.language}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Display}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                <Button Style="{StaticResource CaptionButton}" Click="OpenSettings_Click"
+                        FontFamily="Segoe MDL2 Assets" FontSize="11" Content="&#xE713;" ToolTip="{loc:Tr settings.title}" />
                 <Button Style="{StaticResource CaptionButton}" Click="Minimize_Click"
                         FontFamily="Segoe MDL2 Assets" FontSize="10" Content="&#xE921;" />
                 <Button x:Name="MaxRestoreButton" Style="{StaticResource CaptionButton}" Click="MaxRestore_Click"
@@ -98,16 +90,6 @@
                         </Ellipse.Style>
                     </Ellipse>
                     <TextBlock Text="{Binding EmissionLabel}" FontSize="13" VerticalAlignment="Center" Margin="0,0,12,0" />
-                    <CheckBox Content="{loc:Tr main.allowLaunch}" IsChecked="{Binding AllowExternalLaunch}"
-                              VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" Margin="0,0,12,0"
-                              ToolTip="{loc:Tr main.allowLaunch.tip}" />
-                    <CheckBox Content="{loc:Tr main.runAtStartup}" IsChecked="{Binding RunAtStartup}"
-                              VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" Margin="0,0,12,0"
-                              ToolTip="{loc:Tr main.runAtStartup.tip}" />
-                    <CheckBox Content="{loc:Tr update.autoCheck}" IsChecked="{Binding AutoUpdate}"
-                              VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" Margin="0,0,8,0"
-                              ToolTip="{loc:Tr update.autoCheck.tip}" />
-                    <Button Content="{loc:Tr update.checkNow}" Command="{Binding CheckForUpdatesCommand}" Margin="0,0,12,0" />
                     <Button Content="{loc:Tr common.emergencyToggle}" Command="{Binding ToggleEmissionCommand}" Margin="0,0,8,0" />
                     <Button Content="{loc:Tr main.editProfiles}" Click="OpenEditor_Click" Style="{StaticResource AccentButton}" />
                 </StackPanel>

@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;
@@ -34,6 +35,9 @@ public partial class App : Application
     private ToolStripMenuItem? _exitItem;
     private MainWindow? _window;
     private bool _exiting;
+    private Mutex? _instanceMutex;
+    private EventWaitHandle? _showSignal;
+    private const string InstanceKey = "MidiToEverything.SingleInstance.v1";
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -41,6 +45,26 @@ public partial class App : Application
 
         // Install crash handling first so even startup failures are logged and surfaced.
         CrashReporter.Install(this);
+
+        // Single instance: if one is already running, tell it to surface its window and exit.
+        _instanceMutex = new Mutex(initiallyOwned: true, InstanceKey, out var isFirstInstance);
+        if (!isFirstInstance)
+        {
+            try { EventWaitHandle.OpenExisting(InstanceKey + ".show").Set(); } catch { /* ignore */ }
+            Shutdown();
+            return;
+        }
+
+        _showSignal = new EventWaitHandle(false, EventResetMode.AutoReset, InstanceKey + ".show");
+        var showWaiter = new Thread(() =>
+        {
+            while (_showSignal is { } sig)
+            {
+                try { sig.WaitOne(); } catch { return; }
+                Dispatcher.BeginInvoke(ShowWindow);
+            }
+        }) { IsBackground = true, Name = "single-instance-waiter" };
+        showWaiter.Start();
 
         Directory.CreateDirectory(AppInfo.DataDirectory);
 
@@ -62,8 +86,13 @@ public partial class App : Application
         var logger = _host.Services.GetRequiredService<ILogger<App>>();
         logger.LogInformation("{Name} {Version} starting.", AppInfo.Name, AppInfo.Version);
 
+        var settings = _host.Services.GetRequiredService<AppConfig>().Settings;
+
         // Apply the persisted UI language before any window is created.
-        Localization.Loc.Instance.SetLanguage(_host.Services.GetRequiredService<AppConfig>().Settings.Language);
+        Localization.Loc.Instance.SetLanguage(settings.Language);
+
+        // Honor the saved startup emission state before the view model reads the gate.
+        _host.Services.GetRequiredService<GatedInputSink>().Enabled = settings.StartEmissionEnabled;
 
         _window = _host.Services.GetRequiredService<MainWindow>();
         _window.Closing += OnWindowClosing;
@@ -74,7 +103,10 @@ public partial class App : Application
 
         SetupTray();
         SyncAutoStart();
-        _window.Show();
+        if (!settings.StartMinimized)
+        {
+            _window.Show();
+        }
 
         // If the previous run crashed and restarted us, tell the user now that the UI is up.
         CrashReporter.ShowPendingCrashNotice();
@@ -342,9 +374,17 @@ public partial class App : Application
             return;
         }
 
-        // Hide to tray instead of exiting (FR-7.3).
-        e.Cancel = true;
-        _window?.Hide();
+        // Close button: hide to the tray (FR-7.3) or exit, per the user's setting.
+        var closeToTray = _host?.Services.GetRequiredService<ProfileManager>().CurrentConfig.Settings.CloseToTray ?? true;
+        if (closeToTray)
+        {
+            e.Cancel = true;
+            _window?.Hide();
+        }
+        else
+        {
+            ExitApp();
+        }
     }
 
     private void ExitApp()
@@ -371,6 +411,11 @@ public partial class App : Application
             await _host.StopAsync();
             _host.Dispose();
         }
+
+        var signal = _showSignal;
+        _showSignal = null;
+        signal?.Dispose();
+        _instanceMutex?.Dispose();
 
         Log.CloseAndFlush();
         base.OnExit(e);

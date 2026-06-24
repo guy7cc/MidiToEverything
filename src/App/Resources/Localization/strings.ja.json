@@ -162,6 +162,13 @@
   "main.resume": "再開",
   "main.clear": "クリア",
   "main.language": "言語",
+  "settings.title": "設定",
+  "settings.startMinimized": "トレイに最小化して起動",
+  "settings.startMinimized.tip": "起動時にウィンドウを表示せず、トレイに常駐します。",
+  "settings.closeToTray": "閉じるボタンでトレイに最小化",
+  "settings.closeToTray.tip": "オフにすると、閉じるボタンでアプリを終了します。",
+  "settings.startEmission": "起動時に発火を有効にする",
+  "settings.startEmission.tip": "オフにすると、停止状態（発火しない）で起動します。緊急停止で切替。",
 
   "editor.title": "プロファイル編集",
   "editor.profiles": "プロファイル",

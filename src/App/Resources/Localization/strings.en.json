@@ -162,6 +162,13 @@
   "main.resume": "Resume",
   "main.clear": "Clear",
   "main.language": "Language",
+  "settings.title": "Settings",
+  "settings.startMinimized": "Start minimized to tray",
+  "settings.startMinimized.tip": "Start without showing the window; run in the tray.",
+  "settings.closeToTray": "Close button minimizes to tray",
+  "settings.closeToTray.tip": "When off, the close button exits the app.",
+  "settings.startEmission": "Enable output on startup",
+  "settings.startEmission.tip": "When off, start stopped (no output); toggle with the emergency stop.",
 
   "editor.title": "Edit profiles",
   "editor.profiles": "Profiles",
