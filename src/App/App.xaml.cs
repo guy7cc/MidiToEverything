@@ -28,6 +28,17 @@ namespace MidiToEverything.App;
 /// </summary>
 public partial class App : Application
 {
+    /// <summary>
+    /// True only for CI release builds (the release workflow passes <c>-p:OfficialBuild=true</c>,
+    /// which defines OFFICIAL_BUILD). Local/source builds are false, so they skip the automatic
+    /// update check — avoiding a false "update available" and a dev build trying to MSI-update itself.
+    /// </summary>
+#if OFFICIAL_BUILD
+    public static readonly bool IsOfficialBuild = true;
+#else
+    public static readonly bool IsOfficialBuild = false;
+#endif
+
     /// <summary>Runtime-adjustable Serilog level so the Settings window can change it live.</summary>
     public static readonly LoggingLevelSwitch LogLevelSwitch = new(LogEventLevel.Debug);
 
