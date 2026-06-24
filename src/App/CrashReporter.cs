@@ -32,6 +32,9 @@ internal static class CrashReporter
     /// <summary>Best-effort cleanup (e.g. remove the tray icon) run just before the process exits.</summary>
     public static Action? Cleanup { get; set; }
 
+    /// <summary>When false, an unhandled crash shows the notice but does not relaunch (setting CrashAutoRestart).</summary>
+    public static bool AutoRestart { get; set; } = true;
+
     /// <summary>Register the global exception handlers. Call as early as possible in startup.</summary>
     public static void Install(Application app)
     {
@@ -80,9 +83,9 @@ internal static class CrashReporter
         var looping = RecordAndDetectLoop();
         try { Cleanup?.Invoke(); } catch { /* best effort */ }
 
-        if (looping)
+        if (looping || !AutoRestart)
         {
-            // Repeated crashes — stop the restart cycle and tell the user directly.
+            // Repeated crashes (or auto-restart disabled) — stop the restart cycle and tell the user directly.
             try
             {
                 MessageBox.Show(string.Format(Loc.T("crash.loop"), ex.Message, LogDir),
@@ -96,7 +99,7 @@ internal static class CrashReporter
         }
 
         try { Log.CloseAndFlush(); } catch { /* ignore */ }
-        Environment.Exit(looping ? 1 : 0);
+        Environment.Exit((looping || !AutoRestart) ? 1 : 0);
     }
 
     private static void WriteReport(Exception ex)

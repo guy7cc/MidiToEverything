@@ -60,6 +60,15 @@ public sealed record AppSettings
     /// <summary>Devices to watch; "*" means all.</summary>
     public IReadOnlyList<string> WatchedDevices { get; init; } = new[] { "*" };
 
+    /// <summary>Serilog minimum level ("Verbose"/"Debug"/"Information"/"Warning"/"Error"/"Fatal").</summary>
+    public string LogLevel { get; init; } = "Debug";
+
+    /// <summary>Number of daily rolling log files to keep.</summary>
+    public int LogRetentionDays { get; init; } = 7;
+
+    /// <summary>Relaunch the app automatically after an unhandled crash.</summary>
+    public bool CrashAutoRestart { get; init; } = true;
+
     public MonitorSettings Monitor { get; init; } = new();
 }
 

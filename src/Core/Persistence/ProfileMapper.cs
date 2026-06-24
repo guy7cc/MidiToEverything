@@ -38,6 +38,9 @@ internal static class ProfileMapper
         ObsPort = s.ObsPort,
         ObsPassword = s.ObsPassword,
         WatchedDevices = s.WatchedDevices.ToArray(),
+        LogLevel = s.LogLevel,
+        LogRetentionDays = s.LogRetentionDays,
+        CrashAutoRestart = s.CrashAutoRestart,
         Monitor = new MonitorSettings { MaxLogLines = s.Monitor.MaxLogLines, UiThrottleMs = s.Monitor.UiThrottleMs },
     };
 
@@ -155,6 +158,9 @@ internal static class ProfileMapper
             ObsPort = config.Settings.ObsPort,
             ObsPassword = config.Settings.ObsPassword,
             WatchedDevices = config.Settings.WatchedDevices.ToList(),
+            LogLevel = config.Settings.LogLevel,
+            LogRetentionDays = config.Settings.LogRetentionDays,
+            CrashAutoRestart = config.Settings.CrashAutoRestart,
             Monitor = new MonitorDto
             {
                 MaxLogLines = config.Settings.Monitor.MaxLogLines,

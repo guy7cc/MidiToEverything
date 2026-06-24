@@ -21,11 +21,11 @@
 - [ ] OBS起動時自動接続（後回し: `IObsClient` に Connect API が無く遅延接続のため）
 
 ## C. 入力モニター・ログ・診断
-- [ ] モニター最大ログ行数 / UI更新間隔（config の `monitor.maxLogLines`/`uiThrottleMs` のUI）
-- [ ] ウィンドウ非表示時はモニターを自動一時停止（CPU節約）
-- [ ] ログレベル（Debug/Info/Warning）＋「ログフォルダを開く」ボタン
-- [ ] クラッシュ時の自動再起動 オン/オフ（現在は常に再起動）
-- [ ] ログ保持日数（現在7日固定）
+- [x] モニター最大ログ行数 / UI更新間隔（`monitor.maxLogLines`/`uiThrottleMs` のUI、最大行数・間隔とも即時反映）
+- [ ] ウィンドウ非表示時はモニターを自動一時停止（後回し: ウィンドウ可視性の配線が必要、CPU節約は軽微）
+- [x] ログレベル（`LoggingLevelSwitch` で即時反映）＋「ログフォルダを開く」ボタン
+- [x] クラッシュ時の自動再起動 オン/オフ（`CrashReporter.AutoRestart`、`CrashAutoRestart` 設定）
+- [x] ログ保持日数（`LogRetentionDays`、起動時に反映）
 
 ## D. アップデート拡張
 - [ ] 更新チャンネル（安定版のみ / プレリリースも含む）

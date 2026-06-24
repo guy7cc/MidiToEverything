@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -23,8 +25,6 @@ namespace MidiToEverything.App.ViewModels;
 /// </summary>
 public partial class MainViewModel : ObservableObject, IDisposable
 {
-    private const int MaxLogRows = 500;
-
     private readonly IMidiSource _source;
     private readonly ProfileManager _profiles;
     private readonly GatedInputSink _gate;
@@ -63,6 +63,11 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _obsHost = settings.ObsHost;
         _obsPort = settings.ObsPort;
         _obsPassword = settings.ObsPassword;
+        _monitorMaxLines = settings.Monitor.MaxLogLines;
+        _monitorThrottleMs = settings.Monitor.UiThrottleMs;
+        _logLevel = settings.LogLevel;
+        _logRetentionDays = settings.LogRetentionDays;
+        _crashAutoRestart = settings.CrashAutoRestart;
         _selectedLanguage = Languages.FirstOrDefault(l => l.Code == Loc.Instance.Language) ?? Languages.FirstOrDefault();
         Loc.Instance.LanguageChanged += OnLanguageChanged;
         _isAutoDetect = settings.AutoDetectDevices;
@@ -81,7 +86,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         _flushTimer = new DispatcherTimer(DispatcherPriority.Background, _dispatcher)
         {
-            Interval = TimeSpan.FromMilliseconds(30),
+            Interval = TimeSpan.FromMilliseconds(Math.Max(1, _monitorThrottleMs)),
         };
         _flushTimer.Tick += (_, _) => Flush();
         _flushTimer.Start();
@@ -114,6 +119,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _obsHost = "localhost";
     [ObservableProperty] private int _obsPort = 4455;
     [ObservableProperty] private string _obsPassword = "";
+
+    // Diagnostics / logging (Batch C).
+    [ObservableProperty] private int _monitorMaxLines = 500;
+    [ObservableProperty] private int _monitorThrottleMs = 30;
+    [ObservableProperty] private string _logLevel = "Debug";
+    [ObservableProperty] private int _logRetentionDays = 7;
+    [ObservableProperty] private bool _crashAutoRestart = true;
+
+    public IReadOnlyList<string> LogLevels { get; } =
+        new[] { "Verbose", "Debug", "Information", "Warning", "Error", "Fatal" };
 
     // ── Startup / window ──────────────────────────────────────────────────────
     [ObservableProperty] private bool _startMinimized;
@@ -238,6 +253,43 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _source.DetectionMode = value ? MidiDetectionMode.AutoPolling : MidiDetectionMode.Manual;
         OnPropertyChanged(nameof(DetectModeLabel));
         PersistSetting(s => s with { AutoDetectDevices = value });
+    }
+
+    // Diagnostics / logging (Batch C).
+    partial void OnMonitorMaxLinesChanged(int value) =>
+        PersistSetting(s => s with { Monitor = s.Monitor with { MaxLogLines = value } });
+
+    partial void OnMonitorThrottleMsChanged(int value)
+    {
+        _flushTimer.Interval = TimeSpan.FromMilliseconds(Math.Max(1, value));
+        PersistSetting(s => s with { Monitor = s.Monitor with { UiThrottleMs = value } });
+    }
+
+    partial void OnLogLevelChanged(string value)
+    {
+        App.LogLevelSwitch.MinimumLevel = App.ParseLogLevel(value);
+        PersistSetting(s => s with { LogLevel = value });
+    }
+
+    partial void OnLogRetentionDaysChanged(int value) =>
+        PersistSetting(s => s with { LogRetentionDays = value });
+
+    partial void OnCrashAutoRestartChanged(bool value)
+    {
+        CrashReporter.AutoRestart = value;
+        PersistSetting(s => s with { CrashAutoRestart = value });
+    }
+
+    [RelayCommand]
+    private void OpenLogsFolder()
+    {
+        var dir = Path.Combine(AppInfo.DataDirectory, "logs");
+        try
+        {
+            Directory.CreateDirectory(dir);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{dir}\"") { UseShellExecute = true });
+        }
+        catch { /* best effort */ }
     }
 
     [RelayCommand]
@@ -377,7 +429,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             }
         }
 
-        while (Monitor.Count > MaxLogRows)
+        var max = Math.Max(1, MonitorMaxLines);
+        while (Monitor.Count > max)
         {
             Monitor.RemoveAt(Monitor.Count - 1);
         }

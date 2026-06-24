@@ -95,6 +95,51 @@
                 </Grid>
                 <TextBox Width="220" HorizontalAlignment="Left" Margin="0,4,0,0" Text="{Binding ObsPassword}" ToolTip="{loc:Tr main.obs.pass.tip}" />
 
+                <!-- Diagnostics / logging -->
+                <TextBlock Text="{loc:Tr settings.diagnostics}" Foreground="{StaticResource TextDimBrush}"
+                           FontWeight="SemiBold" FontSize="12" Margin="0,16,0,6" />
+                <CheckBox Content="{loc:Tr settings.crashAutoRestart}" IsChecked="{Binding CrashAutoRestart}"
+                          ToolTip="{loc:Tr settings.crashAutoRestart.tip}" Margin="0,5" />
+                <Grid Width="220" HorizontalAlignment="Left" Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="72" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{loc:Tr settings.logLevel}" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="12" />
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding LogLevels}" SelectedItem="{Binding LogLevel}"
+                              ToolTip="{loc:Tr settings.logLevel.tip}" />
+                </Grid>
+                <Grid Width="220" HorizontalAlignment="Left" Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="72" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{loc:Tr settings.logRetention}" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="12" />
+                    <TextBox Grid.Column="1" Text="{Binding LogRetentionDays}" ToolTip="{loc:Tr settings.logRetention.tip}" />
+                </Grid>
+                <Grid Width="220" HorizontalAlignment="Left" Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="72" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{loc:Tr settings.monitorMaxLines}" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="12" />
+                    <TextBox Grid.Column="1" Text="{Binding MonitorMaxLines}" ToolTip="{loc:Tr settings.monitorMaxLines.tip}" />
+                </Grid>
+                <Grid Width="220" HorizontalAlignment="Left" Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="72" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{loc:Tr settings.monitorThrottle}" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="12" />
+                    <TextBox Grid.Column="1" Text="{Binding MonitorThrottleMs}" ToolTip="{loc:Tr settings.monitorThrottle.tip}" />
+                </Grid>
+                <Button Content="{loc:Tr settings.openLogs}" Command="{Binding OpenLogsFolderCommand}"
+                        HorizontalAlignment="Left" Margin="0,8,0,0" />
+
                 <!-- Update: manual check -->
                 <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                     <Button Content="{loc:Tr update.checkNow}" Command="{Binding CheckForUpdatesCommand}" />
