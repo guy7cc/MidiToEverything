@@ -6,7 +6,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <Version>0.1.0</Version>
+    <!-- Local/dev default; the release workflow overrides this with the tag version (-p:Version=).
+         Keep it at the latest released version so dev builds don't perpetually self-report as
+         outdated and trigger the update banner against the real release. -->
+    <Version>0.5.1</Version>
     <Authors>MidiToEverything</Authors>
     <Product>MidiToEverything</Product>
   </PropertyGroup>

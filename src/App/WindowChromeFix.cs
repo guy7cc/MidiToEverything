@@ -39,6 +39,31 @@ internal static class WindowChromeFix
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
+    private const int GWL_STYLE = -16;
+    private const int WS_MAXIMIZEBOX = 0x00010000;
+
+    /// <summary>
+    /// Remove the maximize capability while keeping the resize frame (WS_THICKFRAME) — so a dialog can
+    /// still be DWM-rounded and resized, but caption double-click / Win+Up won't maximize it.
+    /// </summary>
+    public static void DisableMaximize(Window window)
+    {
+        var hwnd = new WindowInteropHelper(window).Handle;
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        var style = GetWindowLong(hwnd, GWL_STYLE);
+        SetWindowLong(hwnd, GWL_STYLE, style & ~WS_MAXIMIZEBOX);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern int GetWindowLong(IntPtr hwnd, int index);
+
+    [DllImport("user32.dll")]
+    private static extern int SetWindowLong(IntPtr hwnd, int index, int value);
+
     private static IntPtr Hook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         if (msg == WM_GETMINMAXINFO)

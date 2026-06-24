@@ -205,6 +205,7 @@
   "settings.import": "インポート",
   "settings.import.confirm": "現在の設定とプロファイルをインポート内容で置き換えます。よろしいですか？",
   "settings.import.failed": "インポートに失敗しました。ファイルを確認してください。",
+  "settings.export.failed": "エクスポートに失敗しました。保存先を確認してください。",
   "settings.reset": "設定を初期化",
   "settings.reset.confirm": "すべての設定を初期値に戻します（プロファイルは保持）。よろしいですか？",
   "tray.profileSwitched.title": "プロファイル切替",

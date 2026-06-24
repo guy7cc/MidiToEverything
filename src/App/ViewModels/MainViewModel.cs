@@ -252,9 +252,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
             Filter = "JSON (*.json)|*.json",
             FileName = "MidiToEverything-config.json",
         };
-        if (dialog.ShowDialog() == true)
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
         {
             File.WriteAllText(dialog.FileName, ConfigSerializer.Serialize(_profiles.CurrentConfig));
+        }
+        catch
+        {
+            System.Windows.MessageBox.Show(Loc.T("settings.export.failed"), Loc.T("settings.export"),
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
     }
 
@@ -339,10 +349,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         Loc.Instance.SetLanguage(value.Code);
-        var config = _profiles.CurrentConfig;
-        var updated = config with { Settings = config.Settings with { Language = value.Code } };
-        _repository.Save(updated);
-        _profiles.Reload(updated);
+        PersistSetting(s => s with { Language = value.Code });
     }
 
     partial void OnEmissionEnabledChanged(bool value) => OnPropertyChanged(nameof(EmissionLabel));
@@ -357,10 +364,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnAllowExternalLaunchChanged(bool value)
     {
         _launchPolicy.Allowed = value;
-        var config = _profiles.CurrentConfig;
-        var updated = config with { Settings = config.Settings with { AllowExternalLaunch = value } };
-        _repository.Save(updated);
-        _profiles.Reload(updated);
+        PersistSetting(s => s with { AllowExternalLaunch = value });
     }
 
     // Launch-at-startup: apply to the HKCU Run key and persist in config (so it survives
@@ -376,10 +380,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
 
         WindowsStartup.SetEnabled(value, Environment.ProcessPath ?? string.Empty);
-        var config = _profiles.CurrentConfig;
-        var updated = config with { Settings = config.Settings with { StartWithWindows = value } };
-        _repository.Save(updated);
-        _profiles.Reload(updated);
+        PersistSetting(s => s with { StartWithWindows = value });
     }
 
     // OBS connection settings: persist on edit; the OBS client reads them on next connect.
@@ -388,15 +389,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnObsPasswordChanged(string value) => SaveObsSettings();
 
     private void SaveObsSettings()
-    {
-        var config = _profiles.CurrentConfig;
-        var updated = config with
-        {
-            Settings = config.Settings with { ObsHost = ObsHost, ObsPort = ObsPort, ObsPassword = ObsPassword },
-        };
-        _repository.Save(updated);
-        _profiles.Reload(updated);
-    }
+        => PersistSetting(s => s with { ObsHost = ObsHost, ObsPort = ObsPort, ObsPassword = ObsPassword });
 
     // Device-detection mode toggle (B-1): switch between periodic polling and manual rescan (persisted).
     partial void OnIsAutoDetectChanged(bool value)
@@ -461,15 +454,16 @@ public partial class MainViewModel : ObservableObject, IDisposable
     // Persist the toggle; (re)start or stop the periodic check accordingly.
     partial void OnAutoUpdateChanged(bool value)
     {
-        var config = _profiles.CurrentConfig;
-        var updated = config with { Settings = config.Settings with { AutoUpdate = value } };
-        _repository.Save(updated);
-        _profiles.Reload(updated);
+        PersistSetting(s => s with { AutoUpdate = value });
 
         if (value)
         {
             _updateTimer.Start();
-            _ = CheckForUpdatesAsync(manual: false);
+            // Don't fire a network check while batch-applying (reset/import); only on a real toggle.
+            if (!_suppressPersist)
+            {
+                _ = CheckForUpdatesAsync(manual: false);
+            }
         }
         else
         {
@@ -498,6 +492,14 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         var update = await _updateChecker.GetUpdateAsync(
             AppInfo.Version, includePrerelease: UpdateChannel == "prerelease");
+
+        // On automatic checks, respect a dismissal ("Later"): don't resurface the version the user
+        // set aside (neither banner nor tray) until a newer one appears. Manual checks always show.
+        if (!manual && update is not null && update.Version == _dismissedVersion)
+        {
+            return;
+        }
+
         var isNew = update is not null && update.Version != AvailableUpdate?.Version;
         AvailableUpdate = update;
         UpdateStatus = update is not null
@@ -510,6 +512,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             App.NotifyTray(Loc.T("update.available.title"), string.Format(Loc.T("update.available"), update.Version));
         }
     }
+
+    // The version the user dismissed via "Later"; suppressed on automatic checks until superseded.
+    private string? _dismissedVersion;
 
     /// <summary>Download the installer and launch it, then exit so it can replace the running files.</summary>
     [RelayCommand]
@@ -539,6 +544,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void DismissUpdate()
     {
+        _dismissedVersion = AvailableUpdate?.Version;
         AvailableUpdate = null;
         UpdateStatus = "";
     }
