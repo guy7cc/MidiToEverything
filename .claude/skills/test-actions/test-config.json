@@ -1,0 +1,135 @@
+{
+  "version": 2,
+  "settings": {
+    "startWithWindows": false,
+    "emergencyStopHotkey": "ctrl+alt+pause",
+    "allowExternalLaunch": true,
+    "language": "ja",
+    "autoUpdate": false,
+    "startMinimized": false,
+    "closeToTray": false,
+    "startEmissionEnabled": true,
+    "autoDetectDevices": true,
+    "obsHost": "localhost",
+    "obsPort": 4455,
+    "obsPassword": "",
+    "watchedDevices": ["*"],
+    "logLevel": "Debug",
+    "monitor": { "maxLogLines": 500, "uiThrottleMs": 30 }
+  },
+  "baseProfile": {
+    "id": "base",
+    "name": "受け入れテスト(基本ルール)",
+    "enabled": true,
+    "bindings": [
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 60 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "key", "keys": ["a"] } ], "label": "key: 'a' を送る" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 61 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "typeText", "text": "MidiToEverything OK " } ], "label": "typeText" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 62 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "mouseClick", "button": "left", "double": false } ], "label": "mouseClick 左" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 63 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "cursorMove", "mode": "relative", "dx": 120, "dy": 0, "useInputValue": false } ], "label": "cursorMove +120x" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 64 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "scroll", "axis": "vertical", "amount": -240, "useInputValue": false } ], "label": "scroll 下" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 65 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "mediaKey", "key": "playPause" } ], "label": "mediaKey 再生/一時停止" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 66 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "windowControl", "op": "minimize" } ], "label": "windowControl 最小化" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 67 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "launch", "target": "notepad.exe" } ], "label": "launch メモ帳" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "cc", "number": 20 },
+        "trigger": { "mode": "absolute", "range": [0, 127] },
+        "actions": [ { "type": "setVolume", "target": "master" } ], "label": "setVolume マスター(値追従)" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 68 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "uia", "windowPattern": "電卓|Calculator", "elementName": "5", "verb": "invoke" } ], "label": "uia 電卓の[5]を押す(要調整)" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 69 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "virtualDesktop", "op": "next" } ], "label": "virtualDesktop 次へ" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 70 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "windowsToggle", "setting": "darkMode" } ], "label": "windowsToggle ダークモード" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 71 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "brightness" } ], "label": "brightness 明るさ" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 72 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "http", "url": "http://127.0.0.1:8973/midi-test", "method": "GET" } ], "label": "http GET (ローカル)" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 73 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "osc", "target": "127.0.0.1:9000", "address": "/miditest", "args": "1" } ], "label": "osc 送信 (ローカル)" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 74 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "obs", "op": "sceneSwitch", "arg": "Scene" } ], "label": "obs シーン切替(要OBS)" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 75 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "midiOut", "device": "MIDIToEverything-Out", "kind": "controlChange", "channel": 1, "data1": 80, "data2": 100 } ], "label": "midiOut CC送信(要ループバック)" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 76 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "macro", "steps": [ ["ctrl","a"], ["ctrl","c"] ], "stepDelayMs": 40 } ], "label": "macro 全選択→コピー" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 77 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "toggle", "keysA": ["1"], "keysB": ["2"] } ], "label": "toggle 1↔2" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 78 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "plugin", "pluginId": "sample", "command": "ping", "arg": "" } ], "label": "plugin (要プラグイン)" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 79 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "switchProfile", "target": "toggle" } ], "label": "switchProfile トグル" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 80 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "none" } ], "label": "none (発火なし)" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "cc", "number": 30 },
+        "trigger": { "mode": "relative", "relativeFormat": "twosComplement", "relativeOutput": "amount" },
+        "actions": [ { "type": "scroll", "axis": "vertical", "useInputValue": true } ], "label": "relative ノブ→スクロール量" },
+
+      { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 90 },
+        "trigger": { "mode": "trigger" },
+        "actions": [ { "type": "typeText", "text": "[BASE]" } ], "label": "union確認: 基本側" }
+    ]
+  },
+  "profiles": [
+    {
+      "id": "acceptance-app",
+      "name": "受け入れテスト(メモ帳ルール)",
+      "enabled": true,
+      "match": { "pattern": "^notepad\\.exe$", "priority": 10 },
+      "bindings": [
+        { "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 90 },
+          "trigger": { "mode": "trigger" },
+          "actions": [ { "type": "typeText", "text": "[RULE]" } ], "label": "union確認: メモ帳ルール側" }
+      ]
+    }
+  ]
+}
