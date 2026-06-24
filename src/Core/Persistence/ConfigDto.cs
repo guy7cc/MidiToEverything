@@ -30,6 +30,9 @@ internal sealed class SettingsDto
     public bool CloseToTray { get; set; } = true;
     public bool StartEmissionEnabled { get; set; } = true;
     public bool TrayNotifications { get; set; } = true;
+    public string Theme { get; set; } = "dark";
+    public string AccentColor { get; set; } = "blue";
+    public double UiScale { get; set; } = 1.0;
     public bool AutoDetectDevices { get; set; } = true;
     public string ObsHost { get; set; } = "localhost";
     public int ObsPort { get; set; } = 4455;

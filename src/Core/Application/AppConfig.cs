@@ -58,6 +58,15 @@ public sealed record AppSettings
     /// <summary>Show tray balloon notifications (profile switch, update available).</summary>
     public bool TrayNotifications { get; init; } = true;
 
+    /// <summary>UI theme: "dark" (default) or "light".</summary>
+    public string Theme { get; init; } = "dark";
+
+    /// <summary>Accent color preset: "blue" (default) / "green" / "purple" / "orange".</summary>
+    public string AccentColor { get; init; } = "blue";
+
+    /// <summary>UI scale factor for content (1.0 = 100%).</summary>
+    public double UiScale { get; init; } = 1.0;
+
     /// <summary>Detect MIDI devices by periodic polling (true) or only on manual rescan (false).</summary>
     public bool AutoDetectDevices { get; init; } = true;
 

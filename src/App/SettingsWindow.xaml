@@ -33,8 +33,11 @@
                     FontFamily="Segoe MDL2 Assets" FontSize="10" Content="&#xE8BB;" />
         </Grid>
 
-        <!-- Body -->
+        <!-- Body (scaled by the UI-scale setting) -->
         <Grid Grid.Row="1" Margin="18,14">
+            <Grid.LayoutTransform>
+                <ScaleTransform ScaleX="{Binding UiScale}" ScaleY="{Binding UiScale}" />
+            </Grid.LayoutTransform>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
@@ -50,6 +53,38 @@
                         <DataTemplate><TextBlock Text="{Binding Display}" /></DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+
+                <!-- Appearance -->
+                <TextBlock Text="{loc:Tr settings.appearance}" Foreground="{StaticResource TextDimBrush}"
+                           FontWeight="SemiBold" FontSize="12" Margin="0,0,0,6" />
+                <Grid Width="220" HorizontalAlignment="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="110" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{loc:Tr settings.theme}" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="12" />
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" />
+                </Grid>
+                <Grid Width="220" HorizontalAlignment="Left" Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="110" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{loc:Tr settings.accent}" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="12" />
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding AccentColors}" SelectedItem="{Binding AccentColor}" />
+                </Grid>
+                <Grid Width="220" HorizontalAlignment="Left" Margin="0,4,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="110" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{loc:Tr settings.uiScale}" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="12" />
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding UiScales}" SelectedItem="{Binding UiScale}"
+                              ItemStringFormat="{}{0:P0}" />
+                </Grid>
 
                 <!-- Toggles -->
                 <CheckBox Content="{loc:Tr main.runAtStartup}" IsChecked="{Binding RunAtStartup}"

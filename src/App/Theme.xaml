@@ -21,35 +21,50 @@
     <Color x:Key="Pal.Warn">#FFF0C674</Color>
     <Color x:Key="Pal.Hover">#FF3E3E48</Color>
     <Color x:Key="Pal.Pressed">#FF26262E</Color>
+    <Color x:Key="Pal.OnAccent">#FF0B1B2E</Color>
+    <Color x:Key="Pal.ToggleOn">#FF20415F</Color>
+    <Color x:Key="Pal.SelectedItem">#FF2A3A50</Color>
+    <Color x:Key="Pal.ScrollThumb">#FF44444F</Color>
+    <Color x:Key="Pal.ScrollThumbHover">#FF5A5A66</Color>
+    <Color x:Key="Pal.CardTop">#FF3A3A45</Color>
+    <Color x:Key="Pal.CardBottom">#FF2B2B33</Color>
+    <Color x:Key="Pal.HeaderStart">#FF32323C</Color>
+    <Color x:Key="Pal.HeaderEnd">#FF202026</Color>
 
-    <SolidColorBrush x:Key="BgBrush" Color="{StaticResource Pal.Bg}" />
-    <SolidColorBrush x:Key="CaptionBrush" Color="{StaticResource Pal.Caption}" />
-    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Pal.Surface}" />
-    <SolidColorBrush x:Key="SurfaceAltBrush" Color="{StaticResource Pal.SurfaceAlt}" />
-    <SolidColorBrush x:Key="InputBgBrush" Color="{StaticResource Pal.InputBg}" />
-    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource Pal.Border}" />
-    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource Pal.Text}" />
-    <SolidColorBrush x:Key="TextDimBrush" Color="{StaticResource Pal.TextDim}" />
-    <SolidColorBrush x:Key="TextFaintBrush" Color="{StaticResource Pal.TextFaint}" />
-    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Pal.Accent}" />
-    <SolidColorBrush x:Key="AccentTextBrush" Color="{StaticResource Pal.AccentText}" />
-    <SolidColorBrush x:Key="OkBrush" Color="{StaticResource Pal.Ok}" />
-    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource Pal.Danger}" />
-    <SolidColorBrush x:Key="WarnBrush" Color="{StaticResource Pal.Warn}" />
-    <SolidColorBrush x:Key="HoverBrush" Color="{StaticResource Pal.Hover}" />
-    <SolidColorBrush x:Key="PressedBrush" Color="{StaticResource Pal.Pressed}" />
-    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#FF44444F" />
+    <!-- Brushes reference palette colors via DynamicResource so the theme/accent can be swapped live
+         (ThemeManager mutates the Pal.* color values; every StaticResource brush ref updates in place). -->
+    <SolidColorBrush x:Key="BgBrush" Color="{DynamicResource Pal.Bg}" />
+    <SolidColorBrush x:Key="CaptionBrush" Color="{DynamicResource Pal.Caption}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{DynamicResource Pal.Surface}" />
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="{DynamicResource Pal.SurfaceAlt}" />
+    <SolidColorBrush x:Key="InputBgBrush" Color="{DynamicResource Pal.InputBg}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{DynamicResource Pal.Border}" />
+    <SolidColorBrush x:Key="TextBrush" Color="{DynamicResource Pal.Text}" />
+    <SolidColorBrush x:Key="TextDimBrush" Color="{DynamicResource Pal.TextDim}" />
+    <SolidColorBrush x:Key="TextFaintBrush" Color="{DynamicResource Pal.TextFaint}" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{DynamicResource Pal.Accent}" />
+    <SolidColorBrush x:Key="AccentTextBrush" Color="{DynamicResource Pal.AccentText}" />
+    <SolidColorBrush x:Key="OnAccentBrush" Color="{DynamicResource Pal.OnAccent}" />
+    <SolidColorBrush x:Key="ToggleOnBrush" Color="{DynamicResource Pal.ToggleOn}" />
+    <SolidColorBrush x:Key="SelectedItemBrush" Color="{DynamicResource Pal.SelectedItem}" />
+    <SolidColorBrush x:Key="OkBrush" Color="{DynamicResource Pal.Ok}" />
+    <SolidColorBrush x:Key="DangerBrush" Color="{DynamicResource Pal.Danger}" />
+    <SolidColorBrush x:Key="WarnBrush" Color="{DynamicResource Pal.Warn}" />
+    <SolidColorBrush x:Key="HoverBrush" Color="{DynamicResource Pal.Hover}" />
+    <SolidColorBrush x:Key="PressedBrush" Color="{DynamicResource Pal.Pressed}" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="{DynamicResource Pal.ScrollThumb}" />
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="{DynamicResource Pal.ScrollThumbHover}" />
 
     <!-- ============================== Card "box" surface ============================== -->
     <!-- Panel boxes use a subtle top-lit gradient + a soft drop shadow for depth. -->
     <LinearGradientBrush x:Key="CardBrush" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Color="#FF3A3A45" Offset="0" />
-        <GradientStop Color="#FF2B2B33" Offset="1" />
+        <GradientStop Color="{DynamicResource Pal.CardTop}" Offset="0" />
+        <GradientStop Color="{DynamicResource Pal.CardBottom}" Offset="1" />
     </LinearGradientBrush>
     <!-- Main-window header: same palette, swept left → right. -->
     <LinearGradientBrush x:Key="HeaderBrush" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#FF32323C" Offset="0" />
-        <GradientStop Color="#FF202026" Offset="1" />
+        <GradientStop Color="{DynamicResource Pal.HeaderStart}" Offset="0" />
+        <GradientStop Color="{DynamicResource Pal.HeaderEnd}" Offset="1" />
     </LinearGradientBrush>
     <DropShadowEffect x:Key="CardShadow" Color="#FF000000" BlurRadius="20" ShadowDepth="3"
                       Direction="270" Opacity="0.65" RenderingBias="Quality" />
@@ -119,7 +134,7 @@
 
     <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-        <Setter Property="Foreground" Value="#FF0B1B2E" />
+        <Setter Property="Foreground" Value="{StaticResource OnAccentBrush}" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
@@ -185,7 +200,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#FF20415F" />
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource ToggleOnBrush}" />
                             <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                             <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
                         </Trigger>
@@ -243,7 +258,7 @@
                             <Setter TargetName="bd" Property="Background" Value="{StaticResource HoverBrush}" />
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#FF2A3A50" />
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource SelectedItemBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -353,7 +368,7 @@
                     <Border x:Name="t" CornerRadius="4" Background="{StaticResource ScrollThumbBrush}" Margin="2" />
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="t" Property="Background" Value="#FF5A5A66" />
+                            <Setter TargetName="t" Property="Background" Value="{StaticResource ScrollThumbHoverBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
