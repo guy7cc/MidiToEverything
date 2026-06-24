@@ -103,8 +103,9 @@ public partial class App : Application
 
         var settings = _host.Services.GetRequiredService<AppConfig>().Settings;
 
-        // Apply the persisted UI language before any window is created.
+        // Apply the persisted UI language and theme/accent before any window is created.
         Localization.Loc.Instance.SetLanguage(settings.Language);
+        ThemeManager.Apply(settings.Theme, settings.AccentColor);
 
         // Honor the saved startup emission state before the view model reads the gate.
         _host.Services.GetRequiredService<GatedInputSink>().Enabled = settings.StartEmissionEnabled;

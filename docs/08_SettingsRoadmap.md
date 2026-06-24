@@ -37,5 +37,8 @@
 - [ ] 外部起動の確認ダイアログ（後回し: 確認UIを Core 側にコールバックする必要がある）
 - [ ] 特定アプリ前面時は発火を抑止（後回し: 任意・大きめ）
 
-## F. 外観（任意・大きめ）
-- [ ] ライト/ダークテーマ、アクセントカラー、フォントサイズ（拡大）
+## F. 外観
+- [x] ライト/ダークテーマ（`Theme`）。Theme.xaml のブラシを `DynamicResource` 化し、`ThemeManager` が
+      `Pal.*` 色を差し替えて即時反映
+- [x] アクセントカラー（`AccentColor`: blue/green/purple/orange、即時反映）
+- [x] UI拡大率（`UiScale`: 100/115/130%、メイン内容・設定ウィンドウに `LayoutTransform` で即時反映）

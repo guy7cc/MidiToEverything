@@ -72,6 +72,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _logLevel = settings.LogLevel;
         _logRetentionDays = settings.LogRetentionDays;
         _crashAutoRestart = settings.CrashAutoRestart;
+        _theme = settings.Theme;
+        _accentColor = settings.AccentColor;
+        _uiScale = settings.UiScale;
         _selectedLanguage = Languages.FirstOrDefault(l => l.Code == Loc.Instance.Language) ?? Languages.FirstOrDefault();
         Loc.Instance.LanguageChanged += OnLanguageChanged;
         _isAutoDetect = settings.AutoDetectDevices;
@@ -133,6 +136,29 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     public IReadOnlyList<string> LogLevels { get; } =
         new[] { "Verbose", "Debug", "Information", "Warning", "Error", "Fatal" };
+
+    // Appearance (Batch F).
+    [ObservableProperty] private string _theme = "dark";
+    [ObservableProperty] private string _accentColor = "blue";
+    [ObservableProperty] private double _uiScale = 1.0;
+
+    public IReadOnlyList<string> Themes => ThemeManager.Themes;
+    public IReadOnlyList<string> AccentColors => ThemeManager.Accents;
+    public IReadOnlyList<double> UiScales { get; } = new[] { 1.0, 1.15, 1.3 };
+
+    partial void OnThemeChanged(string value)
+    {
+        ThemeManager.Apply(value, AccentColor);
+        PersistSetting(s => s with { Theme = value });
+    }
+
+    partial void OnAccentColorChanged(string value)
+    {
+        ThemeManager.Apply(Theme, value);
+        PersistSetting(s => s with { AccentColor = value });
+    }
+
+    partial void OnUiScaleChanged(double value) => PersistSetting(s => s with { UiScale = value });
 
     // ── Startup / window ──────────────────────────────────────────────────────
     [ObservableProperty] private bool _startMinimized;
@@ -196,6 +222,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             CrashAutoRestart = d.CrashAutoRestart;
             MonitorMaxLines = d.Monitor.MaxLogLines;
             MonitorThrottleMs = d.Monitor.UiThrottleMs;
+            Theme = d.Theme;
+            AccentColor = d.AccentColor;
+            UiScale = d.UiScale;
             SelectedLanguage = Languages.FirstOrDefault(l => l.Code == d.Language) ?? Languages.FirstOrDefault();
         }
         finally
