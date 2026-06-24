@@ -106,6 +106,12 @@ public partial class App : Application
         services.AddSingleton(sp =>
             new LaunchPolicy(sp.GetRequiredService<AppConfig>().Settings.AllowExternalLaunch));
 
+        // Auto-update: check GitHub Releases, download + run the MSI on the user's confirmation.
+        services.AddSingleton<IUpdateChecker>(sp => new Infrastructure.Update.GitHubUpdateChecker(
+            logger: sp.GetService<ILogger<Infrastructure.Update.GitHubUpdateChecker>>()));
+        services.AddSingleton<IUpdateInstaller>(sp => new Infrastructure.Update.MsiUpdateInstaller(
+            logger: sp.GetService<ILogger<Infrastructure.Update.MsiUpdateInstaller>>()));
+
         // Action plugins (Phase 4): load from the app's "plugins" folder at startup.
         services.AddSingleton(sp =>
         {

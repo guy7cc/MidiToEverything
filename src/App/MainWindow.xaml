@@ -37,6 +37,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="38" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -103,14 +104,33 @@
                     <CheckBox Content="{loc:Tr main.runAtStartup}" IsChecked="{Binding RunAtStartup}"
                               VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" Margin="0,0,12,0"
                               ToolTip="{loc:Tr main.runAtStartup.tip}" />
+                    <CheckBox Content="{loc:Tr update.autoCheck}" IsChecked="{Binding AutoUpdate}"
+                              VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" Margin="0,0,8,0"
+                              ToolTip="{loc:Tr update.autoCheck.tip}" />
+                    <Button Content="{loc:Tr update.checkNow}" Command="{Binding CheckForUpdatesCommand}" Margin="0,0,12,0" />
                     <Button Content="{loc:Tr common.emergencyToggle}" Command="{Binding ToggleEmissionCommand}" Margin="0,0,8,0" />
                     <Button Content="{loc:Tr main.editProfiles}" Click="OpenEditor_Click" Style="{StaticResource AccentButton}" />
                 </StackPanel>
             </Grid>
         </Border>
 
+        <!-- Update banner (shown when a newer release is available) -->
+        <Border Grid.Row="2" Background="{StaticResource AccentBrush}" Padding="14,8"
+                Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="{loc:Tr update.install}" Command="{Binding InstallUpdateCommand}" Margin="0,0,8,0" />
+                    <Button Content="{loc:Tr update.later}" Command="{Binding DismissUpdateCommand}" />
+                </StackPanel>
+                <TextBlock Text="{Binding UpdateBannerText}" Foreground="White" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Margin="0,0,12,0" />
+                <TextBlock Text="{Binding UpdateStatus}" Foreground="White" Opacity="0.85"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </Border>
+
         <!-- Main content -->
-        <Grid Grid.Row="2" Margin="12">
+        <Grid Grid.Row="3" Margin="12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220" />
                 <ColumnDefinition Width="*" />
