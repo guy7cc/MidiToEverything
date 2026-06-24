@@ -70,7 +70,11 @@ public partial class App : Application
             while (_showSignal is { } sig)
             {
                 try { sig.WaitOne(); } catch { return; }
-                Dispatcher.BeginInvoke(ShowWindow);
+                Dispatcher.BeginInvoke(() =>
+                {
+                    ReloadConfigFromDisk();
+                    ShowWindow();
+                });
             }
         }) { IsBackground = true, Name = "single-instance-waiter" };
         showWaiter.Start();
@@ -390,6 +394,31 @@ public partial class App : Application
         _window.Show();
         _window.WindowState = WindowState.Normal;
         _window.Activate();
+    }
+
+    /// <summary>
+    /// A second launch surfaces this already-running instance (single instance) rather than starting
+    /// its own process, so it never loads config itself. Re-read config.json from disk here so the
+    /// active profile and bindings reflect any changes made since this instance started.
+    /// In-memory settings auto-save, so this is a no-op when nothing changed on disk.
+    /// </summary>
+    private void ReloadConfigFromDisk()
+    {
+        if (_host is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var repository = _host.Services.GetRequiredService<IProfileRepository>();
+            var manager = _host.Services.GetRequiredService<ProfileManager>();
+            manager.Reload(repository.LoadOrCreateDefault());
+        }
+        catch (Exception ex)
+        {
+            _host.Services.GetService<ILogger<App>>()?.LogWarning(ex, "Failed to reload config on activation.");
+        }
     }
 
     private void OnWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
