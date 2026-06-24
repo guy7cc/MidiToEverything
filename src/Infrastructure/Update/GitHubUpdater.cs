@@ -107,11 +107,18 @@ public sealed class MsiUpdateInstaller : IUpdateInstaller
 
     public void Launch(string installerPath)
     {
-        // /passive: unattended with a progress bar (still prompts UAC for the per-machine install).
-        // The MajorUpgrade in the MSI replaces the installed version in place.
-        Process.Start(new ProcessStartInfo("msiexec.exe", $"/i \"{installerPath}\" /passive")
+        // Run the silent upgrade and relaunch the app afterward, via a detached cmd:
+        //   1) brief wait so this process exits first (the installer can then replace its files),
+        //   2) msiexec /passive (unattended progress bar; still prompts UAC for the per-machine MSI),
+        //   3) start the app again. The MajorUpgrade reinstalls in place (the MSI remembers the
+        //      install folder), so the current exe path is also the new exe path.
+        var exe = Environment.ProcessPath;
+        var relaunch = string.IsNullOrEmpty(exe) ? string.Empty : $" & start \"\" \"{exe}\"";
+        var args = $"/c ping -n 3 127.0.0.1 >nul & msiexec /i \"{installerPath}\" /passive{relaunch}";
+        Process.Start(new ProcessStartInfo("cmd.exe", args)
         {
             UseShellExecute = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
         });
     }
 

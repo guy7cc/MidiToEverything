@@ -160,7 +160,15 @@ $propDefaults
       <ComponentRef Id="StartMenuShortcut" />
       <ComponentRef Id="DesktopShortcut" />
       <ComponentRef Id="StartupRun" />
+      <ComponentRef Id="InstallDirReg" />
     </Feature>
+
+    <!-- Remember the install location across upgrades: a prior install records the folder (see the
+         InstallDirReg component), and this search restores it so a silent MajorUpgrade reinstalls in
+         place instead of reverting to the default Program Files folder. -->
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Id="PrevInstallFolder" Root="HKLM" Key="Software\guy7cc\MidiToEverything" Name="InstallDir" Type="raw" />
+    </Property>
 
     <!-- WIXUI_INSTALLDIR holds the directory ID; the folder field edits it indirectly. -->
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
@@ -377,6 +385,13 @@ $cascade
   <Fragment>
     <Component Id="StartupRun" Directory="INSTALLFOLDER" Guid="6B9A3F2E-7C4D-4E1B-9A2C-3F5E8D1A7C24" Condition="INSTALLSTARTUP = &quot;1&quot;">
       <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="MidiToEverything" Type="string" Value="&quot;[#MidiToEverythingExe]&quot;" KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <!-- Record the chosen install folder so the next (silent) upgrade can restore it. -->
+    <Component Id="InstallDirReg" Directory="INSTALLFOLDER" Guid="6B9A3F2E-7C4D-4E1B-9A2C-3F5E8D1A7C26">
+      <RegistryValue Root="HKLM" Key="Software\guy7cc\MidiToEverything" Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
     </Component>
   </Fragment>
 
