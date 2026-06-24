@@ -16,6 +16,9 @@
     "watchedDevices": [
       "*"
     ],
+    "logLevel": "Debug",
+    "logRetentionDays": 7,
+    "crashAutoRestart": true,
     "monitor": {
       "maxLogLines": 500,
       "uiThrottleMs": 30

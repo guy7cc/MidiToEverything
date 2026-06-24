@@ -32,6 +32,9 @@ internal sealed class SettingsDto
     public int ObsPort { get; set; } = 4455;
     public string ObsPassword { get; set; } = "";
     public List<string> WatchedDevices { get; set; } = new() { "*" };
+    public string LogLevel { get; set; } = "Debug";
+    public int LogRetentionDays { get; set; } = 7;
+    public bool CrashAutoRestart { get; set; } = true;
     public MonitorDto Monitor { get; set; } = new();
 }
 

@@ -15,6 +15,8 @@ using MidiToEverything.Infrastructure;
 using MidiToEverything.Infrastructure.Input;
 using MidiToEverything.Infrastructure.Startup;
 using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using Application = System.Windows.Application;
 
 namespace MidiToEverything.App;
@@ -26,6 +28,13 @@ namespace MidiToEverything.App;
 /// </summary>
 public partial class App : Application
 {
+    /// <summary>Runtime-adjustable Serilog level so the Settings window can change it live.</summary>
+    public static readonly LoggingLevelSwitch LogLevelSwitch = new(LogEventLevel.Debug);
+
+    /// <summary>Parse a settings level string to a Serilog level (defaults to Debug).</summary>
+    public static LogEventLevel ParseLogLevel(string? level) =>
+        Enum.TryParse<LogEventLevel>(level, ignoreCase: true, out var parsed) ? parsed : LogEventLevel.Debug;
+
     private IHost? _host;
     private EngineCoordinator? _engine;
     private NotifyIcon? _tray;
@@ -68,12 +77,18 @@ public partial class App : Application
 
         Directory.CreateDirectory(AppInfo.DataDirectory);
 
+        // Read persisted diagnostics settings before the logger exists (the host loads its own
+        // copy later). Level changes apply live via LogLevelSwitch; retention is fixed here.
+        var bootSettings = new Core.Persistence.JsonProfileRepository().LoadOrCreateDefault().Settings;
+        LogLevelSwitch.MinimumLevel = ParseLogLevel(bootSettings.LogLevel);
+        CrashReporter.AutoRestart = bootSettings.CrashAutoRestart;
+
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.ControlledBy(LogLevelSwitch)
             .WriteTo.File(
                 Path.Combine(AppInfo.DataDirectory, "logs", "app-.log"),
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 7)
+                retainedFileCountLimit: Math.Max(1, bootSettings.LogRetentionDays))
             .CreateLogger();
 
         _host = Host.CreateDefaultBuilder()
