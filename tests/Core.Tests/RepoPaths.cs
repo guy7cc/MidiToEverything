@@ -19,4 +19,8 @@ internal static class RepoPaths
     }
 
     public static string SampleConfig => Path.Combine(Root, "samples", "config.sample.json");
+
+    /// <summary>The action-acceptance runbook's test config (.claude/skills/test-actions/test-config.json).</summary>
+    public static string AcceptanceConfig =>
+        Path.Combine(Root, ".claude", "skills", "test-actions", "test-config.json");
 }

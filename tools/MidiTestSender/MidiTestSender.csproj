@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Standalone helper (NOT in MidiToEverything.sln, so CI build/test ignore it): sends MIDI
+       events to a named output port for the action acceptance runbook
+       (.claude/skills/test-actions/SKILL.md). Pair with a loopMIDI virtual port the app listens on. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>midisend</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Melanchall.DryWetMidi" Version="7.1.0" />
+  </ItemGroup>
+
+</Project>
