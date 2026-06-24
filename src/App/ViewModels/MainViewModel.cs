@@ -12,6 +12,7 @@ using MidiToEverything.Core.Application;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
 using MidiToEverything.Core.Mapping;
+using MidiToEverything.Core.Persistence;
 using MidiToEverything.Infrastructure.Input;
 using MidiToEverything.Infrastructure.Startup;
 
@@ -59,6 +60,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _startMinimized = settings.StartMinimized;
         _closeToTray = settings.CloseToTray;
         _startEmissionEnabled = settings.StartEmissionEnabled;
+        _trayNotifications = settings.TrayNotifications;
         _emergencyHotkey = settings.EmergencyStopHotkey ?? "ctrl+alt+pause";
         _obsHost = settings.ObsHost;
         _obsPort = settings.ObsPort;
@@ -136,6 +138,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _startMinimized;
     [ObservableProperty] private bool _closeToTray = true;
     [ObservableProperty] private bool _startEmissionEnabled = true;
+    [ObservableProperty] private bool _trayNotifications = true;
 
     /// <summary>Global emergency-stop hotkey spec (e.g. "ctrl+alt+pause"); registered by MainWindow.</summary>
     [ObservableProperty]
@@ -148,14 +151,127 @@ public partial class MainViewModel : ObservableObject, IDisposable
     partial void OnStartMinimizedChanged(bool value) => PersistSetting(s => s with { StartMinimized = value });
     partial void OnCloseToTrayChanged(bool value) => PersistSetting(s => s with { CloseToTray = value });
     partial void OnStartEmissionEnabledChanged(bool value) => PersistSetting(s => s with { StartEmissionEnabled = value });
+    partial void OnTrayNotificationsChanged(bool value) => PersistSetting(s => s with { TrayNotifications = value });
     partial void OnEmergencyHotkeyChanged(string value) => PersistSetting(s => s with { EmergencyStopHotkey = value });
+
+    // While true (during reset/import), property-change handlers skip persisting so we save once at the end.
+    private bool _suppressPersist;
 
     private void PersistSetting(Func<AppSettings, AppSettings> mutate)
     {
+        if (_suppressPersist)
+        {
+            return;
+        }
+
         var config = _profiles.CurrentConfig;
         var updated = config with { Settings = mutate(config.Settings) };
         _repository.Save(updated);
         _profiles.Reload(updated);
+    }
+
+    // Reflect a settings record into the bound properties (side-effect handlers still apply, but persistence
+    // is suppressed so the caller controls the single save). Used by reset-to-defaults and import.
+    private void LoadSettingsIntoUi(AppSettings d)
+    {
+        _suppressPersist = true;
+        try
+        {
+            RunAtStartup = d.StartWithWindows;
+            StartMinimized = d.StartMinimized;
+            CloseToTray = d.CloseToTray;
+            StartEmissionEnabled = d.StartEmissionEnabled;
+            TrayNotifications = d.TrayNotifications;
+            AllowExternalLaunch = d.AllowExternalLaunch;
+            AutoUpdate = d.AutoUpdate;
+            UpdateChannel = d.UpdateChannel;
+            UpdateCheckHours = d.UpdateCheckHours;
+            IsAutoDetect = d.AutoDetectDevices;
+            EmergencyHotkey = d.EmergencyStopHotkey ?? "ctrl+alt+pause";
+            ObsHost = d.ObsHost;
+            ObsPort = d.ObsPort;
+            ObsPassword = d.ObsPassword;
+            LogLevel = d.LogLevel;
+            LogRetentionDays = d.LogRetentionDays;
+            CrashAutoRestart = d.CrashAutoRestart;
+            MonitorMaxLines = d.Monitor.MaxLogLines;
+            MonitorThrottleMs = d.Monitor.UiThrottleMs;
+            SelectedLanguage = Languages.FirstOrDefault(l => l.Code == d.Language) ?? Languages.FirstOrDefault();
+        }
+        finally
+        {
+            _suppressPersist = false;
+        }
+    }
+
+    [RelayCommand]
+    private void OpenConfigFolder()
+    {
+        try
+        {
+            Directory.CreateDirectory(AppInfo.DataDirectory);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{AppInfo.DataDirectory}\"") { UseShellExecute = true });
+        }
+        catch { /* best effort */ }
+    }
+
+    [RelayCommand]
+    private void ExportConfig()
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "JSON (*.json)|*.json",
+            FileName = "MidiToEverything-config.json",
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            File.WriteAllText(dialog.FileName, ConfigSerializer.Serialize(_profiles.CurrentConfig));
+        }
+    }
+
+    [RelayCommand]
+    private void ImportConfig()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "JSON (*.json)|*.json" };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        if (System.Windows.MessageBox.Show(Loc.T("settings.import.confirm"), Loc.T("settings.import"),
+                System.Windows.MessageBoxButton.OKCancel, System.Windows.MessageBoxImage.Warning)
+            != System.Windows.MessageBoxResult.OK)
+        {
+            return;
+        }
+
+        try
+        {
+            var imported = ConfigSerializer.Deserialize(File.ReadAllText(dialog.FileName));
+            _repository.Save(imported);
+            _profiles.Reload(imported);
+            LoadSettingsIntoUi(imported.Settings);
+        }
+        catch
+        {
+            System.Windows.MessageBox.Show(Loc.T("settings.import.failed"), Loc.T("settings.import"),
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    private void ResetSettings()
+    {
+        if (System.Windows.MessageBox.Show(Loc.T("settings.reset.confirm"), Loc.T("settings.reset"),
+                System.Windows.MessageBoxButton.OKCancel, System.Windows.MessageBoxImage.Warning)
+            != System.Windows.MessageBoxResult.OK)
+        {
+            return;
+        }
+
+        var defaults = new AppSettings();
+        LoadSettingsIntoUi(defaults);
+        PersistSetting(_ => defaults);
     }
 
     // ── Auto-update ───────────────────────────────────────────────────────────
@@ -353,10 +469,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         var update = await _updateChecker.GetUpdateAsync(
             AppInfo.Version, includePrerelease: UpdateChannel == "prerelease");
+        var isNew = update is not null && update.Version != AvailableUpdate?.Version;
         AvailableUpdate = update;
         UpdateStatus = update is not null
             ? ""
             : manual ? Loc.T("update.upToDate") : "";
+
+        // Notify (tray) when an update first becomes available on an automatic check.
+        if (!manual && isNew && update is not null && TrayNotifications)
+        {
+            App.NotifyTray(Loc.T("update.available.title"), string.Format(Loc.T("update.available"), update.Version));
+        }
     }
 
     /// <summary>Download the installer and launch it, then exit so it can replace the running files.</summary>
@@ -407,8 +530,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private void OnEmissionChanged(object? sender, bool enabled)
         => _dispatcher.BeginInvoke(() => EmissionEnabled = enabled);
 
+    private string? _lastProfileName;
+
     private void ApplyState(ActiveProfileState state)
     {
+        // Tray notification on an actual profile switch (skip the initial baseline).
+        if (_lastProfileName is not null && _lastProfileName != state.Effective.Name && TrayNotifications)
+        {
+            App.NotifyTray(Loc.T("tray.profileSwitched.title"), state.Effective.Name);
+        }
+        _lastProfileName = state.Effective.Name;
+
         ActiveProfile = state.Effective.Name;
         IsPinned = state.IsPinned;
         var process = string.IsNullOrEmpty(state.Window.ProcessName) ? "(なし)" : state.Window.ProcessName;
