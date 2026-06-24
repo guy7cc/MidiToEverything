@@ -182,6 +182,11 @@
   "settings.monitorThrottle": "Refresh (ms)",
   "settings.monitorThrottle.tip": "Input-monitor UI refresh interval in milliseconds.",
   "settings.openLogs": "Open logs folder",
+  "settings.updateSection": "Updates",
+  "settings.updateChannel": "Update channel",
+  "settings.updateChannel.tip": "stable = latest release only / prerelease = include prereleases.",
+  "settings.updateInterval": "Check every (hours)",
+  "settings.updateInterval.tip": "Hours between automatic update checks.",
   "settings.emergencyHotkey": "Emergency-stop hotkey",
   "settings.emergencyHotkey.tip": "e.g. ctrl+alt+pause. Modifier(s) (ctrl/alt/shift/win) + a key joined by \"+\". Invalid values show red.",
 

@@ -24,6 +24,8 @@ internal sealed class SettingsDto
     public bool AllowExternalLaunch { get; set; }
     public string Language { get; set; } = "ja";
     public bool AutoUpdate { get; set; } = true;
+    public string UpdateChannel { get; set; } = "stable";
+    public int UpdateCheckHours { get; set; } = 24;
     public bool StartMinimized { get; set; }
     public bool CloseToTray { get; set; } = true;
     public bool StartEmissionEnabled { get; set; } = true;

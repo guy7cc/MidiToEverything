@@ -6,6 +6,8 @@
     "allowExternalLaunch": false,
     "language": "ja",
     "autoUpdate": true,
+    "updateChannel": "stable",
+    "updateCheckHours": 24,
     "startMinimized": false,
     "closeToTray": true,
     "startEmissionEnabled": true,

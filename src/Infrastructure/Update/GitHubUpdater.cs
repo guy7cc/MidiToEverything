@@ -15,6 +15,7 @@ public sealed class GitHubUpdateChecker : IUpdateChecker
 {
     private readonly HttpClient _http;
     private readonly string _latestUrl;
+    private readonly string _releasesUrl;
     private readonly ILogger<GitHubUpdateChecker> _logger;
 
     public GitHubUpdateChecker(
@@ -26,21 +27,33 @@ public sealed class GitHubUpdateChecker : IUpdateChecker
         _http.DefaultRequestHeaders.UserAgent.TryParseAdd("MidiToEverything-Updater");
         _http.DefaultRequestHeaders.Accept.TryParseAdd("application/vnd.github+json");
         _latestUrl = $"https://api.github.com/repos/{repository}/releases/latest";
+        _releasesUrl = $"https://api.github.com/repos/{repository}/releases?per_page=20";
         _logger = logger ?? NullLogger<GitHubUpdateChecker>.Instance;
     }
 
-    public async Task<UpdateInfo?> GetUpdateAsync(string currentVersion, CancellationToken cancellationToken = default)
+    public async Task<UpdateInfo?> GetUpdateAsync(string currentVersion, bool includePrerelease = false, CancellationToken cancellationToken = default)
     {
         try
         {
-            var json = await _http.GetStringAsync(_latestUrl, cancellationToken).ConfigureAwait(false);
-            var latest = ReleaseParser.ParseLatestRelease(json);
-            if (latest is null)
+            UpdateInfo? candidate;
+            if (includePrerelease)
+            {
+                // Prereleases are not surfaced by /releases/latest, so scan the recent list.
+                var json = await _http.GetStringAsync(_releasesUrl, cancellationToken).ConfigureAwait(false);
+                candidate = ReleaseParser.ParseReleases(json, includePrerelease: true);
+            }
+            else
+            {
+                var json = await _http.GetStringAsync(_latestUrl, cancellationToken).ConfigureAwait(false);
+                candidate = ReleaseParser.ParseLatestRelease(json);
+            }
+
+            if (candidate is null)
             {
                 return null;
             }
 
-            return ReleaseParser.IsNewer(latest.Version, currentVersion) ? latest : null;
+            return ReleaseParser.IsNewer(candidate.Version, currentVersion) ? candidate : null;
         }
         catch (Exception ex)
         {
