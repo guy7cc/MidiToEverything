@@ -1,4 +1,4 @@
-using MidiToEverything.Core.Persistence;
+﻿using MidiToEverything.Core.Persistence;
 
 namespace MidiToEverything.Core.Tests.Persistence;
 
@@ -28,3 +28,5 @@ public class DefaultConfigSampleTests
         File.WriteAllText(RepoPaths.SampleConfig, ConfigSerializer.Serialize(DefaultConfig.Create()));
     }
 }
+
+

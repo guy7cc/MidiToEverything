@@ -65,7 +65,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _obsPassword = settings.ObsPassword;
         _selectedLanguage = Languages.FirstOrDefault(l => l.Code == Loc.Instance.Language) ?? Languages.FirstOrDefault();
         Loc.Instance.LanguageChanged += OnLanguageChanged;
-        _isAutoDetect = source.DetectionMode == MidiDetectionMode.AutoPolling;
+        _isAutoDetect = settings.AutoDetectDevices;
+        source.DetectionMode = _isAutoDetect ? MidiDetectionMode.AutoPolling : MidiDetectionMode.Manual;
         ApplyState(profiles.State);
         foreach (var device in source.Devices)
         {
@@ -231,11 +232,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _profiles.Reload(updated);
     }
 
-    // Device-detection mode toggle (B-1): switch between periodic polling and manual rescan.
+    // Device-detection mode toggle (B-1): switch between periodic polling and manual rescan (persisted).
     partial void OnIsAutoDetectChanged(bool value)
     {
         _source.DetectionMode = value ? MidiDetectionMode.AutoPolling : MidiDetectionMode.Manual;
         OnPropertyChanged(nameof(DetectModeLabel));
+        PersistSetting(s => s with { AutoDetectDevices = value });
     }
 
     [RelayCommand]

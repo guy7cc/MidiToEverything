@@ -123,30 +123,10 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="{loc:Tr main.devices}" FontWeight="SemiBold"
                                Foreground="{StaticResource TextDimBrush}" Margin="0,0,0,10" />
-                    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-                        <ToggleButton IsChecked="{Binding IsAutoDetect}" Content="{Binding DetectModeLabel}"
-                                      HorizontalAlignment="Stretch"
-                                      ToolTip="{loc:Tr main.detect.tip}" />
-                        <Button Content="{loc:Tr main.refreshNow}" Command="{Binding RescanDevicesCommand}"
-                                Margin="0,6,0,0" HorizontalAlignment="Stretch" />
-                    </StackPanel>
+                    <Button DockPanel.Dock="Top" Content="{loc:Tr main.refreshNow}" Command="{Binding RescanDevicesCommand}"
+                            Margin="0,0,0,12" HorizontalAlignment="Stretch" />
                     <TextBlock DockPanel.Dock="Top" Text="{loc:Tr main.notConnected}" Foreground="{StaticResource TextFaintBrush}" FontSize="12"
                                Visibility="{Binding Devices.Count, Converter={StaticResource ZeroToVisibility}}" />
-                    <!-- OBS connection (obs-websocket) for OBS actions -->
-                    <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-                        <TextBlock Text="{loc:Tr main.obs.title}" Foreground="{StaticResource TextDimBrush}"
-                                   FontSize="12" Margin="0,0,0,4" />
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="58" />
-                            </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" Margin="0,0,4,0" Text="{Binding ObsHost}" ToolTip="{loc:Tr main.obs.host.tip}" />
-                            <TextBox Grid.Column="1" Text="{Binding ObsPort}" ToolTip="{loc:Tr main.obs.port.tip}" />
-                        </Grid>
-                        <TextBox Margin="0,4,0,0" Text="{Binding ObsPassword}"
-                                 ToolTip="{loc:Tr main.obs.pass.tip}" />
-                    </StackPanel>
                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <ItemsControl ItemsSource="{Binding Devices}">
                             <ItemsControl.ItemTemplate>
