@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MidiToEverything.App.Localization;
 using MidiToEverything.App.ViewModels.Editing;
+using MidiToEverything.Core;
 using MidiToEverything.Core.Application;
 using MidiToEverything.Core.Application.Ports;
 using MidiToEverything.Core.Domain;
@@ -29,25 +30,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private readonly GatedInputSink _gate;
     private readonly LaunchPolicy _launchPolicy;
     private readonly IProfileRepository _repository;
+    private readonly IUpdateChecker _updateChecker;
+    private readonly IUpdateInstaller _updateInstaller;
     private readonly Dispatcher _dispatcher;
     private readonly DispatcherTimer _flushTimer;
+    private readonly DispatcherTimer _updateTimer;
     private readonly ConcurrentQueue<MidiMessage> _incoming = new();
     private readonly FiringEvaluator _firing = new();
 
     public MainViewModel(IMidiSource source, ProfileManager profiles, GatedInputSink gate,
-        LaunchPolicy launchPolicy, IProfileRepository repository)
+        LaunchPolicy launchPolicy, IProfileRepository repository,
+        IUpdateChecker updateChecker, IUpdateInstaller updateInstaller)
     {
         _source = source;
         _profiles = profiles;
         _gate = gate;
         _launchPolicy = launchPolicy;
         _repository = repository;
+        _updateChecker = updateChecker;
+        _updateInstaller = updateInstaller;
         _dispatcher = Dispatcher.CurrentDispatcher;
 
         EmissionEnabled = gate.Enabled;
         _allowExternalLaunch = launchPolicy.Allowed;
         _runAtStartup = profiles.CurrentConfig.Settings.StartWithWindows;
         var settings = profiles.CurrentConfig.Settings;
+        _autoUpdate = settings.AutoUpdate;
         _obsHost = settings.ObsHost;
         _obsPort = settings.ObsPort;
         _obsPassword = settings.ObsPassword;
@@ -72,6 +80,19 @@ public partial class MainViewModel : ObservableObject, IDisposable
         };
         _flushTimer.Tick += (_, _) => Flush();
         _flushTimer.Start();
+
+        // Auto-update: check on startup (after the UI settles) and every 24 hours.
+        _updateTimer = new DispatcherTimer(DispatcherPriority.Background, _dispatcher)
+        {
+            Interval = TimeSpan.FromHours(24),
+        };
+        _updateTimer.Tick += async (_, _) => await CheckForUpdatesAsync(manual: false);
+        if (AutoUpdate)
+        {
+            _updateTimer.Start();
+            _ = _dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle,
+                new Action(async () => await CheckForUpdatesAsync(manual: false)));
+        }
     }
 
     public ObservableCollection<string> Devices { get; } = new();
@@ -88,6 +109,22 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _obsHost = "localhost";
     [ObservableProperty] private int _obsPort = 4455;
     [ObservableProperty] private string _obsPassword = "";
+
+    // ── Auto-update ───────────────────────────────────────────────────────────
+    [ObservableProperty] private bool _autoUpdate = true;
+
+    /// <summary>The available newer release, or null when up to date / not yet checked.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUpdate), nameof(UpdateBannerText))]
+    private UpdateInfo? _availableUpdate;
+
+    /// <summary>Status line for the update flow (checking / downloading / error).</summary>
+    [ObservableProperty] private string _updateStatus = "";
+
+    public bool HasUpdate => AvailableUpdate is not null;
+
+    public string UpdateBannerText =>
+        AvailableUpdate is null ? "" : string.Format(Loc.T("update.available"), AvailableUpdate.Version);
 
     public string EmissionLabel => Loc.T(EmissionEnabled ? "main.status.running" : "main.status.stopped");
     public string DetectModeLabel => Loc.T(IsAutoDetect ? "main.detect.auto" : "main.detect.manual");
@@ -183,6 +220,76 @@ public partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Force an immediate device re-scan (B-1; the manual "refresh" button).</summary>
     [RelayCommand]
     private void RescanDevices() => _source.Rescan();
+
+    // ── Auto-update ───────────────────────────────────────────────────────────
+
+    // Persist the toggle; (re)start or stop the periodic check accordingly.
+    partial void OnAutoUpdateChanged(bool value)
+    {
+        var config = _profiles.CurrentConfig;
+        var updated = config with { Settings = config.Settings with { AutoUpdate = value } };
+        _repository.Save(updated);
+        _profiles.Reload(updated);
+
+        if (value)
+        {
+            _updateTimer.Start();
+            _ = CheckForUpdatesAsync(manual: false);
+        }
+        else
+        {
+            _updateTimer.Stop();
+        }
+    }
+
+    [RelayCommand]
+    private Task CheckForUpdates() => CheckForUpdatesAsync(manual: true);
+
+    private async Task CheckForUpdatesAsync(bool manual)
+    {
+        if (manual)
+        {
+            UpdateStatus = Loc.T("update.checking");
+        }
+
+        var update = await _updateChecker.GetUpdateAsync(AppInfo.Version);
+        AvailableUpdate = update;
+        UpdateStatus = update is not null
+            ? ""
+            : manual ? Loc.T("update.upToDate") : "";
+    }
+
+    /// <summary>Download the installer and launch it, then exit so it can replace the running files.</summary>
+    [RelayCommand]
+    private async Task InstallUpdate()
+    {
+        if (AvailableUpdate is not { } update)
+        {
+            return;
+        }
+
+        try
+        {
+            var progress = new Progress<double>(p => UpdateStatus = string.Format(Loc.T("update.downloading"), (int)(p * 100)));
+            UpdateStatus = string.Format(Loc.T("update.downloading"), 0);
+            var path = await _updateInstaller.DownloadAsync(update, progress);
+
+            UpdateStatus = Loc.T("update.launching");
+            _updateInstaller.Launch(path);
+            System.Windows.Application.Current?.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus = string.Format(Loc.T("update.failed"), ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private void DismissUpdate()
+    {
+        AvailableUpdate = null;
+        UpdateStatus = "";
+    }
 
     // ── Engine events (background threads) ────────────────────────────────────
 
@@ -293,6 +400,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         _flushTimer.Stop();
+        _updateTimer.Stop();
         _source.MessageReceived -= OnMessageReceived;
         _source.DeviceConnected -= OnDeviceConnected;
         _source.DeviceDisconnected -= OnDeviceDisconnected;

@@ -37,6 +37,9 @@ public sealed record AppSettings
     /// <summary>UI language code ("ja" / "en"). docs/07.</summary>
     public string Language { get; init; } = "ja";
 
+    /// <summary>Check GitHub Releases for a newer version on startup and periodically.</summary>
+    public bool AutoUpdate { get; init; } = true;
+
     /// <summary>obs-websocket connection for OBS actions (docs/05 §5, Phase 3).</summary>
     public string ObsHost { get; init; } = "localhost";
     public int ObsPort { get; init; } = 4455;

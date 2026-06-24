@@ -5,6 +5,7 @@
     "emergencyStopHotkey": "ctrl+alt+pause",
     "allowExternalLaunch": false,
     "language": "ja",
+    "autoUpdate": true,
     "obsHost": "localhost",
     "obsPort": 4455,
     "obsPassword": "",
