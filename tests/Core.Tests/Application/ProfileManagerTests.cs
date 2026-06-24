@@ -37,9 +37,9 @@ public class ProfileManagerTests
 
         watcher.SetForeground("notepad.exe", "Untitled");
 
-        Assert.Equal("notepad", manager.State.Context?.Id);
         Assert.Equal("notepad", manager.State.Effective.Id);
-        Assert.Same(manager.Current.Context, manager.State.Context);
+        Assert.Contains(manager.State.Active, p => p.Id == "notepad"); // the matched rule is active
+        Assert.Contains(manager.Current.Rules, p => p.Id == "notepad");
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class ProfileManagerTests
 
         watcher.SetForeground("explorer.exe", "Files");
 
-        Assert.Null(manager.State.Context);
+        Assert.Single(manager.State.Active); // only the base rule is active
         Assert.Equal("base", manager.State.Effective.Id);
     }
 
@@ -62,7 +62,9 @@ public class ProfileManagerTests
 
         watcher.SetForeground("app.exe", "");
 
-        Assert.Equal("high", manager.State.Context?.Id);
+        Assert.Equal("high", manager.State.Effective.Id);           // highest-priority match for display
+        Assert.Contains(manager.State.Active, p => p.Id == "low");  // but both rules are active (union)
+        Assert.Contains(manager.State.Active, p => p.Id == "high");
     }
 
     [Fact]
@@ -75,8 +77,8 @@ public class ProfileManagerTests
 
         Assert.True(manager.State.IsPinned);
         Assert.Equal("obs", manager.State.Effective.Id);
-        // context still tracks the window underneath the pin
-        Assert.Equal("notepad", manager.State.Context?.Id);
+        // the window match stays active underneath the force-enable
+        Assert.Contains(manager.State.Active, p => p.Id == "notepad");
     }
 
     [Fact]
@@ -144,7 +146,7 @@ public class ProfileManagerTests
     {
         var (manager, watcher) = Build(App("notepad", "notepad.exe"));
         watcher.SetForeground("obs64.exe", "");
-        Assert.Null(manager.State.Context); // no profile matches obs yet
+        Assert.Equal("base", manager.State.Effective.Id); // no rule matches obs yet (base only)
 
         manager.Reload(new AppConfig
         {
@@ -152,7 +154,7 @@ public class ProfileManagerTests
             Profiles = new[] { App("obs", "obs64.exe") },
         });
 
-        Assert.Equal("obs", manager.State.Context?.Id); // re-evaluated against the current window
+        Assert.Equal("obs", manager.State.Effective.Id); // re-evaluated against the current window
         Assert.Single(manager.CurrentConfig.Profiles);
     }
 

@@ -20,25 +20,31 @@ public class ConfigSerializerTests
         },
     };
 
+    private static string[][] FiredKeys(MidiMessage message, params Profile[] active)
+        => new FiringEvaluator().Evaluate(message, new ActiveRules(active))
+            .Select(f => ((KeyAction)f.Binding.Actions[0]).Keys.ToArray())
+            .ToArray();
+
     [Fact]
     public void DefaultConfig_RoundTrips_PreservingResolutionBehavior()
     {
         var loaded = ConfigSerializer.Deserialize(ConfigSerializer.Serialize(DefaultConfig.Create()));
 
-        var resolver = new MappingResolver();
+        var baseRule = loaded.BaseProfile;
         var csp = loaded.Profiles.Single(p => p.Id == "clip-studio");
         var obs = loaded.Profiles.Single(p => p.Id == "obs");
 
-        // base undo with no context
-        Assert.Equal("base",
-            resolver.Resolve(NoteOn(36), new ProfileLayers(loaded.BaseProfile)).SourceProfileId);
-        // CSP blocks Note37 (NoneAction survived the round-trip)
-        Assert.Equal(ResolutionOutcome.Blocked,
-            resolver.Resolve(NoteOn(37), new ProfileLayers(loaded.BaseProfile, Context: csp)).Outcome);
-        // OBS overrides Note36
-        var obsHit = resolver.Resolve(NoteOn(36), new ProfileLayers(loaded.BaseProfile, Context: obs));
-        Assert.Equal("obs", obsHit.SourceProfileId);
-        Assert.Equal(new[] { "ctrl", "shift", "1" }, Assert.IsType<KeyAction>(obsHit.Binding!.Actions[0]).Keys);
+        // base undo with the base rule only
+        Assert.Equal(new[] { new[] { "ctrl", "z" } }, FiredKeys(NoteOn(36), baseRule));
+
+        // base + CSP: CSP's Note37 `none` is inert (union), so the base copy still fires
+        Assert.Equal(new[] { new[] { "ctrl", "c" } }, FiredKeys(NoteOn(37), baseRule, csp));
+
+        // base + OBS: Note36 co-fires both base undo AND obs scene-1 (union, no override)
+        var obsKeys = FiredKeys(NoteOn(36), baseRule, obs);
+        Assert.Equal(2, obsKeys.Length);
+        Assert.Contains(obsKeys, k => k.SequenceEqual(new[] { "ctrl", "z" }));
+        Assert.Contains(obsKeys, k => k.SequenceEqual(new[] { "ctrl", "shift", "1" }));
     }
 
     [Fact]

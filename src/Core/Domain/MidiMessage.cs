@@ -2,8 +2,8 @@ namespace MidiToEverything.Core.Domain;
 
 /// <summary>
 /// A concrete MIDI message received from a device, normalized for the mapping engine.
-/// This is the runtime input to <see cref="Mapping.MappingResolver"/> — distinct from
-/// the wildcard-capable <see cref="Signal"/> pattern stored in profiles.
+/// This is the runtime input to <see cref="Mapping.FiringEvaluator"/> — distinct from
+/// the wildcard-capable <see cref="Signal"/> pattern stored in rules.
 /// </summary>
 /// <param name="Device">Source device identifier (name-based).</param>
 /// <param name="Channel">MIDI channel, 1..16.</param>

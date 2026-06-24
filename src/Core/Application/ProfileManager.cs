@@ -6,27 +6,36 @@ using MidiToEverything.Core.Mapping;
 
 namespace MidiToEverything.Core.Application;
 
-/// <summary>Snapshot of which profile is active and why (for UI/tray, FR-5.6).</summary>
-/// <param name="Effective">Top layer in effect: pinned ?? context ?? base.</param>
-/// <param name="Context">Profile matched to the foreground window, if any.</param>
-/// <param name="Pinned">Manually pinned profile, if any (FR-5.5).</param>
-/// <param name="IsPinned">True when a manual pin overrides auto-switch.</param>
+/// <summary>Snapshot of which rules are active and why (for UI/tray, FR-5.6).</summary>
+/// <param name="Active">All rules active now: the base rule + every rule whose regex matches the
+/// foreground window + any force-enabled rule.</param>
+/// <param name="Pinned">A manually force-enabled rule, if any (FR-5.5).</param>
+/// <param name="IsPinned">True when a rule is manually force-enabled.</param>
 /// <param name="Window">The foreground window context.</param>
 public sealed record ActiveProfileState(
-    Profile Effective,
-    Profile? Context,
+    IReadOnlyList<Profile> Active,
     Profile? Pinned,
     bool IsPinned,
-    WindowContext Window);
+    WindowContext Window)
+{
+    /// <summary>A representative rule for single-line display: pinned, else highest-priority match, else base.</summary>
+    public Profile Effective =>
+        Pinned
+        ?? Active.Where(p => p.Match is not null).OrderByDescending(p => p.Match!.Priority).FirstOrDefault()
+        ?? Active[0];
+
+    /// <summary>Names of the active rules in order (base first), for an "active rules" summary.</summary>
+    public IReadOnlyList<string> ActiveNames => Active.Select(p => p.Name).ToArray();
+}
 
 /// <summary>
-/// Owns active-profile selection (docs/02_Architecture.md §3.6) and serves the current
-/// <see cref="ProfileLayers"/> to the pipeline via <see cref="IMappingContext"/>.
+/// Owns the active-rule set (docs/02_Architecture.md §3.6) and serves the current
+/// <see cref="ActiveRules"/> to the pipeline via <see cref="IMappingContext"/>.
 ///
-/// Auto-switches to the highest-priority profile whose <see cref="MatchRule"/> matches the
-/// foreground window (FR-5.1/5.2). A manual switch — from the UI (FR-5.3) or a MIDI
-/// <see cref="SwitchProfileAction"/> (FR-5.4) — pins a profile, overriding auto-switch until
-/// unpinned (FR-5.5).
+/// Every rule whose <see cref="MatchRule"/> matches the foreground window is active simultaneously
+/// (FR-5.1/5.2); the base rule is always active; their bindings co-fire (no priority override). A
+/// manual force-enable — from the UI (FR-5.3) or a MIDI <see cref="SwitchProfileAction"/> (FR-5.4) —
+/// keeps a rule active regardless of its regex (FR-5.5).
 /// </summary>
 public sealed class ProfileManager : IMappingContext, IDisposable
 {
@@ -37,7 +46,6 @@ public sealed class ProfileManager : IMappingContext, IDisposable
     private AppConfig _config;
     private Profile _base;
     private IReadOnlyList<Profile> _profiles;
-    private Profile? _context;
     private string? _pinnedId;
     private WindowContext _window = WindowContext.Unknown;
 
@@ -57,8 +65,8 @@ public sealed class ProfileManager : IMappingContext, IDisposable
     }
 
     /// <summary>
-    /// Swap in an edited configuration and re-evaluate the active profile, so changes from the
-    /// editor take effect immediately without a restart (FR-7.2). A pin pointing at a profile
+    /// Swap in an edited configuration and re-evaluate the active rules, so changes from the
+    /// editor take effect immediately without a restart (FR-7.2). A force-enable pointing at a rule
     /// that no longer exists is cleared.
     /// </summary>
     public void Reload(AppConfig config)
@@ -72,20 +80,18 @@ public sealed class ProfileManager : IMappingContext, IDisposable
             {
                 _pinnedId = null;
             }
-
-            _context = Match(_window);
         }
 
-        _logger.LogInformation("Configuration reloaded ({Count} profiles).", config.Profiles.Count);
+        _logger.LogInformation("Configuration reloaded ({Count} rules).", config.Profiles.Count);
         RaiseChanged();
     }
 
-    /// <summary>Raised whenever the effective profile, pin state, or foreground window changes (FR-5.6).</summary>
+    /// <summary>Raised whenever the active rule set, force-enable state, or foreground window changes (FR-5.6).</summary>
     public event EventHandler<ActiveProfileState>? Changed;
 
-    public ProfileLayers Current
+    public ActiveRules Current
     {
-        get { lock (_gate) { return BuildLayers(); } }
+        get { lock (_gate) { return BuildActive(); } }
     }
 
     public ActiveProfileState State
@@ -113,7 +119,7 @@ public sealed class ProfileManager : IMappingContext, IDisposable
 
     public void Dispose() => Stop();
 
-    /// <summary>Manually pin a profile (UI selection), overriding auto-switch (FR-5.3/5.5).</summary>
+    /// <summary>Manually force-enable a rule (UI selection), keeping it active regardless of its regex (FR-5.3/5.5).</summary>
     public void Pin(string profileId)
     {
         lock (_gate)
@@ -129,7 +135,7 @@ public sealed class ProfileManager : IMappingContext, IDisposable
         RaiseChanged();
     }
 
-    /// <summary>Clear the manual pin and resume auto-switching (FR-5.5).</summary>
+    /// <summary>Clear the manual force-enable and resume regex-only matching (FR-5.5).</summary>
     public void Unpin()
     {
         lock (_gate)
@@ -140,7 +146,7 @@ public sealed class ProfileManager : IMappingContext, IDisposable
         RaiseChanged();
     }
 
-    /// <summary>Handle a MIDI-driven profile switch (FR-5.4).</summary>
+    /// <summary>Handle a MIDI-driven rule force-enable (FR-5.4).</summary>
     public void HandleSwitch(SwitchProfileAction action)
     {
         switch (action.Target)
@@ -167,17 +173,19 @@ public sealed class ProfileManager : IMappingContext, IDisposable
         lock (_gate)
         {
             _window = context;
-            _context = Match(context);
         }
 
         RaiseChanged();
     }
 
-    private Profile? Match(WindowContext context) => _profiles
+    /// <summary>Every enabled rule whose regex matches the current window (in declaration order).</summary>
+    private IEnumerable<Profile> Matching() => _profiles
         .Where(p => p.Enabled && p.Match is not null &&
-                    p.Match.Matches(context.ProcessName, context.WindowTitle))
-        .OrderByDescending(p => p.Match!.Priority)
-        .FirstOrDefault();
+                    p.Match.Matches(_window.ProcessName, _window.WindowTitle));
+
+    /// <summary>A representative matched rule (highest priority) for force-enable cycling/toggle.</summary>
+    private Profile? PrimaryMatch() =>
+        Matching().OrderByDescending(p => p.Match!.Priority).FirstOrDefault();
 
     private void Cycle(int direction)
     {
@@ -188,7 +196,7 @@ public sealed class ProfileManager : IMappingContext, IDisposable
                 return;
             }
 
-            var currentId = _pinnedId ?? _context?.Id;
+            var currentId = _pinnedId ?? PrimaryMatch()?.Id;
             var index = currentId is null ? -1 : IndexOf(currentId);
 
             int next;
@@ -212,8 +220,8 @@ public sealed class ProfileManager : IMappingContext, IDisposable
     {
         lock (_gate)
         {
-            // Pinned -> release to auto. Auto with a context match -> pin that context.
-            _pinnedId = _pinnedId is not null ? null : _context?.Id;
+            // Force-enabled -> release to regex-only. Otherwise -> force-enable the primary match.
+            _pinnedId = _pinnedId is not null ? null : PrimaryMatch()?.Id;
         }
 
         RaiseChanged();
@@ -235,17 +243,24 @@ public sealed class ProfileManager : IMappingContext, IDisposable
     private Profile? Find(string id) =>
         id == _base.Id ? _base : _profiles.FirstOrDefault(p => p.Id == id);
 
-    private ProfileLayers BuildLayers()
+    private ActiveRules BuildActive()
     {
-        var pinned = _pinnedId is null ? null : Find(_pinnedId);
-        return new ProfileLayers(_base, Context: _context, Pinned: pinned);
+        var rules = new List<Profile> { _base };
+        rules.AddRange(Matching());
+
+        if (_pinnedId is not null && Find(_pinnedId) is { } pinned && rules.All(r => r.Id != pinned.Id))
+        {
+            rules.Add(pinned);
+        }
+
+        return new ActiveRules(rules);
     }
 
     private ActiveProfileState BuildState()
     {
         var pinned = _pinnedId is null ? null : Find(_pinnedId);
-        var effective = pinned ?? _context ?? _base;
-        return new ActiveProfileState(effective, _context, pinned, pinned is not null, _window);
+        var active = BuildActive().Rules;
+        return new ActiveProfileState(active, pinned, pinned is not null, _window);
     }
 
     private void RaiseChanged()
@@ -256,8 +271,8 @@ public sealed class ProfileManager : IMappingContext, IDisposable
             state = BuildState();
         }
 
-        _logger.LogDebug("Active profile: {Profile} (pinned={Pinned}) window={Process}",
-            state.Effective.Name, state.IsPinned, state.Window.ProcessName);
+        _logger.LogDebug("Active rules: {Names} (pinned={Pinned}) window={Process}",
+            string.Join(", ", state.ActiveNames), state.IsPinned, state.Window.ProcessName);
         Changed?.Invoke(this, state);
     }
 }
