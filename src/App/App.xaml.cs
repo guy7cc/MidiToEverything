@@ -36,6 +36,7 @@ public partial class App : Application
         Enum.TryParse<LogEventLevel>(level, ignoreCase: true, out var parsed) ? parsed : LogEventLevel.Debug;
 
     private IHost? _host;
+    private AppConfig? _bootConfig;
     private EngineCoordinator? _engine;
     private NotifyIcon? _tray;
     private ToolStripMenuItem? _showItem;
@@ -83,7 +84,8 @@ public partial class App : Application
 
         // Read persisted diagnostics settings before the logger exists (the host loads its own
         // copy later). Level changes apply live via LogLevelSwitch; retention is fixed here.
-        var bootSettings = new Core.Persistence.JsonProfileRepository().LoadOrCreateDefault().Settings;
+        _bootConfig = new Core.Persistence.JsonProfileRepository().LoadOrCreateDefault();
+        var bootSettings = _bootConfig.Settings;
         LogLevelSwitch.MinimumLevel = ParseLogLevel(bootSettings.LogLevel);
         CrashReporter.AutoRestart = bootSettings.CrashAutoRestart;
 
@@ -132,7 +134,7 @@ public partial class App : Application
         CrashReporter.ShowPendingCrashNotice();
     }
 
-    private static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
+    private void ConfigureServices(HostBuilderContext context, IServiceCollection services)
     {
         services.AddInfrastructure();
 
@@ -140,7 +142,8 @@ public partial class App : Application
         services.AddSingleton<IProfileRepository>(sp =>
             new Core.Persistence.JsonProfileRepository(
                 logger: sp.GetService<ILogger<Core.Persistence.JsonProfileRepository>>()));
-        services.AddSingleton(sp => sp.GetRequiredService<IProfileRepository>().LoadOrCreateDefault());
+        // Reuse the config already read at boot (for the logger) instead of parsing config.json twice.
+        services.AddSingleton(_bootConfig ?? throw new InvalidOperationException("Boot config not loaded."));
 
         // Core engine.
         services.AddSingleton(sp => new ProfileManager(
@@ -407,6 +410,16 @@ public partial class App : Application
         if (_host is null)
         {
             return;
+        }
+
+        // The profile editor is the authoritative in-progress editor (and auto-saves); don't reload
+        // underneath an open edit, which would diverge from what the editor is showing.
+        foreach (Window window in Windows)
+        {
+            if (window is ProfileEditorWindow)
+            {
+                return;
+            }
         }
 
         try

@@ -205,6 +205,7 @@
   "settings.import": "Import",
   "settings.import.confirm": "This replaces your current settings and profiles with the imported file. Continue?",
   "settings.import.failed": "Import failed. Please check the file.",
+  "settings.export.failed": "Export failed. Please check the destination.",
   "settings.reset": "Reset settings",
   "settings.reset.confirm": "Reset all settings to defaults (profiles are kept). Continue?",
   "tray.profileSwitched.title": "Profile switched",

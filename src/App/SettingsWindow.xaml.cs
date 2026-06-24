@@ -12,7 +12,12 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         // Match the other windows: DWM-round the corners (Windows 11+) for a consistent look.
-        SourceInitialized += (_, _) => WindowChromeFix.Apply(this);
+        // CanResize gives DWM a frame to round; disable maximize so this dialog can't be maximized.
+        SourceInitialized += (_, _) =>
+        {
+            WindowChromeFix.Apply(this);
+            WindowChromeFix.DisableMaximize(this);
+        };
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
