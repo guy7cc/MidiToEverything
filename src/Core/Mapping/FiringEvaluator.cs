@@ -17,17 +17,35 @@ public readonly record struct Firing(Binding Binding, TriggerResult Trigger);
 /// </summary>
 public sealed class FiringEvaluator
 {
-    private readonly MappingResolver _resolver;
     private readonly DeltaTracker _delta = new();
     private readonly EdgeGate _edge = new();
 
-    public FiringEvaluator(MappingResolver? resolver = null) => _resolver = resolver ?? new MappingResolver();
-
-    /// <summary>The bindings that fire for this message (empty when nothing matches/fires or is blocked).</summary>
-    public IReadOnlyList<Firing> Evaluate(MidiMessage message, ProfileLayers layers)
+    /// <summary>
+    /// The bindings that fire for this message — the union across <em>all</em> active rules. Within
+    /// each rule only the highest-specificity matches are kept (<see cref="Profile.FindAllMatches"/>);
+    /// across rules they co-fire (no priority override). <c>none</c>/block bindings are inert and emit
+    /// nothing. Empty when nothing fires.
+    /// </summary>
+    public IReadOnlyList<Firing> Evaluate(MidiMessage message, ActiveRules active)
     {
-        var resolution = _resolver.ResolveAll(message, layers);
-        if (!resolution.ShouldEmit)
+        var bindings = new List<Binding>();
+        foreach (var rule in active.Rules)
+        {
+            if (!rule.Enabled)
+            {
+                continue;
+            }
+
+            foreach (var binding in rule.FindAllMatches(message))
+            {
+                if (!binding.IsBlock) // `none` is inert in the union model (nothing to block)
+                {
+                    bindings.Add(binding);
+                }
+            }
+        }
+
+        if (bindings.Count == 0)
         {
             return Array.Empty<Firing>();
         }
@@ -39,7 +57,7 @@ public sealed class FiringEvaluator
         int? absDelta = null;
         var absAdvanced = false;
 
-        foreach (var binding in resolution.Bindings)
+        foreach (var binding in bindings)
         {
             TriggerResult trigger;
             if (binding.Trigger is { Mode: TriggerMode.Relative, RelativeFormat: RelativeFormat.AbsoluteDelta })

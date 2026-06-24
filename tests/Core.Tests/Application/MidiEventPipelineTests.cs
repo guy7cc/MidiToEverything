@@ -22,7 +22,7 @@ public sealed class MidiEventPipelineTests : IAsyncLifetime
 
     public MidiEventPipelineTests()
     {
-        _context = new MutableMappingContext(new ProfileLayers(_config.BaseProfile));
+        _context = new MutableMappingContext(new ActiveRules(_config.BaseProfile));
         _pipeline = new MidiEventPipeline(_source, _context, new ActionExecutor(_sink));
     }
 
@@ -53,7 +53,7 @@ public sealed class MidiEventPipelineTests : IAsyncLifetime
     [Fact]
     public async Task HoldKey_InClipStudio_EmitsDownThenUp()
     {
-        _context.Set(new ProfileLayers(_config.BaseProfile, Context: Profile("clip-studio")));
+        _context.Set(new ActiveRules(new[] { _config.BaseProfile, Profile("clip-studio") }));
 
         _source.Emit(NoteOn(40));   // press the pad
         _source.Emit(NoteOff(40));  // release it
@@ -82,7 +82,7 @@ public sealed class MidiEventPipelineTests : IAsyncLifetime
                 },
             },
         };
-        _context.Set(new ProfileLayers(profile));
+        _context.Set(new ActiveRules(profile));
 
         _source.Emit(NoteOn(39));  // press → key down
         _source.Emit(NoteOff(39)); // release → key up (this used to be ignored)
@@ -93,19 +93,22 @@ public sealed class MidiEventPipelineTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task BlockedSignal_InClipStudio_EmitsNothing()
+    public async Task NoneInOneRule_DoesNotBlockAnotherRule_Union()
     {
-        _context.Set(new ProfileLayers(_config.BaseProfile, Context: Profile("clip-studio")));
+        // Union model: CSP's Note37 `none` is inert and no longer suppresses the base copy, so the
+        // base binding still fires. (To suppress base in CSP, scope the base rule's regex instead.)
+        _context.Set(new ActiveRules(new[] { _config.BaseProfile, Profile("clip-studio") }));
 
-        _source.Emit(NoteOn(37)); // CSP blocks Note37 with NoneAction
+        _source.Emit(NoteOn(37));
 
-        await _sink.AssertNoCallsAsync(TimeSpan.FromMilliseconds(150));
+        await _sink.WaitForCountAsync(1, Timeout);
+        Assert.Equal(new[] { "ctrl", "c" }, Assert.IsType<KeyTapCall>(_sink.Calls[0]).Keys);
     }
 
     [Fact]
     public async Task Cc74_Absolute_InClipStudio_EmitsScrollWithMagnitude()
     {
-        _context.Set(new ProfileLayers(_config.BaseProfile, Context: Profile("clip-studio")));
+        _context.Set(new ActiveRules(new[] { _config.BaseProfile, Profile("clip-studio") }));
 
         _source.Emit(Cc(74, 127)); // full value → normalized 1.0
 
@@ -134,7 +137,7 @@ public sealed class MidiEventPipelineTests : IAsyncLifetime
                 },
             },
         };
-        _context.Set(new ProfileLayers(profile));
+        _context.Set(new ActiveRules(profile));
 
         _source.Emit(NoteOn(36));
 
@@ -172,7 +175,7 @@ public sealed class MidiEventPipelineTests : IAsyncLifetime
                 RelCc(14, RelativeOutput.FireOnDecrease, "b"),
             },
         };
-        _context.Set(new ProfileLayers(profile));
+        _context.Set(new ActiveRules(profile));
 
         _source.Emit(Cc(14, 1));   // two's complement 1 → +1 → increase → fires "a"
         _source.Emit(Cc(14, 127)); // two's complement 127 → -1 → decrease → fires "b"

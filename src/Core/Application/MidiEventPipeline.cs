@@ -31,14 +31,13 @@ public sealed class MidiEventPipeline : IAsyncDisposable
         IMidiSource source,
         IMappingContext context,
         ActionExecutor executor,
-        MappingResolver? resolver = null,
         ILogger<MidiEventPipeline>? logger = null,
         int capacity = 4096)
     {
         _source = source;
         _context = context;
         _executor = executor;
-        _firing = new FiringEvaluator(resolver);
+        _firing = new FiringEvaluator();
         _logger = logger ?? NullLogger<MidiEventPipeline>.Instance;
         _channel = Channel.CreateBounded<Envelope>(new BoundedChannelOptions(capacity)
         {
