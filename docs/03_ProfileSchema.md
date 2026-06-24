@@ -1,9 +1,9 @@
-# データ構造 / プロファイル設定スキーマ — MidiToEverything
+# データ構造 / ルール設定スキーマ — MidiToEverything
 
 関連: [01_PRD.md](01_PRD.md) / [02_Architecture.md](02_Architecture.md)
 
 保存形式は **JSON**（`System.Text.Json`）。保存先は `%APPDATA%\MidiToEverything\`。
-`settings.json`（全体設定）＋ `profiles\<id>.json`（プロファイル単位）に分割するか、単一 `config.json` にまとめるかは実装選択（本書は単一束ねの論理スキーマを示す）。
+`settings.json`（全体設定）＋ `profiles\<id>.json`（ルール単位）に分割するか、単一 `config.json` にまとめるかは実装選択（本書は単一束ねの論理スキーマを示す）。
 
 ---
 
@@ -61,10 +61,10 @@
 // スクロール
 { "type": "scroll", "axis": "vertical", "amount": 120, "useInputValue": true }
 
-// プロファイル切替
-{ "type": "switchProfile", "target": "next" }   // "next" | "prev" | "toggle" | プロファイルIdの文字列
+// ルール切替
+{ "type": "switchProfile", "target": "next" }   // "next" | "prev" | "toggle" | ルールIdの文字列
 
-// 何もしない＝基本プロファイルの割当を明示ブロック（FR-6.4）
+// 何もしない（no-op）。合算モードでは他ルールを遮断しない（旧「ブロック」は廃止）
 { "type": "none" }
 ```
 
@@ -93,14 +93,14 @@
 
 ---
 
-## 4. プロファイル
+## 4. ルール
 
 | フィールド | 型 | 説明 |
 |------|----|----|
 | `id` | string | 一意 ID（kebab-case） |
 | `name` | string | 表示名 |
 | `enabled` | bool | 有効/無効 |
-| `match` | object | コンテキスト自動切替条件（基本プロファイルでは無し） |
+| `match` | object | コンテキスト自動切替条件（基本ルールでは無し） |
 | `match.pattern` | string(regex) | **単一の正規表現**。`"<プロセス名>\n<ウィンドウタイトル>"` の2行文字列に対し**複数行モード**で評価。例: `^chrome\.exe$`（プロセス名行に一致）/ `Google Chrome$`（タイトル行に一致）/ 両方を `(?:…)|(?:…)` でOR結合。空文字は不一致。不正な正規表現は例外を投げず不一致扱い |
 | `match.priority` | int | 複数一致時の優先度（大きいほど優先） |
 | `bindings` | Binding[] | シグナル→アクションの対応 |
@@ -145,7 +145,7 @@
     "updateChannel": "stable",          // stable / prerelease
     "updateCheckHours": 24,             // 自動確認の間隔（時間）
     // 通知・外観
-    "trayNotifications": true,          // トレイ通知（プロファイル切替・更新あり）
+    "trayNotifications": true,          // トレイ通知（ルール切替・更新あり）
     "theme": "dark",                    // dark / light（即時反映）
     "accentColor": "blue",              // blue / green / purple / orange
     "uiScale": 1.0,                     // UI 拡大率（1.0=100%）
@@ -161,10 +161,10 @@
     "currentProfileId": "clip-studio"
   },
 
-  // ── 基本（グローバル）プロファイル：常時最下層で適用 FR-6.1 ──
+  // ── 基本（グローバル）ルール：常時最下層で適用 FR-6.1 ──
   "baseProfile": {
     "id": "base",
-    "name": "基本プロファイル",
+    "name": "基本ルール",
     "enabled": true,
     "bindings": [
       {
@@ -183,12 +183,12 @@
         "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 51 },
         "trigger": { "mode": "trigger", "threshold": 1 },
         "actions": [ { "type": "switchProfile", "target": "next" } ],
-        "label": "プロファイル切替(次)"      // 手動切替を MIDI に割当 FR-5.4
+        "label": "ルール切替(次)"      // 手動切替を MIDI に割当 FR-5.4
       }
     ]
   },
 
-  // ── 個別プロファイル群 ──
+  // ── 個別ルール群 ──
   "profiles": [
     {
       "id": "clip-studio",
@@ -221,11 +221,11 @@
           "label": "手のひらツール(押下中)"
         },
         {
-          // 基本プロファイルの「コピー(Note36...いや37)」を CSP では無効化する例（ブロック）FR-6.4
+          // no-op の例（合算モードでは基本のコピーは遮断されず発火する点に注意）
           "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 37 },
           "trigger": { "mode": "trigger" },
           "actions": [ { "type": "none" } ],
-          "label": "（基本のコピーを無効化）"
+          "label": "（何もしない）"
         }
       ]
     },
@@ -239,7 +239,7 @@
         {
           "signal": { "device": "*", "channel": "any", "type": "noteOn", "number": 36 },
           "trigger": { "mode": "trigger" },
-          // 基本の Note36(Undo) を OBS ではシーン切替に上書き FR-6.2
+          // OBS では Note36 にシーン切替を割り当て。合算のため基本の Undo と「両方」発火する
           "actions": [ { "type": "key", "keys": ["ctrl", "shift", "1"] } ],
           "label": "シーン1へ"
         }
@@ -251,17 +251,19 @@
 
 ---
 
-## 6. 競合解決の具体例（この設定での挙動）
+## 6. 解決（合算モデルでの挙動）
 
-| 状況 | Note36 を叩く | Note37 を叩く |
+前面アプリにマッチした**全ルール＋基本ルール**を常に同時評価し、各ルールのバインディングを**合算して発火**する（優先度による上書きは無い）。この設定（基本＝Note36:元に戻す / Note37:コピー、clip-studio＝Note37:`none`、obs＝Note36:シーン1）での例:
+
+| 前面アプリ | Note36 を叩く | Note37 を叩く |
 |------|--------------|---------------|
-| デスクトップ/ブラウザ（個別未一致） | 基本: **元に戻す(Ctrl+Z)** | 基本: **コピー(Ctrl+C)** |
-| Clip Studio Paint 前面 | 個別に定義なし→基本へフォールバック: **元に戻す** | 個別が `none` で**明示ブロック→何もしない** |
-| OBS 前面 | 個別が上書き: **シーン1へ(Ctrl+Shift+1)** | 個別に定義なし→基本: **コピー** |
+| デスクトップ/ブラウザ（アプリ別ルール未一致） | 基本: **元に戻す(Ctrl+Z)** | 基本: **コピー(Ctrl+C)** |
+| Clip Studio Paint（基本＋CSP が有効） | 基本: **元に戻す** | 基本: **コピー**（CSP の `none` は不活性＝遮断しない） |
+| OBS（基本＋OBS が有効） | 基本: **元に戻す** ＋ OBS: **シーン1へ(Ctrl+Shift+1)**（**両方発火**） | 基本: **コピー** |
 
-> ルール: 上位レイヤ（ピン留め > コンテキスト一致 > 基本）で最初に定義が見つかったレイヤを採用。`none` はフォールバックを止める。詳細は [02_Architecture.md](02_Architecture.md) §3.2。
+> ルール: マッチした全ルール（基本含む）のバインディングが合算で発火する。**上書きは無い**ため、同一シグナルを複数ルールが持てば全て発火する。アプリ別に挙動を変えたいときは、各ルールの正規表現で**重ならないようにスコープ**を切る（例: 基本側の regex で対象アプリを除外）。`none` は「何もしない」no-op で、他ルールを遮断しない。詳細は [02_Architecture.md](02_Architecture.md) §3.2。
 >
-> 採用レイヤ内で**同一シグナルに同じ具体度のバインディングが複数ある場合は、それら全てが発火する**（より具体的なバインディングは曖昧なものを引き続き上書きする）。これにより1つのコントロールで複数アクションを駆動できる。例えば相対値ノブで `fireOnIncrease` の binding と `fireOnDecrease` の binding を別々に作れば、増加で前者・減少で後者がそれぞれ発火する。
+> ルール内では特異度が効く: より具体的なバインディングが同一ルール内の曖昧なものを上書きし、同じ具体度のバインディングが複数あれば全て発火する（例: 相対値ノブの `fireOnIncrease`/`fireOnDecrease` を別々に作れば増加で前者・減少で後者）。手動の強制 ON/OFF（ピン/トグル）で regex に関係なくルールを有効/無効化できる。
 
 ---
 
