@@ -3,8 +3,11 @@ namespace MidiToEverything.Core.Application.Ports;
 /// <summary>Checks the release host (GitHub) for a newer version than the running one.</summary>
 public interface IUpdateChecker
 {
-    /// <summary>Returns the available update, or null when up to date / offline / on error.</summary>
-    Task<UpdateInfo?> GetUpdateAsync(string currentVersion, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Returns the available update, or null when up to date / offline / on error.
+    /// When <paramref name="includePrerelease"/> is true, prerelease tags are also considered.
+    /// </summary>
+    Task<UpdateInfo?> GetUpdateAsync(string currentVersion, bool includePrerelease = false, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Downloads and launches the update installer.</summary>

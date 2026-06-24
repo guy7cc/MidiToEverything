@@ -41,6 +41,32 @@ public class ReleaseParserTests
     public void ParseLatestRelease_ReturnsNull_ForDraftPrereleaseNoMsiOrJunk(string json)
         => Assert.Null(ReleaseParser.ParseLatestRelease(json));
 
+    // Shape mirrors the /releases array (newest first); includes a prerelease ahead of a stable.
+    private const string ReleasesJson = """
+    [
+      { "tag_name": "v0.5.0-beta", "html_url": "https://example/0.5.0-beta", "draft": false, "prerelease": true,
+        "assets": [ { "name": "MidiToEverything-v0.5.0-beta-win-x64.msi", "browser_download_url": "https://example/0.5.0-beta.msi" } ] },
+      { "tag_name": "v0.4.0", "html_url": "https://example/0.4.0", "draft": false, "prerelease": false,
+        "assets": [ { "name": "MidiToEverything-v0.4.0-win-x64.msi", "browser_download_url": "https://example/0.4.0.msi" } ] }
+    ]
+    """;
+
+    [Fact]
+    public void ParseReleases_StableChannel_SkipsPrerelease()
+    {
+        var info = ReleaseParser.ParseReleases(ReleasesJson, includePrerelease: false);
+        Assert.NotNull(info);
+        Assert.Equal("0.4.0", info!.Version);
+    }
+
+    [Fact]
+    public void ParseReleases_PrereleaseChannel_PicksNewestIncludingPrerelease()
+    {
+        var info = ReleaseParser.ParseReleases(ReleasesJson, includePrerelease: true);
+        Assert.NotNull(info);
+        Assert.Equal("0.5.0", info!.Version); // beta suffix stripped, 0.5.0 > 0.4.0
+    }
+
     [Theory]
     [InlineData("0.3.0", "0.1.0", true)]
     [InlineData("v0.3.0", "0.3.0", false)]   // same version, v-prefixed

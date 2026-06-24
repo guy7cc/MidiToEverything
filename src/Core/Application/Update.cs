@@ -30,39 +30,85 @@ public static class ReleaseParser
 
         using (doc)
         {
-            var root = doc.RootElement;
-            if (Bool(root, "draft") || Bool(root, "prerelease"))
+            return ParseRelease(doc.RootElement, allowPrerelease: false);
+        }
+    }
+
+    /// <summary>
+    /// Pick the newest installable release from a GitHub <c>/releases</c> array. Drafts are always
+    /// skipped; prereleases are included only when <paramref name="includePrerelease"/> is true.
+    /// </summary>
+    public static UpdateInfo? ParseReleases(string json, bool includePrerelease)
+    {
+        JsonDocument doc;
+        try
+        {
+            doc = JsonDocument.Parse(json);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        using (doc)
+        {
+            if (doc.RootElement.ValueKind != JsonValueKind.Array)
             {
                 return null;
             }
 
-            var version = String(root, "tag_name");
-            if (string.IsNullOrEmpty(version))
+            UpdateInfo? best = null;
+            foreach (var element in doc.RootElement.EnumerateArray())
             {
-                return null;
-            }
-
-            var releaseUrl = String(root, "html_url") ?? "";
-            string? installerUrl = null;
-            string? sha256 = null;
-            if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var asset in assets.EnumerateArray())
+                var info = ParseRelease(element, includePrerelease);
+                if (info is null)
                 {
-                    var name = String(asset, "name");
-                    if (name is not null && name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase))
-                    {
-                        installerUrl = String(asset, "browser_download_url");
-                        sha256 = String(asset, "digest"); // e.g. "sha256:abc..."
-                        break;
-                    }
+                    continue;
+                }
+
+                if (best is null || IsNewer(info.Version, best.Version))
+                {
+                    best = info;
                 }
             }
 
-            return string.IsNullOrEmpty(installerUrl)
-                ? null
-                : new UpdateInfo(NormalizeVersion(version), installerUrl!, releaseUrl, sha256);
+            return best;
         }
+    }
+
+    private static UpdateInfo? ParseRelease(JsonElement root, bool allowPrerelease)
+    {
+        if (Bool(root, "draft") || (!allowPrerelease && Bool(root, "prerelease")))
+        {
+            return null;
+        }
+
+        var version = String(root, "tag_name");
+        if (string.IsNullOrEmpty(version))
+        {
+            return null;
+        }
+
+        var releaseUrl = String(root, "html_url") ?? "";
+        string? installerUrl = null;
+        string? sha256 = null;
+        if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var asset in assets.EnumerateArray())
+            {
+                var name = String(asset, "name");
+                if (name is not null && name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase))
+                {
+                    installerUrl = String(asset, "browser_download_url");
+                    sha256 = String(asset, "digest"); // e.g. "sha256:abc..."
+                    break;
+                }
+            }
+        }
+
+        return string.IsNullOrEmpty(installerUrl)
+            ? null
+            : new UpdateInfo(NormalizeVersion(version), installerUrl!, releaseUrl, sha256);
     }
 
     /// <summary>True when <paramref name="candidate"/> is a strictly newer version than <paramref name="current"/>.</summary>

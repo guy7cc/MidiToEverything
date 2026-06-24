@@ -40,6 +40,12 @@ public sealed record AppSettings
     /// <summary>Check GitHub Releases for a newer version on startup and periodically.</summary>
     public bool AutoUpdate { get; init; } = true;
 
+    /// <summary>Update channel: "stable" (latest release only) or "prerelease" (include prereleases).</summary>
+    public string UpdateChannel { get; init; } = "stable";
+
+    /// <summary>Hours between automatic update checks.</summary>
+    public int UpdateCheckHours { get; init; } = 24;
+
     /// <summary>Start hidden in the tray instead of showing the main window.</summary>
     public bool StartMinimized { get; init; }
 

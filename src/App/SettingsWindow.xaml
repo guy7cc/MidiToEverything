@@ -140,8 +140,31 @@
                 <Button Content="{loc:Tr settings.openLogs}" Command="{Binding OpenLogsFolderCommand}"
                         HorizontalAlignment="Left" Margin="0,8,0,0" />
 
+                <!-- Update channel + interval -->
+                <TextBlock Text="{loc:Tr settings.updateSection}" Foreground="{StaticResource TextDimBrush}"
+                           FontWeight="SemiBold" FontSize="12" Margin="0,16,0,6" />
+                <Grid Width="220" HorizontalAlignment="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="110" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{loc:Tr settings.updateChannel}" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="12" />
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding UpdateChannels}" SelectedItem="{Binding UpdateChannel}"
+                              ToolTip="{loc:Tr settings.updateChannel.tip}" />
+                </Grid>
+                <Grid Width="220" HorizontalAlignment="Left" Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="72" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{loc:Tr settings.updateInterval}" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" FontSize="12" />
+                    <TextBox Grid.Column="1" Text="{Binding UpdateCheckHours}" ToolTip="{loc:Tr settings.updateInterval.tip}" />
+                </Grid>
+
                 <!-- Update: manual check -->
-                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <Button Content="{loc:Tr update.checkNow}" Command="{Binding CheckForUpdatesCommand}" />
                     <TextBlock Text="{Binding UpdateStatus}" Foreground="{StaticResource TextFaintBrush}"
                                VerticalAlignment="Center" Margin="10,0,0,0" TextTrimming="CharacterEllipsis" />

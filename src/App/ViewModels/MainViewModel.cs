@@ -63,6 +63,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _obsHost = settings.ObsHost;
         _obsPort = settings.ObsPort;
         _obsPassword = settings.ObsPassword;
+        _updateChannel = settings.UpdateChannel;
+        _updateCheckHours = settings.UpdateCheckHours;
         _monitorMaxLines = settings.Monitor.MaxLogLines;
         _monitorThrottleMs = settings.Monitor.UiThrottleMs;
         _logLevel = settings.LogLevel;
@@ -94,7 +96,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         // Auto-update: check on startup (after the UI settles) and every 24 hours.
         _updateTimer = new DispatcherTimer(DispatcherPriority.Background, _dispatcher)
         {
-            Interval = TimeSpan.FromHours(24),
+            Interval = TimeSpan.FromHours(Math.Max(1, _updateCheckHours)),
         };
         _updateTimer.Tick += async (_, _) => await CheckForUpdatesAsync(manual: false);
         if (AutoUpdate)
@@ -158,6 +160,10 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     // ── Auto-update ───────────────────────────────────────────────────────────
     [ObservableProperty] private bool _autoUpdate = true;
+    [ObservableProperty] private string _updateChannel = "stable";
+    [ObservableProperty] private int _updateCheckHours = 24;
+
+    public IReadOnlyList<string> UpdateChannels { get; } = new[] { "stable", "prerelease" };
 
     /// <summary>The available newer release, or null when up to date / not yet checked.</summary>
     [ObservableProperty]
@@ -326,6 +332,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    partial void OnUpdateChannelChanged(string value) =>
+        PersistSetting(s => s with { UpdateChannel = value });
+
+    partial void OnUpdateCheckHoursChanged(int value)
+    {
+        _updateTimer.Interval = TimeSpan.FromHours(Math.Max(1, value));
+        PersistSetting(s => s with { UpdateCheckHours = value });
+    }
+
     [RelayCommand]
     private Task CheckForUpdates() => CheckForUpdatesAsync(manual: true);
 
@@ -336,7 +351,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
             UpdateStatus = Loc.T("update.checking");
         }
 
-        var update = await _updateChecker.GetUpdateAsync(AppInfo.Version);
+        var update = await _updateChecker.GetUpdateAsync(
+            AppInfo.Version, includePrerelease: UpdateChannel == "prerelease");
         AvailableUpdate = update;
         UpdateStatus = update is not null
             ? ""

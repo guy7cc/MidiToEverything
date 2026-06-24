@@ -182,6 +182,11 @@
   "settings.monitorThrottle": "更新間隔(ms)",
   "settings.monitorThrottle.tip": "入力モニターの画面更新間隔（ミリ秒）。",
   "settings.openLogs": "ログフォルダを開く",
+  "settings.updateSection": "アップデート",
+  "settings.updateChannel": "更新チャンネル",
+  "settings.updateChannel.tip": "stable=安定版のみ / prerelease=プレリリースも含める。",
+  "settings.updateInterval": "確認間隔(時間)",
+  "settings.updateInterval.tip": "自動で更新を確認する間隔（時間）。",
   "settings.emergencyHotkey": "緊急停止のホットキー",
   "settings.emergencyHotkey.tip": "例: ctrl+alt+pause。修飾キー（ctrl/alt/shift/win）＋キーを「+」で連結。無効な値は赤字。",
 
