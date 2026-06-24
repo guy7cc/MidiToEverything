@@ -40,6 +40,15 @@ public sealed record AppSettings
     /// <summary>Check GitHub Releases for a newer version on startup and periodically.</summary>
     public bool AutoUpdate { get; init; } = true;
 
+    /// <summary>Start hidden in the tray instead of showing the main window.</summary>
+    public bool StartMinimized { get; init; }
+
+    /// <summary>Close button hides to the tray (true) or exits the app (false).</summary>
+    public bool CloseToTray { get; init; } = true;
+
+    /// <summary>Whether action emission (the safety gate) is enabled at startup.</summary>
+    public bool StartEmissionEnabled { get; init; } = true;
+
     /// <summary>obs-websocket connection for OBS actions (docs/05 §5, Phase 3).</summary>
     public string ObsHost { get; init; } = "localhost";
     public int ObsPort { get; init; } = 4455;
