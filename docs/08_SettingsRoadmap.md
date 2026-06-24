@@ -10,7 +10,7 @@
 - [x] トレイに最小化して起動（起動時にウィンドウを表示せずトレイ常駐）
 - [x] 閉じるボタンの挙動を選択（トレイへ最小化 / 終了）。`App.OnWindowClosing` で `CloseToTray` 判定
 - [x] 起動時の発火状態（有効 / 無効）。`GatedInputSink.Enabled` を `StartEmissionEnabled` から設定
-- [ ] 緊急停止ホットキーの編集UI（config の `emergencyStopHotkey` はあるがUI無し。現在 Ctrl+Alt+Pause がハードコード）
+- [x] 緊急停止ホットキーの編集UI（`HotkeyParser` で config 値を解析・登録、変更時に再登録、無効値は赤字）
 - [x] 多重起動の禁止（Mutex。2回目起動は既存ウィンドウを前面化して終了）
 
 ## B. デバイス／連携の集約

@@ -169,6 +169,8 @@
   "settings.closeToTray.tip": "When off, the close button exits the app.",
   "settings.startEmission": "Enable output on startup",
   "settings.startEmission.tip": "When off, start stopped (no output); toggle with the emergency stop.",
+  "settings.emergencyHotkey": "Emergency-stop hotkey",
+  "settings.emergencyHotkey.tip": "e.g. ctrl+alt+pause. Modifier(s) (ctrl/alt/shift/win) + a key joined by \"+\". Invalid values show red.",
 
   "editor.title": "Edit profiles",
   "editor.profiles": "Profiles",
