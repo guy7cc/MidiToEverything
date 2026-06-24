@@ -11,6 +11,7 @@
     "startMinimized": false,
     "closeToTray": true,
     "startEmissionEnabled": true,
+    "trayNotifications": true,
     "autoDetectDevices": true,
     "obsHost": "localhost",
     "obsPort": 4455,

@@ -29,6 +29,7 @@ internal sealed class SettingsDto
     public bool StartMinimized { get; set; }
     public bool CloseToTray { get; set; } = true;
     public bool StartEmissionEnabled { get; set; } = true;
+    public bool TrayNotifications { get; set; } = true;
     public bool AutoDetectDevices { get; set; } = true;
     public string ObsHost { get; set; } = "localhost";
     public int ObsPort { get; set; } = 4455;

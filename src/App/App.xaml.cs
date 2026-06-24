@@ -312,6 +312,15 @@ public partial class App : Application
         });
     }
 
+    /// <summary>Show a tray balloon (no-op if the tray icon is unavailable). Caller gates on the setting.</summary>
+    public static void NotifyTray(string title, string text)
+    {
+        if (Current is App app && app._tray is { Visible: true } tray)
+        {
+            try { tray.ShowBalloonTip(4000, title, text, ToolTipIcon.Info); } catch { /* best effort */ }
+        }
+    }
+
     // Update tray menu item captions to the current language.
     private void RetranslateTray()
     {

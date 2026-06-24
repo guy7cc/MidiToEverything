@@ -60,6 +60,8 @@
                           ToolTip="{loc:Tr settings.closeToTray.tip}" Margin="0,5" />
                 <CheckBox Content="{loc:Tr settings.startEmission}" IsChecked="{Binding StartEmissionEnabled}"
                           ToolTip="{loc:Tr settings.startEmission.tip}" Margin="0,5" />
+                <CheckBox Content="{loc:Tr settings.trayNotifications}" IsChecked="{Binding TrayNotifications}"
+                          ToolTip="{loc:Tr settings.trayNotifications.tip}" Margin="0,5" />
                 <CheckBox Content="{loc:Tr main.allowLaunch}" IsChecked="{Binding AllowExternalLaunch}"
                           ToolTip="{loc:Tr main.allowLaunch.tip}" Margin="0,5" />
                 <CheckBox Content="{loc:Tr update.autoCheck}" IsChecked="{Binding AutoUpdate}"
@@ -139,6 +141,16 @@
                 </Grid>
                 <Button Content="{loc:Tr settings.openLogs}" Command="{Binding OpenLogsFolderCommand}"
                         HorizontalAlignment="Left" Margin="0,8,0,0" />
+
+                <!-- Configuration management -->
+                <TextBlock Text="{loc:Tr settings.management}" Foreground="{StaticResource TextDimBrush}"
+                           FontWeight="SemiBold" FontSize="12" Margin="0,16,0,6" />
+                <WrapPanel>
+                    <Button Content="{loc:Tr settings.openConfig}" Command="{Binding OpenConfigFolderCommand}" Margin="0,0,6,6" />
+                    <Button Content="{loc:Tr settings.export}" Command="{Binding ExportConfigCommand}" Margin="0,0,6,6" />
+                    <Button Content="{loc:Tr settings.import}" Command="{Binding ImportConfigCommand}" Margin="0,0,6,6" />
+                    <Button Content="{loc:Tr settings.reset}" Command="{Binding ResetSettingsCommand}" Margin="0,0,6,6" />
+                </WrapPanel>
 
                 <!-- Update channel + interval -->
                 <TextBlock Text="{loc:Tr settings.updateSection}" Foreground="{StaticResource TextDimBrush}"

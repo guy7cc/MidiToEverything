@@ -55,6 +55,9 @@ public sealed record AppSettings
     /// <summary>Whether action emission (the safety gate) is enabled at startup.</summary>
     public bool StartEmissionEnabled { get; init; } = true;
 
+    /// <summary>Show tray balloon notifications (profile switch, update available).</summary>
+    public bool TrayNotifications { get; init; } = true;
+
     /// <summary>Detect MIDI devices by periodic polling (true) or only on manual rescan (false).</summary>
     public bool AutoDetectDevices { get; init; } = true;
 
