@@ -7,7 +7,7 @@
         xmlns:loc="clr-namespace:MidiToEverything.App.Localization"
         xmlns:vm="clr-namespace:MidiToEverything.App.ViewModels"
         mc:Ignorable="d"
-        Title="{loc:Tr settings.title}" Width="500" Height="470"
+        Title="{loc:Tr settings.title}" Width="500" Height="520"
         WindowStyle="None" ResizeMode="NoResize"
         Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
         Icon="pack://application:,,,/app.ico" FontFamily="Segoe UI"
@@ -22,19 +22,30 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="38" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Title bar -->
+        <!-- Title bar (app name, like the main window) -->
         <Grid Grid.Row="0" Background="{StaticResource CaptionBrush}">
-            <TextBlock Text="{loc:Tr settings.title}" Foreground="{StaticResource TextDimBrush}"
+            <TextBlock Text="MidiToEverything" Foreground="{StaticResource TextDimBrush}"
                        VerticalAlignment="Center" Margin="14,0" FontSize="12" />
             <Button HorizontalAlignment="Right" Style="{StaticResource CaptionCloseButton}" Click="Close_Click"
                     FontFamily="Segoe MDL2 Assets" FontSize="10" Content="&#xE8BB;" />
         </Grid>
 
-        <!-- Body (scaled by the UI-scale setting) -->
-        <Grid Grid.Row="1" Margin="18,14">
+        <!-- Header bar: same gradient + heading treatment as the main window -->
+        <Border Grid.Row="1" Background="{StaticResource HeaderBrush}" Padding="16,10">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="15"
+                           Foreground="{StaticResource AccentTextBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBlock Text="{loc:Tr settings.title}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- Body: content sits on a Card surface like the main window panels -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" CornerRadius="8" Margin="12" Padding="6">
+        <Grid>
             <Grid.LayoutTransform>
                 <ScaleTransform ScaleX="{Binding UiScale}" ScaleY="{Binding UiScale}" />
             </Grid.LayoutTransform>
@@ -235,7 +246,8 @@
             </TabControl>
 
             <Button Grid.Row="1" HorizontalAlignment="Right" Content="{loc:Tr common.close}"
-                    Style="{StaticResource AccentButton}" Click="Close_Click" />
+                    Style="{StaticResource AccentButton}" Click="Close_Click" Margin="0,10,0,0" />
         </Grid>
+        </Border>
     </Grid>
 </Window>
