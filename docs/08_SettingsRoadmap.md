@@ -14,9 +14,11 @@
 - [x] 多重起動の禁止（Mutex。2回目起動は既存ウィンドウを前面化して終了）
 
 ## B. デバイス／連携の集約
-- [ ] デバイス検出モード（自動ポーリング / 手動）とポーリング間隔 … 現在コンテンツ側のトグルを設定へ集約
-- [ ] 監視デバイスのフィルタ（`WatchedDevices`）
-- [ ] OBS接続（host/port/password）を設定ウィンドウへ移動 ＋ 起動時に自動接続トグル
+- [x] デバイス検出モード（自動ポーリング / 手動）を設定へ集約＋永続化（`AutoDetectDevices`）。rescan はデバイスパネルに残置
+- [ ] ポーリング間隔（後回し: MIDIソースへの配線が必要）
+- [ ] 監視デバイスのフィルタ（`WatchedDevices`）（後回し: 実配線とリスト編集UIが必要）
+- [x] OBS接続（host/port/password）を設定ウィンドウへ移動
+- [ ] OBS起動時自動接続（後回し: `IObsClient` に Connect API が無く遅延接続のため）
 
 ## C. 入力モニター・ログ・診断
 - [ ] モニター最大ログ行数 / UI更新間隔（config の `monitor.maxLogLines`/`uiThrottleMs` のUI）

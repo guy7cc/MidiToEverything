@@ -49,6 +49,9 @@ public sealed record AppSettings
     /// <summary>Whether action emission (the safety gate) is enabled at startup.</summary>
     public bool StartEmissionEnabled { get; init; } = true;
 
+    /// <summary>Detect MIDI devices by periodic polling (true) or only on manual rescan (false).</summary>
+    public bool AutoDetectDevices { get; init; } = true;
+
     /// <summary>obs-websocket connection for OBS actions (docs/05 §5, Phase 3).</summary>
     public string ObsHost { get; init; } = "localhost";
     public int ObsPort { get; init; } = 4455;
