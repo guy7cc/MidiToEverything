@@ -325,7 +325,7 @@ public partial class App : Application
         {
             if (_tray is not null)
             {
-                var text = $"{AppInfo.Name} — {state.Effective.Name}";
+                var text = $"{AppInfo.Name} — {string.Join(" + ", state.ActiveNames)}";
                 _tray.Text = text.Length > 63 ? text[..63] : text;
             }
         });

@@ -24,7 +24,7 @@ public static class DefaultConfig
     private static Profile BaseProfile() => new()
     {
         Id = "base",
-        Name = "基本プロファイル",
+        Name = "基本ルール",
         Bindings = new[]
         {
             new Binding
@@ -43,7 +43,7 @@ public static class DefaultConfig
             {
                 Signal = AnyNoteOn(51),
                 Actions = new InputAction[] { new SwitchProfileAction(ProfileSwitchTarget.Next) },
-                Label = "プロファイル切替(次)",
+                Label = "ルール切替(次)",
             },
         },
     };
