@@ -64,6 +64,22 @@
                 <CheckBox Content="{loc:Tr update.autoCheck}" IsChecked="{Binding AutoUpdate}"
                           ToolTip="{loc:Tr update.autoCheck.tip}" Margin="0,5" />
 
+                <!-- Emergency-stop hotkey -->
+                <TextBlock Text="{loc:Tr settings.emergencyHotkey}" Foreground="{StaticResource TextDimBrush}"
+                           FontSize="12" Margin="0,12,0,2" />
+                <TextBox Text="{Binding EmergencyHotkey, UpdateSourceTrigger=PropertyChanged}" Width="220"
+                         HorizontalAlignment="Left" ToolTip="{loc:Tr settings.emergencyHotkey.tip}">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding EmergencyHotkeyValid}" Value="False">
+                                    <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+
                 <!-- Update: manual check -->
                 <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                     <Button Content="{loc:Tr update.checkNow}" Command="{Binding CheckForUpdatesCommand}" />

@@ -1,7 +1,9 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using MidiToEverything.App.ViewModels;
+using MidiToEverything.Infrastructure.Input;
 
 namespace MidiToEverything.App;
 
@@ -14,14 +16,12 @@ public partial class MainWindow : Window
 {
     private const int HotkeyId = 0xB001;
     private const int WM_HOTKEY = 0x0312;
-    private const uint MOD_ALT = 0x0001;
-    private const uint MOD_CONTROL = 0x0002;
     private const uint MOD_NOREPEAT = 0x4000;
-    private const uint VK_PAUSE = 0x13;
 
     private readonly MainViewModel _viewModel;
     private readonly Func<ProfileEditorWindow> _editorFactory;
     private IntPtr _handle;
+    private bool _hotkeyRegistered;
 
     public MainWindow(MainViewModel viewModel, Func<ProfileEditorWindow> editorFactory)
     {
@@ -39,15 +39,50 @@ public partial class MainWindow : Window
         _handle = new WindowInteropHelper(this).Handle;
         HwndSource.FromHwnd(_handle)?.AddHook(WndProc);
         WindowChromeFix.Apply(this); // keep a maximized borderless window off the taskbar
-        RegisterHotKey(_handle, HotkeyId, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_PAUSE);
+        ApplyEmergencyHotkey();
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         UpdateMaxRestoreGlyph();
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.EmergencyHotkey))
+        {
+            ApplyEmergencyHotkey();
+        }
+    }
+
+    // Register the user-configured emergency-stop hotkey (replacing any previous one). An invalid
+    // spec leaves the hotkey unregistered (the settings field flags it red).
+    private void ApplyEmergencyHotkey()
+    {
+        if (_handle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        if (_hotkeyRegistered)
+        {
+            UnregisterHotKey(_handle, HotkeyId);
+            _hotkeyRegistered = false;
+        }
+
+        if (HotkeyParser.TryParse(_viewModel.EmergencyHotkey, out var modifiers, out var vk))
+        {
+            _hotkeyRegistered = RegisterHotKey(_handle, HotkeyId, modifiers | MOD_NOREPEAT, vk);
+        }
     }
 
     protected override void OnClosed(EventArgs e)
     {
+        _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         if (_handle != IntPtr.Zero)
         {
-            UnregisterHotKey(_handle, HotkeyId);
+            if (_hotkeyRegistered)
+            {
+                UnregisterHotKey(_handle, HotkeyId);
+            }
+
             HwndSource.FromHwnd(_handle)?.RemoveHook(WndProc);
         }
 

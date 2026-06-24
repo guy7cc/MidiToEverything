@@ -59,6 +59,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _startMinimized = settings.StartMinimized;
         _closeToTray = settings.CloseToTray;
         _startEmissionEnabled = settings.StartEmissionEnabled;
+        _emergencyHotkey = settings.EmergencyStopHotkey ?? "ctrl+alt+pause";
         _obsHost = settings.ObsHost;
         _obsPort = settings.ObsPort;
         _obsPassword = settings.ObsPassword;
@@ -118,9 +119,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _closeToTray = true;
     [ObservableProperty] private bool _startEmissionEnabled = true;
 
+    /// <summary>Global emergency-stop hotkey spec (e.g. "ctrl+alt+pause"); registered by MainWindow.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(EmergencyHotkeyValid))]
+    private string _emergencyHotkey = "";
+
+    /// <summary>True when the spec parses to a registrable hotkey (the field shows red otherwise).</summary>
+    public bool EmergencyHotkeyValid => HotkeyParser.TryParse(EmergencyHotkey, out _, out _);
+
     partial void OnStartMinimizedChanged(bool value) => PersistSetting(s => s with { StartMinimized = value });
     partial void OnCloseToTrayChanged(bool value) => PersistSetting(s => s with { CloseToTray = value });
     partial void OnStartEmissionEnabledChanged(bool value) => PersistSetting(s => s with { StartEmissionEnabled = value });
+    partial void OnEmergencyHotkeyChanged(string value) => PersistSetting(s => s with { EmergencyStopHotkey = value });
 
     private void PersistSetting(Func<AppSettings, AppSettings> mutate)
     {

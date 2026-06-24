@@ -169,6 +169,8 @@
   "settings.closeToTray.tip": "オフにすると、閉じるボタンでアプリを終了します。",
   "settings.startEmission": "起動時に発火を有効にする",
   "settings.startEmission.tip": "オフにすると、停止状態（発火しない）で起動します。緊急停止で切替。",
+  "settings.emergencyHotkey": "緊急停止のホットキー",
+  "settings.emergencyHotkey.tip": "例: ctrl+alt+pause。修飾キー（ctrl/alt/shift/win）＋キーを「+」で連結。無効な値は赤字。",
 
   "editor.title": "プロファイル編集",
   "editor.profiles": "プロファイル",
