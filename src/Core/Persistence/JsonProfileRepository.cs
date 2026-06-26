@@ -39,13 +39,58 @@ public sealed class JsonProfileRepository : IProfileRepository
     {
         if (File.Exists(ConfigPath))
         {
-            return Load();
+            try
+            {
+                return Load();
+            }
+            catch (Exception ex)
+            {
+                // A corrupt or partially-written config (bad hand-edit, crash mid-save, or a
+                // file from a newer/unknown schema) must never brick startup. Preserve the bad
+                // file for recovery, then fall back to a fresh default (FR-7.1 robustness).
+                var backup = BackupCorruptFile();
+                _logger.LogError(
+                    ex,
+                    "Config at {Path} could not be loaded; backed it up to {Backup} and recreating default.",
+                    ConfigPath,
+                    backup ?? "(backup failed)");
+            }
+        }
+        else
+        {
+            _logger.LogInformation("No config at {Path}; creating default.", ConfigPath);
         }
 
-        _logger.LogInformation("No config at {Path}; creating default.", ConfigPath);
         var config = DefaultConfig.Create();
         Save(config);
         return config;
+    }
+
+    /// <summary>
+    /// Moves an unloadable config aside so the user can recover it, returning the backup path
+    /// (or null if even the backup failed). Picks the first free <c>config.corrupt[.N].json</c>
+    /// sibling so repeated failures don't clobber earlier copies.
+    /// </summary>
+    private string? BackupCorruptFile()
+    {
+        try
+        {
+            var dir = Path.GetDirectoryName(ConfigPath) ?? ".";
+            var backup = Path.Combine(dir, "config.corrupt.json");
+            for (var i = 1; File.Exists(backup); i++)
+            {
+                backup = Path.Combine(dir, $"config.corrupt.{i}.json");
+            }
+
+            File.Move(ConfigPath, backup);
+            return backup;
+        }
+        catch (Exception ex)
+        {
+            // Best effort: if we can't even rename it, Save() below will overwrite it. Log and move on.
+            _logger.LogWarning(ex, "Failed to back up corrupt config at {Path}.", ConfigPath);
+            return null;
+        }
     }
 
     public void Save(AppConfig config)
